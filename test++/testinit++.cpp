@@ -61,6 +61,7 @@ int main(int argc, char **argv)
 
     printf("\n--- Buffer ---\n");
     aax::Buffer& buffer = aax.buffer(IFILE_PATH);
+    aax::Buffer& tmp = aax.buffer(IFILE_PATH);
 
     TRY( emitter.add(buffer) );
     TRY( emitter2.add(buffer) );
@@ -72,6 +73,10 @@ int main(int argc, char **argv)
     TRY( emitter2.remove_buffer() );
    
     printf("\n");
+
+    printf("--- Destroy Buffer ---\n");
+    aax.destroy(tmp);
+    aax.destroy(buffer);
 
     return 0;
 }
