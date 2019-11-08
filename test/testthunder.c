@@ -45,7 +45,7 @@
 
 #define MODE			AAX_ABSOLUTE
 
-#define FILE_PATH		SRC_PATH"/thunder.wav"
+#define FILE_PATH		SRC_PATH"/thunder.aaxs"
 #define SXPOS			0.0f
 #define SYPOS			0.0f
 #define SZPOS			0.0f
@@ -188,7 +188,7 @@ int main(int argc, char **argv)
             }
 
             /** schedule the emitter for playback */
-            printf("Engine start\n");
+            printf("Thunder start\n");
             res = aaxEmitterSetState(emitter, AAX_PLAYING);
             testForState(res, "aaxEmitterStart");
 

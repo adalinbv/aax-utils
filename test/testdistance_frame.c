@@ -50,7 +50,7 @@
 #define SPEED			(0.145f*SPEED_OF_SOUND)
 #define STEP			(SPEED*UPDATE_DELAY)
 
-#define FILE_PATH		SRC_PATH"/wasp.wav"
+#define FILE_PATH		SRC_PATH"/tictac.wav"
 #define SXPOS			1000.0f
 #define SYPOS			1000.0f
 #define SZPOS			-500.0f

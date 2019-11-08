@@ -44,7 +44,7 @@
 
 #define ENABLE_EMITTER_FREQFILTER	1
 #define ENABLE_SCENERY_FREQFILTER	1
-#define FILE_PATH			SRC_PATH"/wasp.wav"
+#define FILE_PATH			SRC_PATH"/tictac.wav"
 #define	FEMITTER			 400.0f
 #define FSCENE				4000.0f
 #define DEG				(360.0f/5)

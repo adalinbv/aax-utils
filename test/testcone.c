@@ -43,7 +43,7 @@
 #include "driver.h"
 #include "wavfile.h"
 
-#define FILE_PATH		SRC_PATH"/wasp.wav"
+#define FILE_PATH		SRC_PATH"/tictac.wav"
 
 aaxVec3d EmitterPos = { 0.0,  0.0,  10.0  };
 aaxVec3f EmitterDir = { 0.0f, 0.0f,  1.0f };

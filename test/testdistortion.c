@@ -58,7 +58,7 @@
 #define ENABLE_EMITTER_PHASING		1
 #define ENABLE_EMITTER_DYNAMIC_GAIN	0
 #define ENABLE_MIXER_EQUALIZER		0
-#define FILE_PATH			SRC_PATH"/wasp.wav"
+#define FILE_PATH			SRC_PATH"/tictac.wav"
 
 int main(int argc, char **argv)
 {

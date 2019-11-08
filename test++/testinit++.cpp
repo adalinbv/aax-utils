@@ -47,6 +47,7 @@
 int main(int argc, char **argv)
 {
     printf("\n--- AeonWave ---\n");
+
     // Open the default device for playback
     aax::AeonWave aax(AAX_MODE_WRITE_STEREO);
     TRY( aax.set(AAX_INITIALIZED) );
@@ -56,8 +57,6 @@ int main(int argc, char **argv)
     aax::Emitter emitter(AAX_ABSOLUTE);
     aax::Emitter emitter2(AAX_ABSOLUTE);
 //  TRY( emitter.set(AAX_LOOPING) );
-
-
 
     printf("\n--- Buffer ---\n");
     aax::Buffer& buffer = aax.buffer(IFILE_PATH);

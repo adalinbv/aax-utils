@@ -42,7 +42,7 @@
 #include "driver.h"
 #include "wavfile.h"
 
-#define FILE_PATH                    SRC_PATH"/wasp.wav"
+#define FILE_PATH                    SRC_PATH"/tictac.wav"
 
 int main(int argc, char **argv)
 {

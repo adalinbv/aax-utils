@@ -50,7 +50,7 @@
 #define ENABLE_FRAME_FREQFILTER		1
 #define ENABLE_FRAME_EQUALIZER		1
 #define ENABLE_STATIC_FREQFILTER	0
-#define FILE_PATH			SRC_PATH"/wasp.wav"
+#define FILE_PATH			SRC_PATH"/tictac.wav"
 
 int main(int argc, char **argv)
 {
