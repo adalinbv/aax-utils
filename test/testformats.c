@@ -54,7 +54,7 @@ static int _mask_t[MAX_LOOPS] = {
     AAX_FORMAT_BE_UNSIGNED
 };
 
-static const char* _format_s[] = {
+static const char* _format_s[10] = {
     "AAX_PCM8S:  signed, 8-bits per sample",
     "AAX_PCM16S: signed, 16-bits per sample",
     "AAX_PCM24S: signed, 24-bits per sample, 32-bit encoded",
@@ -63,10 +63,11 @@ static const char* _format_s[] = {
     "AAX_DOUBLE: 64-bit floating point, -1.0f to 1.0f",
     "AAX_MULAW",
     "AAX_ALAW",
-    "AAX_IMA4_ADPCM"
+    "AAX_IMA4_ADPCM",
+    "AAX_PCM24S_PACKED: signed, packed 24-bits per sample"
 };
 
-static const char* _format_us[] = {
+static const char* _format_us[4] = {
     "AAX_PCM8U:  unsigned, 8-bits per sample",
     "AAX_PCM16U: unsigned, 16-bits per sample",
     "AAX_PCM24U: unsigned, 24-bits per sample, 32-bit encoded",
@@ -122,7 +123,7 @@ int main(int argc, char **argv)
 
             no_samples = aaxBufferGetSetup(buf, AAX_NO_SAMPLES);
             no_tracks = aaxBufferGetSetup(buf, AAX_TRACKS);
-            freq = 0.6f*(float)aaxBufferGetSetup(buf, AAX_FREQUENCY);
+            freq = (float)aaxBufferGetSetup(buf, AAX_FREQUENCY);
 
             res = aaxBufferSetSetup(buf, AAX_FREQUENCY, freq);
             no_samples = aaxBufferGetSetup(buf, AAX_NO_SAMPLES);
