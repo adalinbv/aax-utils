@@ -197,7 +197,7 @@ void print_aaxs(const char* outfile, struct params param)
     fprintf(output, " <emitter looping=\"true\">\n");
     if (param.percussion)
     {
-        fprintf(output, "  <filter type=\"frequency\" src=\"envelope\">\n");
+        fprintf(output, "  <filter type=\"frequency\" src=\"timed\">\n");
         fprintf(output, "   <slot n=\"0\">\n");
         fprintf(output, "    <param n=\"0\" pitch=\"%g\">%4.1f</param>\n", 1.2f*param.harmonic, 55.0f*param.harmonic/1.2f);
         fprintf(output, "    <param n=\"1\">1.0</param>\n");
