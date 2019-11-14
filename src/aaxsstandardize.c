@@ -345,7 +345,7 @@ struct dsp_t
     } slot[4];
 };
 
-float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char timed_gain, float env_fact, char simplify)
+float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float env_fact, char simplify, char emitter)
 {
     char *keep_volume = getenv("KEEP_VOLUME");
     unsigned int s, snum;
@@ -356,10 +356,20 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char timed_gain, flo
 
     dsp->dtype = t;
     dsp->type = lwrstr(xmlAttributeGetString(xid, "type"));
-    if (!timed_gain && (!strcasecmp(dsp->type, "volume") || !strcasecmp(dsp->type, "timed-gain") || !strcasecmp(dsp->type, "dynamic-gain"))) {
+    if (!final && (!strcasecmp(dsp->type, "volume") || !strcasecmp(dsp->type, "timed-gain") || !strcasecmp(dsp->type, "dynamic-gain"))) {
         dsp->src = false_const;
-    } else {
+    }
+    else
+    {
         dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
+        if (dsp->src && !emitter && final)
+        {
+           int slen = strlen(dsp->src);
+           int tlen = strlen("timed");
+           if (slen >= tlen && !strcmp(dsp->src+slen-tlen, "timed")) {
+             printf("Warning, timed transision filters and effects are single-shot only and therefore\n\tof little use inside audio-frames.\n");
+          }
+       }
     }
     dsp->stereo = xmlAttributeGetBool(xid, "stereo");
     dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
@@ -608,7 +618,7 @@ struct sound_t
     } entry[32];
 };
 
-void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gain, float db, char simplify)
+void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gain, float db, char simplify, char emitter)
 {
     unsigned int p, e, emax;
     char noise;
@@ -683,12 +693,12 @@ void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gai
             else if (!strcasecmp(name, "filter"))
             {
                 sound->entry[p].type = FILTER;
-                fill_dsp(&sound->entry[p++].slot.dsp, xeid, FILTER, 1, 1.0f, 0);
+                fill_dsp(&sound->entry[p++].slot.dsp, xeid, FILTER, 1, 1.0f, 0,emitter);
             }
             else if (!strcasecmp(name, "effect"))
             {
                 sound->entry[p].type = EFFECT;
-                fill_dsp(&sound->entry[p++].slot.dsp, xeid, EFFECT, 1, 1.0f, 0);
+                fill_dsp(&sound->entry[p++].slot.dsp, xeid, EFFECT, 1, 1.0f, 0, emitter);
             }
 
             xmlFree(name);
@@ -793,9 +803,8 @@ struct object_t		// emitter and audioframe
     struct dsp_t dsp[16];
 };
 
-float fill_object(struct object_t *obj, void *xid, float env_fact, char timed_gain, char simplify)
+float fill_object(struct object_t *obj, void *xid, float env_fact, char final, char simplify, char emitter)
 {
-    char emitter = (env_fact >= 0.0f);
     unsigned int p, d, dnum;
     float max = 0.0f;
     void *xdid;
@@ -811,7 +820,7 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char timed_ga
     {
         if (xmlNodeGetPos(xid, xdid, "filter", d) != 0)
         {
-            float m = fill_dsp(&obj->dsp[p++], xdid, FILTER, timed_gain, env_fact, simplify);
+            float m = fill_dsp(&obj->dsp[p++], xdid, FILTER, final, env_fact, simplify, emitter);
             if (!max) max = m;
         }
     }
@@ -828,7 +837,7 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char timed_ga
                                          !strcasecmp(type, "ringmodulator"))) ||
                              (emitter && !strcasecmp(type, "timed-pitch")))
             {
-                float m = fill_dsp(&obj->dsp[p++], xdid, EFFECT, timed_gain, env_fact, simplify);
+                float m = fill_dsp(&obj->dsp[p++], xdid, EFFECT, final, env_fact, simplify, emitter);
                 if (!max) max = m;
             }
         }
@@ -891,7 +900,7 @@ struct aax_t
     struct object_t audioframe;
 };
 
-void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float db, float env_fact, char timed_gain)
+void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float db, float env_fact, char final)
 {
     void *xid;
 
@@ -913,14 +922,14 @@ void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain
             xtid = xmlNodeGet(xaid, "sound");
             if (xtid)
             {
-                fill_sound(&aax->sound, &aax->info, xtid, gain, db, simplify);
+                fill_sound(&aax->sound, &aax->info, xtid, gain, db, simplify, 1);
                 xmlFree(xtid);
             }
 
             xtid = xmlNodeGet(xaid, "emitter");
             if (xtid)
             {
-                float m = fill_object(&aax->emitter, xtid, env_fact, timed_gain, simplify);
+                float m = fill_object(&aax->emitter, xtid, env_fact, final, simplify, 1);
                 if (m > 0) aax->sound.db = _lin2db(1.0f/m);
                 xmlFree(xtid);
             }
@@ -928,7 +937,7 @@ void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain
             xtid = xmlNodeGet(xaid, "audioframe");
             if (xtid)
             {
-                float m = fill_object(&aax->audioframe, xtid, -1.f, timed_gain, simplify);
+                float m = fill_object(&aax->audioframe, xtid, -1.f, final, simplify, 0);
                 if (m < 0) aax->sound.db -= m;
                 xmlFree(xtid);
             }
