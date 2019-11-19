@@ -13,16 +13,30 @@ find_path(EBUR128_INCLUDE_DIR
   HINTS
   "$ENV{${ProgramFilesx86}}/libebur128"
   PATH_SUFFIXES include
+  PATHS
+  ~/Library/Frameworks
+  /Library/Frameworks
+  /usr/local
+  /usr
+  /opt
 )
 
 find_library(EBUR128_LIBRARY
   NAMES ebur128
   HINTS
   "$ENV{${ProgramFilesx86}}/libebur128"
-  PATH_SUFFIXES lib
+  PATH_SUFFIXES lib64
+  PATHS
+    ~/Library/Frameworks
+    /Library/Frameworks
+    /usr/local
+    /usr
+    /opt
 )
 
-include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(EBUR128 DEFAULT_MSG EBUR128_LIBRARY EBUR128_INCLUDE_DIR)
+SET(EBUR128FOUND "NO")
+IF(EBUR128LIBRARY AND EBUR128INCLUDE_DIR)
+  include_directories(${EBUR128INCLUDE_DIR})
+  SET(EBUR128FOUND "YES")
+ENDIF(EBUR128LIBRARY AND EBUR128INCLUDE_DIR)
 
-mark_as_advanced(EBUR128_INCLUDE_DIR EBUR128_LIBRARY)
