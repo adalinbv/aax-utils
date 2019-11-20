@@ -53,7 +53,7 @@ ELSE(WIN32)
 
   # DEBIAN
   SET(CPACK_DEBIAN_PACKAGE_SECTION "utils")
-  SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1), libaax3-bin (>= 3.0.0), libaax3-data (>= 3.4.0), libebur128-1 (>= 1.2.4-1)")
+  SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1), libaax3-bin (>= 3.0.0), libaax3-data (>= 3.4.0), libebur128-1 (>= 1.2.2-2)")
 
   # RPM
   SET(CPACK_RPM_PACKAGE_LICENSE "BSD")
