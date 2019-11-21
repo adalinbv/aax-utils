@@ -149,7 +149,7 @@ INCLUDE_DIRECTORIES("${aax-utils_SOURCE_DIR}"
     "${aax-utils_BINARY_DIR}/include"
 )
 
-if (EBUR128_FOUND)
+if (EBUR128FOUND)
   include_directories("${EBUR128_INCLUDE_DIR}")
   set(HAVE_EBUR128 1)
 endif()
