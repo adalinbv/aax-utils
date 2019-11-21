@@ -2046,6 +2046,7 @@ MIDIFile::initialize(const char *grep)
             }
             MESSAGE("Patch set : %s", midi.get_patch_set().c_str());
             MESSAGE(" instrument set version %s\n", midi.get_patch_version().c_str());
+            MESSAGE("Directory : %s\n", midi.info(AAX_SHARED_DATA_DIR));
 
             int hour, minutes, seconds;
             unsigned int format = midi.get_format();

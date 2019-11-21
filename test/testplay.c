@@ -50,12 +50,17 @@ int main(int argc, char **argv)
     char *devname, *infile;
     aaxConfig config;
     char verbose = 0;
+    char fm = 0;
     int res;
 
     if (getCommandLineOption(argc, argv, "-v") ||
         getCommandLineOption(argc, argv, "--verbose"))
     {
         verbose = 1;
+    }
+
+    if (getCommandLineOption(argc, argv, "--fm")) {
+        fm = 1;
     }
 
     devname = getDeviceName(argc, argv);
@@ -70,6 +75,10 @@ int main(int argc, char **argv)
 
         res = aaxMixerSetSetup(config, AAX_REFRESH_RATE, 90.0f);
         testForState(res, "aaxMixerSetSetup");
+
+         if (fm) {
+            res = aaxMixerSetSetup(config, AAX_CAPABILITIES, AAX_RENDER_SYNTHESIZER);
+         }
 
         buffer = bufferFromFile(config, infile);
         testForError(buffer, "Unable to create a buffer");

@@ -422,13 +422,13 @@ private:
     void set_path();
 
     std::string preset_file(aaxConfig c, std::string& name) {
-        std::string rv = aaxDriverGetSetup(c, AAX_SHARED_DATA_DIR);
+        std::string rv = midi.info(AAX_SHARED_DATA_DIR);
         rv.append("/"); rv.append(name);
         return rv;
     }
 
     std::string aaxs_file(aaxConfig c, std::string& name) {
-        std::string rv = aaxDriverGetSetup(c, AAX_SHARED_DATA_DIR);
+        std::string rv = midi.info(AAX_SHARED_DATA_DIR);
         rv.append("/"); rv.append(name); rv.append(".aaxs");
         return rv;
     }

@@ -99,7 +99,7 @@ static void sleep_for(float dt)
     }
 }
 
-void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile, const char *track, float time_offs, const char *grep, bool verbose, bool batched)
+void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile, const char *track, float time_offs, const char *grep, bool verbose, bool batched, bool fm)
 {
     if (grep) devname = (char*)"None"; // fastest for searching
     aax::MIDIFile midi(devname, infile, track, mode);
@@ -123,6 +123,12 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile, c
         }
 
         midi.set_verbose(verbose);
+        if (fm)
+        {
+            char *env = getenv("AAX_SHARED_DATA_DIR");
+            midi.set(AAX_CAPABILITIES, AAX_RENDER_SYNTHESIZER);
+            if (env) midi.set(AAX_SHARED_DATA_DIR, env);
+        }
         midi.initialize(grep);
         if (!grep)
         {
@@ -191,6 +197,7 @@ int main(int argc, char **argv)
     char *infile = getInputFile(argc, argv, IFILE_PATH);
     bool verbose = false;
     bool batched = false;
+    bool fm = false;
     try
     {
         float time_offs = getTime(argc, argv);
@@ -219,7 +226,12 @@ int main(int argc, char **argv)
             batched = true;
         }
 
-        std::thread midiThread(play, devname, render_mode, infile, outfile, track, time_offs, grep, verbose, batched);
+        if (getCommandLineOption(argc, argv, "--fm")) {
+            fm = 1;
+        }
+
+
+        std::thread midiThread(play, devname, render_mode, infile, outfile, track, time_offs, grep, verbose, batched, fm);
         midiThread.join();
 
     } catch (const std::exception& e) {
