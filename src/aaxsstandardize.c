@@ -1038,8 +1038,10 @@ void free_aax(struct aax_t *aax)
     free_object(&aax->audioframe);
 }
 
-float calculate_loudness(char *tmpfile, char *infile, char *aaxsfile, char *ptr, struct aax_t *aax, char simplify, char commons, float *db, float *gain)
+float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char commons, float *db, float *gain)
 {
+    char tmpfile[128], aaxsfile[128];
+    char *ptr;
     float dt, step, fval;
     double loudness, peak;
     aaxBuffer buffer;
@@ -1048,6 +1050,12 @@ float calculate_loudness(char *tmpfile, char *infile, char *aaxsfile, char *ptr,
     aaxFrame frame;
     void **data;
     int res;
+
+    ptr = strrchr(infile, PATH_SEPARATOR);
+    if (!ptr) ptr = infile;
+    else ptr++;
+    snprintf(aaxsfile, 120, "%s/%s.aaxs", TEMP_DIR, ptr);
+    snprintf(tmpfile, 120, "AeonWave on Audio Files: %s/%s.wav", TEMP_DIR, ptr);
 
     config = aaxDriverOpenByName(tmpfile, AAX_MODE_WRITE_STEREO);
     testForError(config, "unable to open the temporary file.");
@@ -1178,6 +1186,9 @@ float calculate_loudness(char *tmpfile, char *infile, char *aaxsfile, char *ptr,
     printf("%-32s: peak: % -3.1f, R128: % -3.1f", infile, peak, loudness);
     printf(", new gain: %4.1f\n", (*gain > 0.0f) ? fval : -*gain);
 
+    remove(aaxsfile);
+    remove(tmpfile);
+
     return fval;
 }
 
@@ -1235,20 +1246,12 @@ int main(int argc, char **argv)
     outfile = getOutputFile(argc, argv, NULL);
     if (infile)
     {
-        char tmpfile[128], aaxsfile[128];
         float gain, env_fact;
         float fval, db;
         struct aax_t aax;
-        char *ptr;
 
-        ptr = strrchr(infile, PATH_SEPARATOR);
-        if (!ptr) ptr = infile;
-        else ptr++;
-        snprintf(aaxsfile, 120, "%s/%s.aaxs", TEMP_DIR, ptr);
-        snprintf(tmpfile, 120, "AeonWave on Audio Files: %s/%s.wav", TEMP_DIR, ptr);
+        fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain);
 
-        fval = calculate_loudness(tmpfile, infile, aaxsfile, ptr, &aax,
-                                  simplify, commons, &db, &gain);
         env_fact = 1.0f;
         if (gain > 0.0f && fabsf(gain-fval) > 0.1f)
         {
@@ -1259,9 +1262,6 @@ int main(int argc, char **argv)
         fill_aax(&aax, infile, simplify, gain, db, env_fact, 1);
         print_aax(&aax, outfile, commons, 0);
         free_aax(&aax);
-
-        remove(aaxsfile);
-        remove(tmpfile);
     }
     else {
         help();
