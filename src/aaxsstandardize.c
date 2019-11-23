@@ -600,7 +600,7 @@ void free_waveform(struct waveform_t *wave)
 struct sound_t
 {
     int mode;
-    float gain, gainfm, db;
+    float gain, db;
     float frequency;
     float duration;
     int voices;
@@ -904,6 +904,7 @@ struct aax_t
     struct sound_t sound;
     struct object_t emitter;
     struct object_t audioframe;
+    char add_fm;
 };
 
 void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float db, float env_fact, char final)
@@ -928,8 +929,12 @@ void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain
             xtid = xmlNodeGet(xaid, "fm");
             if (xtid)
             {
+                aax->add_fm = AAX_TRUE;
                 fill_sound(&aax->fm, &aax->info, xtid, gain, db, 0, 1);
                 xmlFree(xtid);
+            }
+            else {
+               aax->add_fm = AAX_FALSE;
             }
 
             xtid = xmlNodeGet(xaid, "sound");
@@ -1011,7 +1016,9 @@ void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp)
 
     fprintf(output, "<aeonwave>\n\n");
     print_info(&aax->info, output, commons);
-    print_sound(&aax->fm, &aax->info, output, tmp, "fm");
+    if (aax->add_fm) {
+        print_sound(&aax->fm, &aax->info, output, tmp, "fm");
+    }
     print_sound(&aax->sound, &aax->info, output, tmp, "sound");
     print_object(&aax->emitter, EMITTER, &aax->info, output);
     print_object(&aax->audioframe, FRAME, &aax->info, output);
