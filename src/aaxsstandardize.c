@@ -64,10 +64,6 @@
 #define LEVEL_16DB		0.15848931670f
 #define LEVEL_20DB		0.1f
 
-enum {
-   SOUND = 0,
-   FM
-};
 
 static char debug = 0;
 static float freq = 220.0f;
@@ -1246,9 +1242,19 @@ int main(int argc, char **argv)
     outfile = getOutputFile(argc, argv, NULL);
     if (infile)
     {
-        float gain, env_fact;
-        float fval, db;
+        float env_fact_fm;
+        float fval, db, gain, env_fact;
         struct aax_t aax;
+
+        setenv("AAX_RENDER_MODE", "synthesizer", 1);
+        fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain);
+        unsetenv("AAX_RENDER_MODE");
+
+        env_fact_fm = 1.0f;
+        if (gain > 0.0f && fabsf(gain-fval) > 0.1f) {
+            env_fact_fm = gain/fval;
+        }
+        env_fact_fm *= getGain(argc, argv);
 
         fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain);
 
@@ -1259,7 +1265,9 @@ int main(int argc, char **argv)
             gain = fval;
         }
         env_fact *= getGain(argc, argv);
+
         fill_aax(&aax, infile, simplify, gain, db, env_fact, 1);
+        aax.fm.db = _lin2db(gain/env_fact_fm);
         print_aax(&aax, outfile, commons, 0);
         free_aax(&aax);
     }
