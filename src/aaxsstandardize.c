@@ -64,6 +64,11 @@
 #define LEVEL_16DB		0.15848931670f
 #define LEVEL_20DB		0.1f
 
+enum {
+   SOUND = 0,
+   FM
+};
+
 static char debug = 0;
 static float freq = 220.0f;
 static char* false_const = "false";
@@ -595,7 +600,7 @@ void free_waveform(struct waveform_t *wave)
 struct sound_t
 {
     int mode;
-    float gain, db;
+    float gain, gainfm, db;
     float frequency;
     float duration;
     int voices;
@@ -710,11 +715,11 @@ void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gai
     if (noise) sound->duration = _MAX(sound->duration, 0.3f);
 }
 
-void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char tmp)
+void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char tmp, const char *section)
 {
     unsigned int e;
 
-    fprintf(output, " <sound");
+    fprintf(output, " <%s", section);
     if (sound->mode) {
         fprintf(output, " mode=\"%i\"", sound->mode);
     }
@@ -784,7 +789,7 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
             print_dsp(&sound->entry[e].slot.dsp, info, output);
         }
     }
-    fprintf(output, " </sound>\n\n");
+    fprintf(output, " </%s>\n\n", section);
 }
 
 void free_sound(struct sound_t *sound)
@@ -895,6 +900,7 @@ void free_object(struct object_t *obj)
 struct aax_t
 {
     struct info_t info;
+    struct sound_t fm;
     struct sound_t sound;
     struct object_t emitter;
     struct object_t audioframe;
@@ -916,6 +922,13 @@ void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain
             if (xtid)
             {
                 fill_info(&aax->info, xtid, filename);
+                xmlFree(xtid);
+            }
+
+            xtid = xmlNodeGet(xaid, "fm");
+            if (xtid)
+            {
+                fill_sound(&aax->fm, &aax->info, xtid, gain, db, 0, 1);
                 xmlFree(xtid);
             }
 
@@ -998,7 +1011,8 @@ void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp)
 
     fprintf(output, "<aeonwave>\n\n");
     print_info(&aax->info, output, commons);
-    print_sound(&aax->sound, &aax->info, output, tmp);
+    print_sound(&aax->fm, &aax->info, output, tmp, "fm");
+    print_sound(&aax->sound, &aax->info, output, tmp, "sound");
     print_object(&aax->emitter, EMITTER, &aax->info, output);
     print_object(&aax->audioframe, FRAME, &aax->info, output);
     fprintf(output, "</aeonwave>\n");
@@ -1011,6 +1025,7 @@ void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp)
 void free_aax(struct aax_t *aax)
 {
     free_info(&aax->info);
+    free_sound(&aax->fm);
     free_sound(&aax->sound);
     free_object(&aax->emitter);
     free_object(&aax->audioframe);
@@ -1072,7 +1087,7 @@ int main(int argc, char **argv)
     {
         char tmpfile[128], aaxsfile[128];
         float dt, step, gain, env_fact;
-        double loudness, peak;
+        double loudness[2], peak[2];
         float fval, db;
         struct aax_t aax;
         aaxBuffer buffer;
@@ -1111,7 +1126,7 @@ int main(int argc, char **argv)
         db = aax.sound.db;
         free_aax(&aax);
 
-        /* buffer */
+        /* buffer, defaults to processing the sound section of AAXS files */
         buffer = aaxBufferReadFromStream(config, aaxsfile);
         testForError(buffer, "Unable to create a buffer from an aaxs file.");
 
@@ -1174,7 +1189,8 @@ int main(int argc, char **argv)
         buffer = aaxBufferReadFromStream(config, tmpfile);
         testForError(buffer, "Unable to read the buffer.");
 
-        peak = loudness = 0.0;
+        peak[FM] = loudness[FM] = 0.0;
+        peak[SOUND] = loudness[SOUND] = 0.0;
         aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_FLOAT);
         data = aaxBufferGetData(buffer);
         if (data)
@@ -1190,13 +1206,12 @@ int main(int argc, char **argv)
             if (st)
             {
                 ebur128_add_frames_float(st, bdata, no_samples);
-                ebur128_loudness_global(st, &loudness);
-                ebur128_sample_peak(st, 0, &peak);
+                ebur128_loudness_global(st, &loudness[SOUND]);
+                ebur128_sample_peak(st, 0, &peak[SOUND]);
                 ebur128_destroy(&st);
-                loudness = _db2lin(loudness);
+                loudness[SOUND] = _db2lin(loudness[SOUND]);
             }
-#endif
-#if 0
+#else
             double rms_total = 0.0;
             size_t j = no_samples;
             do
@@ -1206,7 +1221,7 @@ int main(int argc, char **argv)
             }
             while (--j);
 
-            db = _lin2db(sqrt(rms_total/no_samples));
+            loudness[SOUND] = _lin2db(sqrt(rms_total/no_samples));
 #endif
             aaxFree(data);
         }
@@ -1215,9 +1230,9 @@ int main(int argc, char **argv)
         aaxDriverClose(config);
         aaxDriverDestroy(config);
 
-        fval = 6.0f*_MAX(peak, 0.1f)*(_db2lin(-24.0f)/loudness);
+        fval = 6.0f*_MAX(peak[SOUND], 0.1f)*(_db2lin(-24.0f)/loudness[SOUND]);
 
-        printf("%-32s: peak: % -3.1f, R128: % -3.1f", infile, peak, loudness);
+        printf("%-32s: peak: % -3.1f, R128: % -3.1f", infile, peak[SOUND], loudness[SOUND]);
         printf(", new gain: %4.1f\n", (gain > 0.0f) ? fval : -gain);
 
         env_fact = 1.0f;
