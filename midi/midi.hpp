@@ -574,8 +574,7 @@ public:
 private:
     inline float cents2pitch(float p, uint8_t channel) {
         float r = midi.channel(channel).get_semi_tones();
-        float sensitivity = midi.channel(channel).get_aftertouch_sensitivity();
-        return sensitivity*powf(2.0f, p*r/12.0f);
+        return powf(2.0f, p*r/12.0f);
     }
     inline float cents2modulation(float p, uint8_t channel) {
         float r = midi.channel(channel).get_modulation_depth();

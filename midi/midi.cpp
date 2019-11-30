@@ -748,7 +748,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                         }
 
                         // AAX_AFTERTOUCH_SENSITIVITY == AAX_VELOCITY_FACTOR
-                        pressure_sensitivity = buffer.get(AAX_VELOCITY_FACTOR);
+                        pressure_sensitivity = 0.01f*buffer.get(AAX_VELOCITY_FACTOR);
                     }
                     midi.channel(channel_no).set_wide(inst.second);
                 }
@@ -1554,9 +1554,11 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             {
                 uint8_t key = pull_byte();
                 uint8_t pressure = pull_byte();
-                if (!midi.channel(channel).is_drums()) {
+                if (!midi.channel(channel).is_drums())
+                {
+                    float s=midi.channel(channel).get_aftertouch_sensitivity();
                     if (midi.channel(channel).get_pressure_pitch_bend()) {
-                        midi.channel(channel).set_pitch(key, cents2pitch((float)pressure/127.0f, channel));
+                        midi.channel(channel).set_pitch(key, cents2pitch(s*pressure/127.0f, channel));
                     }
                     if (midi.channel(channel).get_pressure_volume_bend()) {
                         midi.channel(channel).set_pressure(key, 1.0f-0.33f*pressure/127.0f);
@@ -1568,9 +1570,11 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             case MIDI_CHANNEL_AFTERTOUCH:
             {
                 uint8_t pressure = pull_byte();
-                if (!midi.channel(channel).is_drums()) {
+                if (!midi.channel(channel).is_drums())
+                {
+                    float s=midi.channel(channel).get_aftertouch_sensitivity();
                     if (midi.channel(channel).get_pressure_pitch_bend()) {
-                        midi.channel(channel).set_pitch(cents2pitch((float)pressure/127.0f, channel));
+                        midi.channel(channel).set_pitch(cents2pitch(s*pressure/127.0f, channel));
                     }
                     if (midi.channel(channel).get_pressure_volume_bend()) {
                         midi.channel(channel).set_pressure(1.0f-0.33f*pressure/127.0f);
