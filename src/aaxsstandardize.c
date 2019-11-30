@@ -178,6 +178,7 @@ struct info_t
     } note;
 
     int aftertouch_mode;
+    float aftertouch_factor;
 };
 
 void fill_info(struct info_t *info, void *xid, const char *filename)
@@ -212,6 +213,7 @@ void fill_info(struct info_t *info, void *xid, const char *filename)
     if (xtid)
     {
         info->aftertouch_mode = xmlAttributeGetInt(xtid, "mode");
+        info->aftertouch_factor = xmlAttributeGetDouble(xtid, "sensitivity");
         xmlFree(xtid);
     }
 
@@ -303,8 +305,12 @@ void print_info(struct info_t *info, FILE *output, char commons)
         fprintf(output, "/>\n");
     }
 
-    if (info->aftertouch_mode) {
-        fprintf(output, "  <aftertouch mode=\"%i\"/>\n", info->aftertouch_mode);
+    if (info->aftertouch_mode || info->aftertouch_factor) {
+        fprintf(output, "  <aftertouch mode=\"%i\"", info->aftertouch_mode);
+        if (info->aftertouch_factor) {
+           fprintf(output, " sensitivity=\"%2.1f\"", info->aftertouch_factor);
+        }
+        fprintf(output, "/>\n");
     }
     fprintf(output, " </info>\n\n");
 }

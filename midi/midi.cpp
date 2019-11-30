@@ -746,6 +746,9 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                         if (pressure_mode > 0) {
                            pressure_pitch_bend = true;
                         }
+
+                        // AAX_AFTERTOUCH_SENSITIVITY == AAX_VELOCITY_FACTOR
+                        pressure_sensitivity = buffer.get(AAX_VELOCITY_FACTOR);
                     }
                     midi.channel(channel_no).set_wide(inst.second);
                 }

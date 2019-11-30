@@ -523,6 +523,7 @@ public:
 
     inline bool get_pressure_volume_bend() { return pressure_volume_bend; }
     inline bool get_pressure_pitch_bend() { return pressure_pitch_bend; }
+    inline float get_aftertouch_sensitivity() { return pressure_sensitivity; }
 
     inline void set_track_name(std::string& tname) { track_name = tname; }
 
@@ -538,6 +539,7 @@ private:
 
     float tuning = 1.0f;
     float modulation_range = 2.0f;
+    float pressure_sensitivity = 1.0f;
     float semi_tones = 2.0f;
 
     uint16_t bank_no = 0;
@@ -572,7 +574,8 @@ public:
 private:
     inline float cents2pitch(float p, uint8_t channel) {
         float r = midi.channel(channel).get_semi_tones();
-        return powf(2.0f, p*r/12.0f);
+        float sensitivity = midi.channel(channel).get_aftertouch_sensitivity();
+        return sensitivity*powf(2.0f, p*r/12.0f);
     }
     inline float cents2modulation(float p, uint8_t channel) {
         float r = midi.channel(channel).get_modulation_depth();
