@@ -338,7 +338,7 @@ struct dsp_t
     int stereo;
     char *repeat;
     int optional;
-    float release_factor;
+    float release_time;
 
     uint8_t no_slots;
     struct slot_t
@@ -382,7 +382,11 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
     dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
     dsp->optional = xmlAttributeGetBool(xid, "optional");
     if (!strcasecmp(dsp->type, "timed-gain")) {
-        dsp->release_factor = _MAX(xmlAttributeGetDouble(xid, "release-factor"), 0.0f);
+        if (xmlAttributeExists(xid, "release-time")) {
+           dsp->release_time = _MAX(xmlAttributeGetDouble(xid, "release-time"), 0.0f);
+        } else {
+           dsp->release_time = _MAX(xmlAttributeGetDouble(xid, "release-factor")/2.5f, 0.0f);
+        }
         env = 1;
     } else if (!strcasecmp(dsp->type, "distortion")) {
         dist = 1;
@@ -476,8 +480,8 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
     if (dsp->repeat) fprintf(output, " repeat=\"%s\"", dsp->repeat);
     if (dsp->stereo) fprintf(output, " stereo=\"true\"");
     if (dsp->optional) fprintf(output, " optional=\"true\"");
-    if (dsp->release_factor > 0.1f) {
-        fprintf(output, " release-factor=\"%s\"", format_float3(dsp->release_factor));
+    if (dsp->release_time > 0.01f) {
+        fprintf(output, " release-time=\"%s\"", format_float3(dsp->release_time));
     }
     fprintf(output, ">\n");
 
