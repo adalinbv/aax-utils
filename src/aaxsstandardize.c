@@ -570,7 +570,7 @@ char fill_waveform(struct waveform_t *wave, void *xid, char simplify)
         wave->phasing = xmlAttributeGetBool(xid, "phasing");
     }
 
-    return strstr(wave->src, "noise") ? 1 : 0;
+    return wave->src ? (strstr(wave->src, "noise") ? 1 : 0) : 0;
 }
 
 void print_waveform(struct waveform_t *wave, FILE *output)
