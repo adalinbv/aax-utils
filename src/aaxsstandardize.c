@@ -913,8 +913,9 @@ struct aax_t
     char add_fm;
 };
 
-void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float db, float env_fact, char final)
+int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float db, float env_fact, char final)
 {
+    int rv = AAX_TRUE;
     void *xid;
 
     memset(aax, 0, sizeof(struct aax_t));
@@ -949,6 +950,11 @@ void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain
                 fill_sound(&aax->sound, &aax->info, xtid, gain, db, simplify, 1);
                 xmlFree(xtid);
             }
+            else
+            {
+                printf("The file does not contain a sound section\n");
+                rv = AAX_FALSE;
+            }
 
             xtid = xmlNodeGet(xaid, "emitter");
             if (xtid)
@@ -968,14 +974,19 @@ void fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain
 
             xmlFree(xaid);
         }
-        else {
+        else
+        {
             printf("%s does not seem to be AAXS compatible.\n", filename);
+            rv = AAX_FALSE;
         }
         xmlClose(xid);
     }
-    else {
+    else
+    {
         printf("%s not found.\n", filename);
+        rv = AAX_FALSE;
     }
+    return rv;
 }
 
 void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp)
@@ -1078,122 +1089,130 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
     res = aaxMixerSetState(config, AAX_INITIALIZED);
     testForState(res, "aaxMixerInit");
 
-    fill_aax(aax, infile, simplify, 1.0f, 1.0f, -AAX_FPINFINITE, 0);
-    print_aax(aax, aaxsfile, commons, 1);
-    *gain = aax->sound.gain;
-    *db = aax->sound.db;
-    free_aax(aax);
-
-    /* buffer, defaults to processing the sound section of AAXS files */
-    buffer = aaxBufferReadFromStream(config, aaxsfile);
-    testForError(buffer, "Unable to create a buffer from an aaxs file.");
-
-    /* emitter */
-    emitter = aaxEmitterCreate();
-    testForError(emitter, "Unable to create a new emitter");
-
-    res = aaxEmitterAddBuffer(emitter, buffer);
-    testForState(res, "aaxEmitterAddBuffer");
-
-    /* frame */
-    frame = aaxAudioFrameCreate(config);
-    testForError(frame, "Unable to create a new audio frame");
-
-    res = aaxMixerRegisterAudioFrame(config, frame);
-    testForState(res, "aaxMixerRegisterAudioFrame");
-
-    res = aaxAudioFrameRegisterEmitter(frame, emitter);
-    testForState(res, "aaxAudioFrameRegisterEmitter");
-
-    res = aaxAudioFrameAddBuffer(frame, buffer);
-
-    /* playback */
-    res = aaxEmitterSetState(emitter, AAX_PLAYING);
-    testForState(res, "aaxEmitterStart");
-
-    res = aaxAudioFrameSetState(frame, AAX_PLAYING);
-    testForState(res, "aaxAudioFrameStart");
-
-    res = aaxMixerSetState(config, AAX_PLAYING);
-    testForState(res, "aaxMixerStart");
-
-    dt = 0.0f;
-    step = 1.0f/aaxMixerGetSetup(config, AAX_REFRESH_RATE);
-    do
+    if (fill_aax(aax, infile, simplify, 1.0f, 1.0f, -AAX_FPINFINITE, 0))
     {
-        aaxMixerSetState(config, AAX_UPDATE);
-        dt += step;
-    }
-    while (dt < 2.5f && aaxEmitterGetState(emitter) == AAX_PLAYING);
+        print_aax(aax, aaxsfile, commons, 1);
+        *gain = aax->sound.gain;
+        *db = aax->sound.db;
+        free_aax(aax);
 
-    res = aaxEmitterSetState(emitter, AAX_SUSPENDED);
-    testForState(res, "aaxEmitterStop");
+        /* buffer, defaults to processing the sound section of AAXS files */
+        buffer = aaxBufferReadFromStream(config, aaxsfile);
+        testForError(buffer, "Unable to create a buffer from an aaxs file.");
 
-    res = aaxAudioFrameSetState(frame, AAX_STOPPED);
-    res = aaxAudioFrameDeregisterEmitter(frame, emitter);
-    res = aaxMixerDeregisterAudioFrame(config, frame);
-    res = aaxMixerSetState(config, AAX_STOPPED);
-    res = aaxAudioFrameDestroy(frame);
-    res = aaxEmitterDestroy(emitter);
-    res = aaxBufferDestroy(buffer);
+        /* emitter */
+        emitter = aaxEmitterCreate();
+        testForError(emitter, "Unable to create a new emitter");
 
-    res = aaxDriverClose(config);
-    res = aaxDriverDestroy(config);
+        res = aaxEmitterAddBuffer(emitter, buffer);
+        testForState(res, "aaxEmitterAddBuffer");
 
-    config = aaxDriverOpenByName("None", AAX_MODE_WRITE_STEREO);
-    testForError(config, "No default audio device available.");
+        /* frame */
+        frame = aaxAudioFrameCreate(config);
+        testForError(frame, "Unable to create a new audio frame");
 
-    snprintf(tmpfile, 120, "%s/%s.wav", TEMP_DIR, ptr);
-    buffer = aaxBufferReadFromStream(config, tmpfile);
-    testForError(buffer, "Unable to read the buffer.");;
+        res = aaxMixerRegisterAudioFrame(config, frame);
+        testForState(res, "aaxMixerRegisterAudioFrame");
 
-    peak = loudness = 0.0;
-    aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_FLOAT);
-    data = aaxBufferGetData(buffer);
-    if (data)
-    {
-        float *bdata = data[0];
-        size_t no_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
-#if HAVE_EBUR128
-        size_t tracks = aaxBufferGetSetup(buffer, AAX_TRACKS);
-        size_t freq = aaxBufferGetSetup(buffer, AAX_FREQUENCY);
-        ebur128_state *st;
+        res = aaxAudioFrameRegisterEmitter(frame, emitter);
+        testForState(res, "aaxAudioFrameRegisterEmitter");
 
-        st = ebur128_init(tracks, freq, EBUR128_MODE_I|EBUR128_MODE_SAMPLE_PEAK);
-        if (st)
-        {
-            ebur128_add_frames_float(st, bdata, no_samples);
-            ebur128_loudness_global(st, &loudness);
-            ebur128_sample_peak(st, 0, &peak);
-            ebur128_destroy(&st);
-            loudness = _db2lin(loudness);
-        }
-#else
-        double rms_total = 0.0;
-        size_t j = no_samples;
+        res = aaxAudioFrameAddBuffer(frame, buffer);
+
+        /* playback */
+        res = aaxEmitterSetState(emitter, AAX_PLAYING);
+        testForState(res, "aaxEmitterStart");
+
+        res = aaxAudioFrameSetState(frame, AAX_PLAYING);
+        testForState(res, "aaxAudioFrameStart");
+
+        res = aaxMixerSetState(config, AAX_PLAYING);
+        testForState(res, "aaxMixerStart");
+
+        dt = 0.0f;
+        step = 1.0f/aaxMixerGetSetup(config, AAX_REFRESH_RATE);
         do
         {
-            float samp = (float)*bdata++;
-            rms_total += samp*samp;
+            aaxMixerSetState(config, AAX_UPDATE);
+            dt += step;
         }
-        while (--j);
+        while (dt < 2.5f && aaxEmitterGetState(emitter) == AAX_PLAYING);
 
-        loudness = _lin2db(sqrt(rms_total/no_samples));
+        res = aaxEmitterSetState(emitter, AAX_SUSPENDED);
+        testForState(res, "aaxEmitterStop");
+
+        res = aaxAudioFrameSetState(frame, AAX_STOPPED);
+        res = aaxAudioFrameDeregisterEmitter(frame, emitter);
+        res = aaxMixerDeregisterAudioFrame(config, frame);
+        res = aaxMixerSetState(config, AAX_STOPPED);
+        res = aaxAudioFrameDestroy(frame);
+        res = aaxEmitterDestroy(emitter);
+        res = aaxBufferDestroy(buffer);
+
+        res = aaxDriverClose(config);
+        res = aaxDriverDestroy(config);
+
+        config = aaxDriverOpenByName("None", AAX_MODE_WRITE_STEREO);
+        testForError(config, "No default audio device available.");
+
+        snprintf(tmpfile, 120, "%s/%s.wav", TEMP_DIR, ptr);
+        buffer = aaxBufferReadFromStream(config, tmpfile);
+        testForError(buffer, "Unable to read the buffer.");;
+
+        peak = loudness = 0.0;
+        aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_FLOAT);
+        data = aaxBufferGetData(buffer);
+        if (data)
+        {
+            float *bdata = data[0];
+            size_t no_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
+#if HAVE_EBUR128
+            size_t tracks = aaxBufferGetSetup(buffer, AAX_TRACKS);
+            size_t freq = aaxBufferGetSetup(buffer, AAX_FREQUENCY);
+            ebur128_state *st;
+
+            st = ebur128_init(tracks, freq, EBUR128_MODE_I|EBUR128_MODE_SAMPLE_PEAK);
+            if (st)
+            {
+                ebur128_add_frames_float(st, bdata, no_samples);
+                ebur128_loudness_global(st, &loudness);
+                ebur128_sample_peak(st, 0, &peak);
+                ebur128_destroy(&st);
+                loudness = _db2lin(loudness);
+            }
+#else
+            double rms_total = 0.0;
+            size_t j = no_samples;
+            do
+            {
+                float samp = (float)*bdata++;
+                rms_total += samp*samp;
+            }
+            while (--j);
+
+            loudness = _lin2db(sqrt(rms_total/no_samples));
 #endif
-        aaxFree(data);
+            aaxFree(data);
+        }
+        aaxBufferDestroy(buffer);
+
+        aaxDriverClose(config);
+        aaxDriverDestroy(config);
+
+        fval = 6.0f*_MAX(peak, 0.1f)*(_db2lin(-24.0f)/loudness);
+
+        printf("%-32s: peak: % -3.1f, R128: % -3.1f", infile, peak, loudness);
+        printf(", new gain: %4.1f\n", (*gain > 0.0f) ? fval : -*gain);
+
+        remove(aaxsfile);
+        remove(tmpfile);
     }
-    aaxBufferDestroy(buffer);
-
-    aaxDriverClose(config);
-    aaxDriverDestroy(config);
-
-    fval = 6.0f*_MAX(peak, 0.1f)*(_db2lin(-24.0f)/loudness);
-
-    printf("%-32s: peak: % -3.1f, R128: % -3.1f", infile, peak, loudness);
-    printf(", new gain: %4.1f\n", (*gain > 0.0f) ? fval : -*gain);
-
-    remove(aaxsfile);
-    remove(tmpfile);
+    else
+    {
+        aaxDriverClose(config);
+        aaxDriverDestroy(config);
+        fval = 0.0f;
+    }
 
     return fval;
 }
@@ -1259,6 +1278,8 @@ int main(int argc, char **argv)
         setenv("AAX_RENDER_MODE", "synthesizer", 1);
         fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain);
         unsetenv("AAX_RENDER_MODE");
+
+        if (fval == 0.0f) exit(-1);
 
         env_fact_fm = 1.0f;
         if (gain > 0.0f && fabsf(gain-fval) > 0.1f) {
