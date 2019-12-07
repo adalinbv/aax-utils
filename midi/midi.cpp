@@ -105,7 +105,9 @@ MIDI::set_path()
     path = AeonWave::info(AAX_SHARED_DATA_DIR);
 
     std::string name = path;
-    name.append("/ultrasynth/");
+    if (instrument_mode == AAX_RENDER_NORMAL) {
+        name.append("/ultrasynth/");
+    }
     if (midi.exists(name))
     {
         path = name;

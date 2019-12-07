@@ -327,7 +327,7 @@ public:
     bool is_drums(uint8_t);
 
     inline void set_capabilities(enum aaxCapabilities m) {
-        set(AAX_CAPABILITIES, m); set_path();
+        instrument_mode = m; set(AAX_CAPABILITIES, m); set_path();
     }
 
     inline unsigned int get_refresh_rate() { return refresh_rate; }
@@ -338,9 +338,6 @@ public:
 
     inline void set_mode(uint8_t m) { if (m > mode) mode = m; }
     inline uint8_t get_mode() { return mode; }
-
-    inline void set_instrument_mode(enum aaxCapabilities m) { instrument_mode = m; }
-    inline enum aaxCapabilities get_instrument_mode() { return instrument_mode; }
 
     inline void set_grep(bool g) { grep_mode = g; }
     inline bool get_grep() { return grep_mode; }
