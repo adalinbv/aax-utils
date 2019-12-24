@@ -244,8 +244,8 @@ void print_aaxs(const char* outfile, struct params param)
     fprintf(output, " <audioframe>\n");
     fprintf(output, "  <filter type=\"equalizer\" optional=\"true\">\n");
     fprintf(output, "   <slot n=\"0\">\n");
-    fprintf(output, "    <param n=\"0\">100.0</param>\n");
-    fprintf(output, "    <param n=\"1\">0.1</param>\n");
+    fprintf(output, "    <param n=\"0\">65.0</param>\n");
+    fprintf(output, "    <param n=\"1\">0.5</param>\n");
     fprintf(output, "    <param n=\"2\">1.0</param>\n");
     fprintf(output, "    <param n=\"3\">1.0</param>\n");
     fprintf(output, "   </slot>\n");

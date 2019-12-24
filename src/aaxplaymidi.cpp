@@ -103,83 +103,79 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile, c
 {
     if (grep) devname = (char*)"None"; // fastest for searching
     aax::MIDIFile midi(devname, infile, track, mode);
-    if (midi)
+    aax::Sensor file;
+    int64_t sleep_us, dt_us;
+    uint64_t time_parts = 0;
+    uint32_t wait_parts;
+    struct timeval now;
+    char obuf[256];
+
+    if (outfile)
     {
-        aax::Sensor file;
-        int64_t sleep_us, dt_us;
-        uint64_t time_parts = 0;
-        uint32_t wait_parts;
-        struct timeval now;
-        char obuf[256];
+        snprintf(obuf, 256, "AeonWave on Audio Files: %s", outfile);
 
-        if (outfile)
-        {
-            snprintf(obuf, 256, "AeonWave on Audio Files: %s", outfile);
+        file = aax::Sensor(obuf, AAX_MODE_WRITE_STEREO);
+        midi.add(file);
+        file.set(AAX_INITIALIZED);
+        file.set(AAX_PLAYING);
+    }
 
-            file = aax::Sensor(obuf, AAX_MODE_WRITE_STEREO);
-            midi.add(file);
-            file.set(AAX_INITIALIZED);
-            file.set(AAX_PLAYING);
+    midi.set_verbose(verbose);
+    if (fm)
+    {
+        char *env = getenv("AAX_SHARED_DATA_DIR");
+        midi.set(AAX_CAPABILITIES, AAX_RENDER_SYNTHESIZER);
+        if (env) midi.set(AAX_SHARED_DATA_DIR, env);
+    }
+    midi.initialize(grep);
+    if (!grep)
+    {
+        midi.start();
+
+        if (batched) {
+            midi.sensor(AAX_CAPTURING);
         }
 
-        midi.set_verbose(verbose);
-        if (fm)
+        wait_parts = 1000;
+        set_mode(1);
+
+        gettimeofday(&now, NULL);
+        dt_us = -(now.tv_sec * 1000000 + now.tv_usec);
+        do
         {
-            char *env = getenv("AAX_SHARED_DATA_DIR");
-            midi.set(AAX_CAPABILITIES, AAX_RENDER_SYNTHESIZER);
-            if (env) midi.set(AAX_SHARED_DATA_DIR, env);
-        }
-        midi.initialize(grep);
-        if (!grep)
-        {
-            midi.start();
+            if (!midi.process(time_parts, wait_parts)) break;
 
-            if (batched) {
-                midi.sensor(AAX_CAPTURING);
-            }
-
-
-            wait_parts = 1000;
-            set_mode(1);
-
-            gettimeofday(&now, NULL);
-            dt_us = -(now.tv_sec * 1000000 + now.tv_usec);
-            do
+            if (wait_parts > 0 && midi.get_pos_sec() >= time_offs)
             {
-                if (!midi.process(time_parts, wait_parts)) break;
+                uint32_t wait_us;
 
-                if (wait_parts > 0 && midi.get_pos_sec() >= time_offs)
+                gettimeofday(&now, NULL);
+                dt_us += now.tv_sec * 1000000 + now.tv_usec;
+
+                wait_us = wait_parts*midi.get_uspp();
+                sleep_us = wait_us - dt_us;
+
+                if (sleep_us > 0)
                 {
-                    uint32_t wait_us;
-
-                    gettimeofday(&now, NULL);
-                    dt_us += now.tv_sec * 1000000 + now.tv_usec;
-
-                    wait_us = wait_parts*midi.get_uspp();
-                    sleep_us = wait_us - dt_us;
-
-                    if (sleep_us > 0)
+                    if (batched)
                     {
-                        if (batched)
-                        {
-                            midi.sensor(AAX_UPDATE);
-                            midi.wait(sleep_us*1e-6f);
-                            midi.get_buffer();
-                        }
-                        else {
-                            sleep_for(sleep_us*1e-6f);
-                        }
+                        midi.sensor(AAX_UPDATE);
+                        midi.wait(sleep_us*1e-6f);
+                        midi.get_buffer();
                     }
-
-                    gettimeofday(&now, NULL);
-                    dt_us = -(now.tv_sec * 1000000 + now.tv_usec);
+                    else {
+                        sleep_for(sleep_us*1e-6f);
+                    }
                 }
-                time_parts += wait_parts;
+
+                gettimeofday(&now, NULL);
+                dt_us = -(now.tv_sec * 1000000 + now.tv_usec);
             }
-            while(!get_key());
-            set_mode(0);
-            midi.stop();
+            time_parts += wait_parts;
         }
+        while(!get_key());
+        set_mode(0);
+        midi.stop();
     }
 }
 
