@@ -67,7 +67,8 @@ help()
     printf("  -i, --input <file>\t\tplayback audio from a file\n");
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
     printf("  -s, --select <name|num>\tonly play the track with this name or number\n");
-    printf("  -t, --time\t\t\tTime offset in seconds or (hh:)mm:ss\n");
+    printf("  -t, --time\t\t\ttime offset in seconds or (hh:)mm:ss\n");
+    printf("  -l, --load <instr,drums>\tmidi isntrument and drum configration files\n");
 //  printf("  -b, --batched\t\t\tprocess the file in batched (high-speed) mode.\n");
     printf("  -v, --verbose\t\t\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
@@ -99,10 +100,12 @@ static void sleep_for(float dt)
     }
 }
 
-void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile, const char *track, float time_offs, const char *grep, bool verbose, bool batched, bool fm)
+void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
+          const char *track, const char *config, float time_offs,
+          const char *grep, bool verbose, bool batched, bool fm)
 {
     if (grep) devname = (char*)"None"; // fastest for searching
-    aax::MIDIFile midi(devname, infile, track, mode);
+    aax::MIDIFile midi(devname, infile, track, mode, config);
     aax::Sensor file;
     int64_t sleep_us, dt_us;
     uint64_t time_parts = 0;
@@ -198,11 +201,16 @@ int main(int argc, char **argv)
     {
         float time_offs = getTime(argc, argv);
         char *outfile = getOutputFile(argc, argv, NULL);
-        const char *track, *grep;
+        const char *track, *grep, *config;
 
         track = getCommandLineOption(argc, argv, "-s");
         if (!track) {
             track = getCommandLineOption(argc, argv, "--select");
+        }
+
+        config = getCommandLineOption(argc, argv, "-l");
+        if (!config) {
+           config = getCommandLineOption(argc, argv, "--load");
         }
 
         grep = getCommandLineOption(argc, argv, "-g");
@@ -227,7 +235,7 @@ int main(int argc, char **argv)
         }
 
 
-        std::thread midiThread(play, devname, render_mode, infile, outfile, track, time_offs, grep, verbose, batched, fm);
+        std::thread midiThread(play, devname, render_mode, infile, outfile, track, config, time_offs, grep, verbose, batched, fm);
         midiThread.join();
 
     } catch (const std::exception& e) {

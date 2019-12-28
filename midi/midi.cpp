@@ -96,7 +96,9 @@ MIDI::MIDI(const char* n, const char *selections, enum aaxRenderMode m)
         }
     }
 
-//  set_reverb("reverb/concerthall-large");
+    reverb.tie(reverb_decay_depth, AAX_REVERB_EFFECT, AAX_DECAY_DEPTH);
+    reverb.tie(reverb_cutoff_frequency, AAX_REVERB_EFFECT, AAX_CUTOFF_FREQUENCY);
+    reverb.tie(reverb_state, AAX_REVERB_EFFECT);
 }
 
 void
@@ -113,6 +115,24 @@ MIDI::set_path()
         path = name;
         AeonWave::set(AAX_SHARED_DATA_DIR, path.c_str());
     }
+}
+
+void
+MIDI::start()
+{
+    reverb_state = AAX_REVERB_LOOPBACKS;
+    set_reverb("reverb/concerthall");
+    reverb.set(AAX_INITIALIZED);
+    reverb.set(AAX_PLAYING);
+    AeonWave::add(reverb);
+    midi.set(AAX_PLAYING);
+}
+
+void
+MIDI::stop()
+{
+    reverb.set(AAX_PLAYING);
+    midi.set(AAX_PLAYING);
 }
 
 void
@@ -166,6 +186,15 @@ MIDI::set_balance(float b)
 }
 
 void
+MIDI::set_chorus(const char *t)
+{
+    Buffer &buf = AeonWave::buffer(t);
+    for(auto& it : channels) {
+        it.second->add(buf);
+    }
+}
+
+void
 MIDI::set_chorus_level(float lvl)
 {
     for(auto& it : channels) {
@@ -174,10 +203,11 @@ MIDI::set_chorus_level(float lvl)
 }
 
 void
-MIDI::set_chorus_depth(float depth)
+MIDI::set_chorus_depth(float ms)
 {
+    float us = 1e-3f*ms;
     for(auto& it : channels) {
-        it.second->set_chorus_depth(depth);
+        it.second->set_chorus_depth(us);
     }
 }
 
@@ -190,6 +220,16 @@ MIDI::set_chorus_rate(float rate)
 }
 
 void
+MIDI::set_reverb(const char *t)
+{
+    Buffer &buf = AeonWave::buffer(t);
+    reverb.add(buf);
+    for(auto& it : channels) {
+        it.second->add(buf);
+    }
+}
+
+void
 MIDI::set_reverb_type(uint8_t value)
 {
     reverb_type = value;
@@ -197,24 +237,63 @@ MIDI::set_reverb_type(uint8_t value)
     {
     case 0:
         midi.set_reverb("reverb/room-small");
+        MESSAGE("Switching to Small Room reveberation");
         break;
     case 1:
         midi.set_reverb("reverb/room-medium");
+        MESSAGE("Switching to Medium Room reveberation");
         break;
     case 2:
         midi.set_reverb("reverb/room-large");
+        MESSAGE("Switching to Large Room reveberation");
         break;
     case 3:
         midi.set_reverb("reverb/concerthall");
+        MESSAGE("Switching to Concert Hall Reveberation");
         break;
     case 4:
         midi.set_reverb("reverb/concerthall-large");
+        MESSAGE("Switching to Lrge Concert Hall reveberation");
         break;
     case 8:
         midi.set_reverb("reverb/plate");
+        MESSAGE("Switching to Plate reveberation");
         break;
     default:
         break;
+    }
+}
+
+void
+MIDI::set_reverb_level(uint8_t channel, uint8_t value)
+{
+return;
+    if (value)
+    {
+        float val = (float)value/127.0f;
+        midi.channel(channel).set_reverb_level(val);
+
+        auto it = channels.find(channel);
+        if (it != channels.end())
+        {
+            if (it->second)
+            {
+                int rv = AeonWave::remove(*it->second);
+                if (rv) reverb.add(*it->second);
+            }
+        }
+    }
+    else
+    {
+        auto it = channels.find(channel);
+        if (it != channels.end())
+        {
+            if (it->second)
+            {
+                int rv = reverb.remove(*it->second);
+                if (rv) AeonWave::add(*it->second);
+            }
+        }
     }
 }
 
@@ -223,14 +302,19 @@ MIDI::set_reverb_type(uint8_t value)
  * file names from the XML files for a quick access during playback.
  */
 void
-MIDI::read_instruments()
+MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
 {
     const char *filename, *type = "instrument";
     auto map = instruments;
 
-    std::string iname = path;
-    iname.append("/");
-    iname.append(instr);
+    std::string iname;
+    if (!gmmidi.empty()) {
+        iname = gmmidi;
+    } else {
+        iname = path;
+        iname.append("/");
+        iname.append(instr);
+    }
 
     filename = iname.c_str();
     for(unsigned int id=0; id<2; ++id)
@@ -312,7 +396,7 @@ MIDI::read_instruments()
                             frames.insert({bank_no,std::string(file)});
                         }
 
-                        std::map<uint16_t,std::pair<std::string,int>> bank;
+                        auto bank = map[bank_no];
                         for (unsigned int i=0; i<inum; i++)
                         {
                             if (xmlNodeGetPos(xbid, xiid, type, i) != 0)
@@ -352,7 +436,7 @@ MIDI::read_instruments()
                                 }
                             }
                         }
-                        map.insert({bank_no,bank});
+                        map[bank_no] = bank;
                         xmlFree(xiid);
                     }
                 }
@@ -374,9 +458,13 @@ MIDI::read_instruments()
             instruments = std::move(map);
 
             // next up: drums
-            iname = path;
-            iname.append("/");
-            iname.append(drum);
+            if (!gmdrums.empty()) {
+                iname = gmdrums;
+            } else {
+                iname = path;
+                iname.append("/");
+                iname.append(drum);
+            }
             filename = iname.c_str();
             type = "drum";
             map = drums;
@@ -1299,17 +1387,49 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                         case MIDI_CHORUS_PARAMETER:
                             switch(param)
                             {
-                            case 0:
+                            case 0:	// CHORUS_TYPE
+                                switch(value)
+                                {
+                                case 0:
+                                    midi.set_chorus("chorus/chorus1");
+                                    break;
+                                case 1:
+                                    midi.set_chorus("chorus/chorus2");
+                                    break;
+                                case 2:
+                                    midi.set_chorus("chorus/chorus3");
+                                    break;
+                                case 3:
+                                    midi.set_chorus("chorus/chorus4");
+                                    break;
+                                case 4:
+                                    midi.set_chorus("chorus/chorus_freedback");
+                                    break;
+                                case 5:
+                                    midi.set_chorus("chorus/flanger");
+                                    break;
+                                default:
+                                    break;
+                                }
                                 break;
-                            case 1:
+                            case 1:	// CHORUS_MOD_RATE
+                            // the modulation frequency in Hz
                                 midi.set_chorus_rate(0.122f*value);
                                 break;
-                            case 2:
-                                midi.set_chorus_depth(0.0032f*(value+1.0f)/60e-3f);
+                            case 2:	// CHORUS_MOD_DEPTH
+                            {
+                            // the peak-to-peak swing of the modulation in ms
+                                float ms = 1e-3f*(value+1.0f)/3.2f;
+                                midi.set_chorus_depth(ms);
                                 break;
-                            case 3:
-                                midi.set_chorus_level(0.00763f*value);
+                            }
+                            case 3:	// CHORUS_FEEDBACK
+                                midi.set_chorus_level(0.763f*value);
+                            // the amount of feedback from Chorus output in %
                                 break;
+                            case 4:	// CHORUS_SEND_TO_REVERB
+                            // the send level from Chorus to Reverb in %
+                                midi.set_chorus_level(0.787f*value);
                             default:
                                break;
                             }
@@ -1723,11 +1843,8 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     midi.channel(channel).set_sustain(value >= 0x40);
                     break;
                 case MIDI_REVERB_SEND_LEVEL:
-                {
-                    float val = (float)value/127.0f;
-                    midi.channel(channel).set_reverb_level(val);
+                    midi.set_reverb_level(channel, value);
                     break;
-                }
                 case MIDI_CHORUS_SEND_LEVEL:
                 {
                     float val = (float)value/127.0f;
@@ -1883,12 +2000,24 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
 }
 
 
-MIDIFile::MIDIFile(const char *devname, const char *filename, const char *selection, enum aaxRenderMode mode)
+MIDIFile::MIDIFile(const char *devname, const char *filename,
+                   const char *selection, enum aaxRenderMode mode,
+                   const char *config)
     : MIDI(devname, selection, mode), file(filename)
 {
     std::ifstream file(filename, std::ios::in|std::ios::binary|std::ios::ate);
     ssize_t size = file.tellg();
     file.seekg(0, std::ios::beg);
+
+    if (config)
+    {
+        std::string s(config);
+        auto separator = s.find(',');
+        gmmidi = s.substr(0, separator);
+        if (separator != std::string::npos) {
+           gmdrums = s.substr(separator+1);
+        }
+    }
 
     if (size > 0)
     {
@@ -1988,6 +2117,9 @@ MIDIFile::initialize(const char *grep)
         }
     }
 
+    if (!gmmidi.empty() || gmdrums.empty()) {
+       midi.read_instruments(gmmidi, gmdrums);
+    }
     midi.read_instruments();
 
     midi.set_grep(grep);

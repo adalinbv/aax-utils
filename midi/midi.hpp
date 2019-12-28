@@ -277,6 +277,7 @@ public:
         MIDI(n, nullptr, m) {}
 
     virtual ~MIDI() {
+        AeonWave::remove(reverb);
         for(auto it=buffers.begin(); it!=buffers.end(); ++it) {
             aaxBufferDestroy(it->second.second); it->second.first = 0;
         }
@@ -311,11 +312,13 @@ public:
         return active_track.empty() ? true : std::find(active_track.begin(), active_track.end(), t) != active_track.end();
     }
 
-    void read_instruments();
+    void read_instruments(std::string gmidi=std::string(), std::string gmdrums=std::string());
 
     void grep(std::string& filename, const char *grep);
     inline void load(std::string& name) { loaded.push_back(name); }
 
+    void start();
+    void stop();
     void rewind();
 
     void finish(uint8_t n);
@@ -366,16 +369,15 @@ public:
     inline void set_ppqn(uint16_t ppqn) { PPQN = ppqn; }
     inline uint16_t get_ppqn() { return PPQN; }
 
+    void set_chorus(const char *t);
     void set_chorus_level(float lvl);
     void set_chorus_depth(float depth);
     void set_chorus_rate(float rate);
 
+    void set_reverb(const char *t);
+    void set_reverb_level(uint8_t channel, uint8_t value);
     void set_reverb_type(uint8_t value);
-    void set_reverb(const char *t) {
-        Buffer &buf = AeonWave::buffer(t);
-        Sensor::add(buf);
-    }
-    inline void set_decay_depth(float rt) { decay_depth = 0.1f*rt/decay_level; }
+    inline void set_decay_depth(float rt) { reverb_decay_depth = 0.1f*rt; }
 
     // ** buffer management ******
     Buffer& buffer(std::string& name, int level=0) {
@@ -472,8 +474,10 @@ private:
     bool grep_mode = false;
 
     uint8_t reverb_type = 4;
-    float decay_level = 1.0f;
-    Param decay_depth;
+    Param reverb_decay_depth = 0.15f;
+    Param reverb_cutoff_frequency = 790.0f;
+    Status reverb_state = AAX_FALSE;
+    aax::Mixer reverb = aax::Mixer(*this);
 };
 
 
@@ -614,7 +618,7 @@ class MIDIFile : public MIDI
 public:
     MIDIFile(const char *filename) : MIDIFile(nullptr, filename) {}
 
-    MIDIFile(const char *devname, const char *filename, const char *track=nullptr, enum aaxRenderMode mode=AAX_MODE_WRITE_STEREO);
+    MIDIFile(const char *devname, const char *filename, const char *track=nullptr, enum aaxRenderMode mode=AAX_MODE_WRITE_STEREO, const char *config=nullptr);
 
     explicit MIDIFile(std::string& devname, std::string& filename)
        :  MIDIFile(devname.c_str(), filename.c_str()) {}
@@ -624,8 +628,8 @@ public:
     }
 
     void initialize(const char *grep = nullptr);
-    inline void start() { midi.set(AAX_PLAYING); }
-    inline void stop() { midi.set(AAX_PROCESSED); }
+    inline void start() { midi.start(); }
+    inline void stop() { midi.stop(); }
     void rewind();
 
     inline float get_duration_sec() { return duration_sec; }
@@ -635,6 +639,8 @@ public:
 
 private:
     std::string file;
+    std::string gmmidi;
+    std::string gmdrums;
     std::vector<uint8_t> midi_data;
     std::vector<MIDITrack*> track;
 
