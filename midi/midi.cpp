@@ -287,7 +287,7 @@ MIDI::set_reverb_level(uint8_t channel, uint8_t value)
     else
     {
         auto it = reverb_channels.find(channel);
-        if (it != channels.end() && it->second)
+        if (it != reverb_channels.end() && it->second)
         {
             reverb.remove(*it->second);
             AeonWave::add(*it->second);
