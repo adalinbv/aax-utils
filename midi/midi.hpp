@@ -439,6 +439,7 @@ private:
 
     std::string track_name;
     std::map<uint16_t,MIDIChannel*> channels;
+    std::map<uint16_t,MIDIChannel*> reverb_channels;
     std::map<uint16_t,std::string> frames;
     std::map<uint16_t,std::map<uint16_t,std::pair<std::string,int>>> drums;
     std::map<uint16_t,std::map<uint16_t,std::pair<std::string,int>>> instruments;

@@ -120,7 +120,7 @@ MIDI::set_path()
 void
 MIDI::start()
 {
-    reverb_state = AAX_REVERB_LOOPBACKS;
+    reverb_state = AAX_REVERB_2ND_ORDER;
     set_reverb("reverb/concerthall");
     reverb.set(AAX_INITIALIZED);
     reverb.set(AAX_PLAYING);
@@ -267,32 +267,31 @@ MIDI::set_reverb_type(uint8_t value)
 void
 MIDI::set_reverb_level(uint8_t channel, uint8_t value)
 {
-return;
     if (value)
     {
         float val = (float)value/127.0f;
         midi.channel(channel).set_reverb_level(val);
 
-        auto it = channels.find(channel);
-        if (it != channels.end())
+        auto it = reverb_channels.find(channel);
+        if (it == reverb_channels.end())
         {
-            if (it->second)
+            it = channels.find(channel);
+            if (it != channels.end() && it->second)
             {
-                int rv = AeonWave::remove(*it->second);
-                if (rv) reverb.add(*it->second);
+                AeonWave::remove(*it->second);
+                reverb.add(*it->second);
+                reverb_channels[it->first] = it->second;
             }
         }
     }
     else
     {
-        auto it = channels.find(channel);
-        if (it != channels.end())
+        auto it = reverb_channels.find(channel);
+        if (it != channels.end() && it->second)
         {
-            if (it->second)
-            {
-                int rv = reverb.remove(*it->second);
-                if (rv) AeonWave::add(*it->second);
-            }
+            reverb.remove(*it->second);
+            AeonWave::add(*it->second);
+            reverb_channels.erase(it);
         }
     }
 }
