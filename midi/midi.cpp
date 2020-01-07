@@ -140,6 +140,13 @@ MIDI::rewind()
 {
     channels.clear();
     uSPP = 500000/PPQN;
+
+    for (auto it : reverb_channels)
+    {
+        reverb.remove(*it.second);
+        AeonWave::add(*it.second);
+    }
+    reverb_channels.clear();
 }
 
 void MIDI::finish(uint8_t n)
