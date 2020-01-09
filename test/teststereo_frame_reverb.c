@@ -108,7 +108,7 @@ int main(int argc, char **argv)
             testForState(res, "aaxMixerStart");
 
             /* reverb */
-            xbuffer = setFiltersEffects(argc, argv, config, NULL, frame, emitter);
+            xbuffer = setFiltersEffects(argc, argv, config, config, frame, emitter, NULL);
             if (!xbuffer)
             {
                effect = aaxEffectCreate(config, AAX_REVERB_EFFECT);
@@ -123,6 +123,30 @@ int main(int argc, char **argv)
 
                res = aaxAudioFrameSetEffect(frame, effect);
                testForState(res, "aaxMixerSetEffect");
+
+               res = aaxEffectDestroy(effect);
+               testForState(res, "aaxEffectDestroy");
+            }
+            else if (config && frame)
+            {
+               effect = aaxMixerGetEffect(config, AAX_REVERB_EFFECT);
+
+               res = aaxEffectSetState(effect,AAX_REVERB_2ND_ORDER|AAX_INVERSE);
+               testForState(res, "aaxEffectSetState");
+
+               res = aaxMixerSetEffect(config, effect);
+               testForState(res, "aaxMixerSetEffect");
+
+               res = aaxEffectDestroy(effect);
+               testForState(res, "aaxEffectDestroy");
+
+               effect = aaxAudioFrameGetEffect(frame, AAX_REVERB_EFFECT);
+
+               res = aaxEffectSetState(effect,AAX_REVERB_1ST_ORDER|AAX_INVERSE);
+               testForState(res, "aaxEffectSetState");
+
+               res = aaxAudioFrameSetEffect(frame, effect);
+               testForState(res, "aaxAudioFrameSetEffect");
 
                res = aaxEffectDestroy(effect);
                testForState(res, "aaxEffectDestroy");

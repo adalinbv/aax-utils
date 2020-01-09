@@ -97,7 +97,7 @@ int main(int argc, char **argv)
             testForState(res, "aaxMixerStart");
 
             /* reverb */
-            xbuffer = setFiltersEffects(argc, argv, config, config, NULL, emitter);
+            xbuffer = setFiltersEffects(argc, argv, config, config, NULL, emitter, NULL);
             if (!xbuffer)
             {
                effect = aaxEffectCreate(config, AAX_REVERB_EFFECT);

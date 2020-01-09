@@ -102,7 +102,7 @@ int main(int argc, char **argv)
             float gain, duration;
             float dt = 0.0f;
 
-            xbuffer = setFiltersEffects(argc, argv, config, config, NULL, NULL);
+            xbuffer = setFiltersEffects(argc, argv, config, config, NULL, NULL, NULL);
             nsrc = _MINMAX(getNumEmitters(argc, argv), 1, 64);
             duration = getDuration(argc, argv);
 
@@ -171,7 +171,7 @@ int main(int argc, char **argv)
                 res = aaxAudioFrameSetState(frame[q], AAX_PLAYING);
                 testForState(res, "aaxAudioFrameStart");
 
-                res = aaxAudioFrameAddBuffer(frame[q], buffer);
+                res = aaxAudioFrameAddBuffer(frame[q], xbuffer);
                 // testForState(res, "aaxAudioFrameAddBuffer");
             }
 

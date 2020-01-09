@@ -420,7 +420,7 @@ char *strDup(const char *s)
 }
 
 aaxBuffer
-setFiltersEffects(int argc, char **argv, aaxConfig c, aaxConfig m, aaxFrame f, aaxEmitter e)
+setFiltersEffects(int argc, char **argv, aaxConfig c, aaxConfig m, aaxFrame f, aaxEmitter e, const char *aaxs)
 {
     static char fname[256];
     aaxBuffer buffer = NULL;
@@ -436,14 +436,25 @@ setFiltersEffects(int argc, char **argv, aaxConfig c, aaxConfig m, aaxFrame f, a
         len -= strlen(s);
 
         buffer = aaxBufferReadFromStream(c, fname);
-        if (buffer)
-        {
-           if (m) aaxMixerAddBuffer(m, buffer);
-           if (f) aaxAudioFrameAddBuffer(f, buffer);
-           if (e) aaxEmitterAddBuffer(e, buffer);
-        }
-        else printf("Error: %s\n", aaxGetErrorString(aaxGetErrorNo()));
     }
+
+    if (!buffer && aaxs)
+    {
+        buffer = aaxBufferCreate(c, 1, 1, AAX_AAXS16S);
+        if (buffer && !aaxBufferSetData(buffer, aaxs))
+        {
+            aaxBufferDestroy(buffer);
+            buffer = NULL;
+        }
+    }
+
+    if (buffer)
+    {
+       if (m) aaxMixerAddBuffer(m, buffer);
+       if (f) aaxAudioFrameAddBuffer(f, buffer);
+       if (e) aaxEmitterAddBuffer(e, buffer);
+    }
+    else printf("Error: %s\n", aaxGetErrorString(aaxGetErrorNo()));
 
     return buffer;
 }
