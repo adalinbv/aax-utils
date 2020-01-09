@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018-2019 by Erik Hofman.
- * Copyright (C) 2018-2019 by Adalin B.V.
+ * Copyright (C) 2018-2020 by Erik Hofman.
+ * Copyright (C) 2018-2020 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@
 #include <xml.h>
 #include <aax/strings.hpp>
 
+#include <sys/stat.h>
 #include <base/timer.h>
 #include "midi.hpp"
 
@@ -195,7 +196,7 @@ MIDI::set_balance(float b)
 void
 MIDI::set_chorus(const char *t)
 {
-    Buffer &buf = AeonWave::buffer(t);
+    Buffer& buf = AeonWave::buffer(t);
     for(auto& it : channels) {
         it.second->add(buf);
     }
@@ -229,10 +230,10 @@ MIDI::set_chorus_rate(float rate)
 void
 MIDI::set_reverb(const char *t)
 {
-    Buffer &buf = AeonWave::buffer(t);
+    Buffer& buf = AeonWave::buffer(t);
     reverb.add(buf);
     for(auto& it : channels) {
-        it.second->add(buf);
+        it.second->set_reverb(buf);
     }
 }
 
@@ -314,8 +315,17 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
     auto map = instruments;
 
     std::string iname;
-    if (!gmmidi.empty()) {
+    if (!gmmidi.empty())
+    {
         iname = gmmidi;
+
+        struct stat buffer;
+        if (stat(iname.c_str(), &buffer) != 0)
+        {
+           iname = path;
+           iname.append("/");
+           iname.append(gmmidi);
+        }
     } else {
         iname = path;
         iname.append("/");
@@ -464,8 +474,17 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
             instruments = std::move(map);
 
             // next up: drums
-            if (!gmdrums.empty()) {
+            if (!gmdrums.empty())
+            {
                 iname = gmdrums;
+
+                struct stat buffer;
+                if (stat(iname.c_str(), &buffer) != 0)
+                {
+                   iname = path;
+                   iname.append("/");
+                   iname.append(gmmidi);
+                }
             } else {
                 iname = path;
                 iname.append("/");
@@ -663,7 +682,7 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
         }
     }
 
-    Buffer &buffer = midi.buffer(name, level);
+    Buffer& buffer = midi.buffer(name, level);
     if (buffer) {
         buffer.set(AAX_CAPABILITIES, int(instrument_mode));
     }
@@ -787,7 +806,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                 }
                 else
                 {
-                    Buffer &buffer = midi.buffer(name);
+                    Buffer& buffer = midi.buffer(name);
                     if (buffer)
                     {
                         auto ret = name_map.insert({key_no,buffer});
@@ -826,7 +845,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                 }
                 else
                 {
-                    Buffer &buffer = midi.buffer(patch_name, level);
+                    Buffer& buffer = midi.buffer(patch_name, level);
                     if (buffer)
                     {
                         auto ret = name_map.insert({key,buffer});
