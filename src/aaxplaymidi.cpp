@@ -186,9 +186,9 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
 int verbose = 0;
 int main(int argc, char **argv)
 {
-    std::setlocale(LC_ALL, "");
-    std::locale::global(std::locale(""));
-    std::cout.imbue(std::locale());
+//  std::setlocale(LC_ALL, "");
+//  std::locale::global(std::locale(""));
+//  std::cout.imbue(std::locale());
 
     if (argc == 1 || getCommandLineOption(argc, argv, "-h") ||
                      getCommandLineOption(argc, argv, "--help"))
