@@ -171,7 +171,7 @@ int main(int argc, char **argv)
                 res = aaxAudioFrameSetState(frame[q], AAX_PLAYING);
                 testForState(res, "aaxAudioFrameStart");
 
-                res = aaxAudioFrameAddBuffer(frame[q], xbuffer);
+                res = aaxAudioFrameAddBuffer(frame[q], buffer);
                 // testForState(res, "aaxAudioFrameAddBuffer");
             }
 
