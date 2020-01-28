@@ -884,52 +884,52 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                 switch(key_no)
                 {
                 case 29: // EXC7
-                    Instrument::stop(30, 0);
+                    Instrument::stop(30);
                     break;
                 case 30: // EXC7
-                    Instrument::stop(29, 0);
+                    Instrument::stop(29);
                     break;
                 case 42: // EXC1
-                    Instrument::stop(44, 0);
-                    Instrument::stop(46, 0);
+                    Instrument::stop(44);
+                    Instrument::stop(46);
                     break;
                 case 44: // EXC1
-                    Instrument::stop(42, 0);
-                    Instrument::stop(46, 0);
+                    Instrument::stop(42);
+                    Instrument::stop(46);
                     break;
                 case 46: // EXC1
-                    Instrument::stop(42, 0);
-                    Instrument::stop(44, 0);
+                    Instrument::stop(42);
+                    Instrument::stop(44);
                     break;
                 case 71: // EXC2
-                    Instrument::stop(72, 0);
+                    Instrument::stop(72);
                     break;
                 case 72: // EXC2
-                    Instrument::stop(71, 0);
+                    Instrument::stop(71);
                     break;
                 case 73: // EXC3
-                    Instrument::stop(74, 0);
+                    Instrument::stop(74);
                     break;
                 case 74: // EXC3
-                    Instrument::stop(73, 0);
+                    Instrument::stop(73);
                     break;
                 case 78: // EXC4
-                    Instrument::stop(79, 0);
+                    Instrument::stop(79);
                     break;
                 case 79: // EXC4
-                    Instrument::stop(78, 0);
+                    Instrument::stop(78);
                     break;
                 case 80: // EXC5
-                    Instrument::stop(81, 0);
+                    Instrument::stop(81);
                     break;
                 case 81: // EXC5
-                    Instrument::stop(80, 0);
+                    Instrument::stop(80);
                     break;
                 case 86: // EXC6
-                    Instrument::stop(87, 0);
+                    Instrument::stop(87);
                     break;
                 case 87: // EXC6
-                    Instrument::stop(86, 0);
+                    Instrument::stop(86);
                     break;
                 default:
                     break;
@@ -939,16 +939,16 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                 switch(key_no)
                 {
                 case 42: // EXC1
-                    Instrument::stop(44, 0);
-                    Instrument::stop(46, 0);
+                    Instrument::stop(44);
+                    Instrument::stop(46);
                     break;
                 case 44: // EXC1
-                    Instrument::stop(42, 0);
-                    Instrument::stop(46, 0);
+                    Instrument::stop(42);
+                    Instrument::stop(46);
                     break;
                 case 46: // EXC1
-                    Instrument::stop(42, 0);
-                    Instrument::stop(44, 0);
+                    Instrument::stop(42);
+                    Instrument::stop(44);
                     break;
                 default:
                     break;
@@ -958,28 +958,28 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                 switch(key_no)
                 {
                 case 27: // EXC1
-                    Instrument::stop(28, 0);
-                    Instrument::stop(29, 0);
+                    Instrument::stop(28);
+                    Instrument::stop(29);
                     break;
                 case 28: // EXC1
-                    Instrument::stop(27, 0);
-                    Instrument::stop(29, 0);
+                    Instrument::stop(27);
+                    Instrument::stop(29);
                     break;
                 case 29: // EXC1
-                    Instrument::stop(27, 0);
-                    Instrument::stop(28, 0);
+                    Instrument::stop(27);
+                    Instrument::stop(28);
                     break;
                 case 42: // EXC1
-                    Instrument::stop(44, 0);
-                    Instrument::stop(46, 0);
+                    Instrument::stop(44);
+                    Instrument::stop(46);
                     break;
                 case 44: // EXC1
-                    Instrument::stop(42, 0);
-                    Instrument::stop(46, 0);
+                    Instrument::stop(42);
+                    Instrument::stop(46);
                     break;
                 case 46: // EXC1
-                    Instrument::stop(42, 0);
-                    Instrument::stop(44, 0);
+                    Instrument::stop(42);
+                    Instrument::stop(44);
                     break;
                 default:
                     break;
@@ -989,10 +989,10 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                 switch(key_no)
                 {
                 case 41: // EXC7
-                    Instrument::stop(42, 0);
+                    Instrument::stop(42);
                     break;
                 case 42: // EXC7
-                    Instrument::stop(41, 0);
+                    Instrument::stop(41);
                     break;
                 default:
                     break;
@@ -1003,7 +1003,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
             }
         }
 
-        Instrument::play(key_no, velocity, it->second, pitch);
+        Instrument::play(key_no, velocity/127.0f, it->second, pitch);
     } else {
 //      throw(std::invalid_argument("Instrument file "+name+" not found"));
     }
