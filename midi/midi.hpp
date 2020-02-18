@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018-2019 by Erik Hofman.
- * Copyright (C) 2018-2019 by Adalin B.V.
+ * Copyright (C) 2018-2020 by Erik Hofman.
+ * Copyright (C) 2018-2020 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -33,9 +33,12 @@
 #define __AAX_MIDI
 
 #include <sys/stat.h>
+
 #include <climits>
+#include <cstdint>
 #include <cstdlib>
 #include <stdexcept>
+#include <memory>
 #include <vector>
 #include <map>
 
@@ -279,7 +282,7 @@ public:
     virtual ~MIDI() {
         AeonWave::remove(reverb);
         for(auto it=buffers.begin(); it!=buffers.end(); ++it) {
-            aaxBufferDestroy(it->second.second); it->second.first = 0;
+            aaxBufferDestroy(*it->second.second); it->second.first = 0;
         }
         buffers.clear();
     }
@@ -384,12 +387,11 @@ public:
         if (level) { name = name + "?patch=" + std::to_string(level); }
         auto it = buffers.find(name);
         if (it == buffers.end()) {
-           Buffer *b = new Buffer(ptr,name.c_str(),false,true);
+            auto b = std::shared_ptr<Buffer>{new Buffer(ptr,name.c_str(),false,true)};
             if (b) {
                 auto ret = buffers.insert({name,{0,b}});
                 it = ret.first;
             } else {
-                delete b;
                 return nullBuffer;
             }
         }
@@ -399,8 +401,8 @@ public:
     void destroy(Buffer& b) {
         for(auto it=buffers.begin(); it!=buffers.end(); ++it)
         {
-            if ((it->second.second == &b) && it->second.first && !(--it->second.first)) {
-                aaxBufferDestroy(it->second.second);
+            if ((*it->second.second == b) && it->second.first && !(--it->second.first)) {
+                aaxBufferDestroy(*it->second.second);
                 buffers.erase(it); break;
             }
         }
@@ -445,7 +447,7 @@ private:
     std::map<uint16_t,std::map<uint16_t,std::pair<std::string,int>>> instruments;
     std::map<std::string,_patch_t> patches;
 
-    std::unordered_map<std::string,std::pair<size_t,Buffer*>> buffers;
+    std::unordered_map<std::string,std::pair<size_t,std::shared_ptr<Buffer>>> buffers;
     Buffer nullBuffer;
 
     std::vector<std::string> loaded;
