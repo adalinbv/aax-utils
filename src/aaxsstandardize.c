@@ -831,8 +831,11 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
     {
         if (xmlNodeGetPos(xid, xdid, "filter", d) != 0)
         {
-            float m = fill_dsp(&obj->dsp[p++], xdid, FILTER, final, env_fact, simplify, emitter);
-            if (!max) max = m;
+            char *type = lwrstr(xmlAttributeGetString(xdid, "type"));
+            if (!simplify || !emitter || strcasecmp(type, "frequency")) {
+                float m = fill_dsp(&obj->dsp[p++], xdid, FILTER, final, env_fact, simplify, emitter);
+                if (!max) max = m;
+            }
         }
     }
     xmlFree(xdid);
