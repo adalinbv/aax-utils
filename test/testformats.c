@@ -87,12 +87,14 @@ int main(int argc, char **argv)
 {
     char *devname, *infile;
     aaxConfig config;
-    int res;
+    int num, res;
 
     devname = getDeviceName(argc, argv);
     infile = getInputFile(argc, argv, FILE_PATH);
     config = aaxDriverOpenByName(devname, AAX_MODE_WRITE_STEREO);
     testForError(config, "No default audio device available.");
+
+    num = getNumEmitters(argc, argv);
 
     if (config)
     {
@@ -102,6 +104,7 @@ int main(int argc, char **argv)
             int no_samples, no_tracks, freq;
             aaxEmitter emitter;
             int q, state, fmt;
+            int quit = 0;
 
             /** emitter */
             emitter = aaxEmitterCreate();
@@ -127,15 +130,26 @@ int main(int argc, char **argv)
 
             res = aaxBufferSetSetup(buf, AAX_FREQUENCY, freq);
             no_samples = aaxBufferGetSetup(buf, AAX_NO_SAMPLES);
+
+            /** schedule the emitter for playback */
+            res = aaxEmitterSetState(emitter, AAX_PLAYING);
+            testForState(res, "aaxEmitterStart");
+
+            quit = 0;
+            set_mode(1);
             for (q=0; q<MAX_LOOPS; q++)
             {
-                fmt = 0;
+                fmt = num;
                 printf("%s\t\t(%x)\n", _mask_s[q], fmt + _mask_t[q]);
                 do
                 {
                     int blocksz, nfmt = fmt + _mask_t[q];
                     aaxBuffer buffer;
                     void** data;
+
+                    printf("  0x%03x:  %s\n", nfmt, (nfmt & AAX_FORMAT_UNSIGNED)
+                                       ? _format_us[fmt & AAX_FORMAT_NATIVE]
+                                       : _format_s[fmt & AAX_FORMAT_NATIVE]);
 
                     if (q)
                     {
@@ -151,10 +165,6 @@ int main(int argc, char **argv)
                         }
                     }
 
-                    /** schedule the emitter for playback */
-                    res = aaxEmitterSetState(emitter, AAX_PLAYING);
-                    testForState(res, "aaxEmitterStart");
-            
                     /** simultaniously convert the buffer format */
                     res = aaxBufferSetSetup(buf, AAX_FORMAT, nfmt);
                     testForState(res, "aaxBufferSetup(AAX_FORMAT)");
@@ -197,12 +207,6 @@ aaxBufferWriteToFile(buffer, s, AAX_OVERWRITE);
         //       and it does work properly.
 }
 #endif
-                    res = aaxEmitterAddBuffer(emitter, buffer);
-                    testForState(res, "aaxEmitterAddBuffer");
-
-                    printf("  0x%03x:  %s\n", nfmt, (nfmt & AAX_FORMAT_UNSIGNED)
-                                       ? _format_us[fmt & AAX_FORMAT_NATIVE]
-                                       : _format_s[fmt & AAX_FORMAT_NATIVE]);
                     do
                     {
                         msecSleep(50);
@@ -210,13 +214,32 @@ aaxBufferWriteToFile(buffer, s, AAX_OVERWRITE);
                     }
                     while (state == 0);
 
+                    res = aaxEmitterSetState(emitter, AAX_STOPPED);
+                    testForState(res, "aaxEmitterSetState");
+
                     res = aaxEmitterRemoveBuffer(emitter);
                     testForState(res, "aaxEmitterRemoveBuffer");
 
+                    res = aaxEmitterAddBuffer(emitter, buffer);
+                    testForState(res, "aaxEmitterAddBuffer");
+
                     res = aaxBufferDestroy(buffer);
+
+                    if (get_key())
+                    {
+                        quit = 1;
+                        break;
+                    }
+
+                    msecSleep(250);
+
+                    res = aaxEmitterSetState(emitter, AAX_PLAYING);
+                    testForState(res, "aaxEmitterSetState");
                 }
                 while (++fmt < AAX_FORMAT_MAX);
+                if (quit) break;
             }
+            set_mode(0);
 
             res = aaxMixerDeregisterEmitter(config, emitter);
             res = aaxMixerSetState(config, AAX_STOPPED);
