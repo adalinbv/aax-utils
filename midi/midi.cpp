@@ -689,8 +689,8 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
 
     try {
         auto ret = channels.insert(
-            { channel_no, new MIDIChannel(*this, instr, drum, buffer,
-                                         channel_no, bank_no, program_no, drums)
+            { channel_no, new MIDIChannel(*this, buffer, channel_no,
+                                          bank_no, program_no, drums)
             } );
         it = ret.first;
         AeonWave::add(*it->second);
@@ -871,7 +871,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
         }
     }
 
-    if (!midi.get_initialize() & it != name_map.end())
+    if (!midi.get_initialize() && it != name_map.end())
     {
         if (midi.channel(channel_no).is_drums())
         {
