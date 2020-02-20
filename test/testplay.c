@@ -43,6 +43,8 @@
 #include "wavfile.h"
 
 
+#define SLEEP_TIME			50e-3f
+#define SLIDE_TIME			7.0f
 #define FILE_PATH			SRC_PATH"/tictac.wav"
 
 int main(int argc, char **argv)
@@ -92,19 +94,27 @@ int main(int argc, char **argv)
         ofile = getOutputFile(argc, argv, NULL);
         if (!ofile && buffer)
         {
-            aaxFrame frame[4];
+            float gain, gain2, gain_step, gain_time = SLIDE_TIME;
+            float pitch, pitch2, pitch_time = SLIDE_TIME;
+            int i, q, state, nsrc;
             aaxEmitter emitter[64];
+            aaxFrame frame[4];
             aaxFilter filter;
             aaxEffect effect;
             aaxBuffer xbuffer;
-            int q, state, nsrc;
-            float pitch, pitch2;
-            float gain, duration;
+            float duration;
             float dt = 0.0f;
 
             xbuffer = setFiltersEffects(argc, argv, config, config, NULL, NULL, NULL);
             nsrc = _MINMAX(getNumEmitters(argc, argv), 1, 64);
             duration = getDuration(argc, argv);
+
+            gain = getGain(argc, argv);
+            gain2 = getGainRange(argc, argv);
+
+            pitch = getPitch(argc, argv);
+            pitch2 = getPitchRange(argc, argv);
+
 
             /** emitter */
             for (q=0; q<nsrc; q++)
@@ -116,7 +126,6 @@ int main(int argc, char **argv)
                 testForError(emitter[q], "Unable to set emitter mode");
 
                 /* gain */
-                gain = getGain(argc, argv);
                 filter = aaxFilterCreate(config, AAX_VOLUME_FILTER);
                 testForError(filter, "Unable to create the volume filter");
 
@@ -128,8 +137,6 @@ int main(int argc, char **argv)
                 aaxFilterDestroy(filter);
 
                 /* pitch */
-                pitch = getPitch(argc, argv);
-                pitch2 = getPitchRange(argc, argv);
                 effect = aaxEffectCreate(config, AAX_PITCH_EFFECT);
                 testForError(effect, "Unable to create the pitch effect");
 
@@ -137,7 +144,7 @@ int main(int argc, char **argv)
                    res = aaxEffectSetParam(effect, AAX_PITCH, AAX_LINEAR, pitch);
                    testForState(res, "aaxEffectSetParam");
                 } else {
-                   res = aaxEffectSetSlot(effect, 0, AAX_LINEAR, pitch2, pitch2, pitch, 7.0f);
+                   res = aaxEffectSetSlot(effect, 0, AAX_LINEAR, pitch2, pitch2, pitch, pitch_time);
                    testForState(res, "aaxEffectSetParam");
 
                    res = aaxEffectSetState(effect, AAX_INVERSE|AAX_ENVELOPE_FOLLOW);
@@ -202,10 +209,11 @@ int main(int argc, char **argv)
             printf("Playing sound for %3.1f seconds or until a key is pressed\n", duration);
             q = 0;
             set_mode(1);
+            gain_step = (gain2-gain)/(gain_time/SLEEP_TIME);
             do
             {
-                msecSleep(50);
-                dt += 0.05f;
+                msecSleep(SLEEP_TIME*1000);
+                dt += SLEEP_TIME;
 
                 if (++q > 10)
                 {
@@ -223,6 +231,25 @@ int main(int argc, char **argv)
                 state = aaxEmitterGetState(emitter[0]);
 
                 if (get_key()) break;
+
+                /* gain */
+                if (gain_step >0) {
+                    gain = _MIN(gain+gain_step, gain2);
+                } else {
+                    gain = _MAX(gain+gain_step, gain2);
+                }
+                for (i=0; i<nsrc; i++)
+                {
+                    filter = aaxFilterCreate(config, AAX_VOLUME_FILTER);
+                    testForError(filter, "Unable to create the volume filter");
+
+                    res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
+                    testForState(res, "aaxFilterSetParam");
+
+                    res = aaxEmitterSetFilter(emitter[i], filter);
+                    testForState(res, "aaxEmitterSetGain");
+                    aaxFilterDestroy(filter);
+                }
             }
             while ((dt < duration) && (state == AAX_PLAYING));
             set_mode(0);

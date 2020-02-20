@@ -160,6 +160,20 @@ getGain(int argc, char **argv)
     return num;
 }
 
+float
+getGainRange(int argc, char **argv)
+{
+    float num = 1.0f;
+    char *ret = getCommandLineOption(argc, argv, "-g");
+    if (!ret) ret = getCommandLineOption(argc, argv, "--gain");
+    if (ret) {
+       ret = strchr(ret, '-');
+       if (ret) ret++;
+    }
+    if (ret) num = (float)atof(ret);
+    return num;
+}
+
 static float
 handleTime(char *ret, float num)
 {
