@@ -209,7 +209,11 @@ int main(int argc, char **argv)
             printf("Playing sound for %3.1f seconds or until a key is pressed\n", duration);
             q = 0;
             set_mode(1);
-            gain_step = (gain2-gain)/(gain_time/SLEEP_TIME);
+            if (gain2 == 1.0f) {
+                gain_step = 0.0f;
+            } else { 
+                gain_step = (gain2-gain)/(gain_time/SLEEP_TIME);
+            }
             do
             {
                 msecSleep(SLEEP_TIME*1000);
@@ -233,7 +237,7 @@ int main(int argc, char **argv)
                 if (get_key()) break;
 
                 /* gain */
-                if (gain_step >0) {
+                if (gain_step >= 0.0f) {
                     gain = _MIN(gain+gain_step, gain2);
                 } else {
                     gain = _MAX(gain+gain_step, gain2);
