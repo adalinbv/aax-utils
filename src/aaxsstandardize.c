@@ -335,10 +335,11 @@ struct dsp_t
     enum type_t dtype;
     char *type;
     char *src;
-    int stereo;
     char *repeat;
+    int stereo;
     int optional;
     float release_time;
+    char env;
 
     uint8_t no_slots;
     struct slot_t
@@ -391,6 +392,7 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
     } else if (!strcasecmp(dsp->type, "distortion")) {
         dist = 1;
     }
+    dsp->env = env;
 
     xsid = xmlMarkId(xid);
     dsp->no_slots = snum = xmlNodeGetNum(xid, "slot");
@@ -499,31 +501,49 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
                 fprintf(output, " pitch=\"%s\"", format_float3(pitch));
                 dsp->slot[s].param[p].value = freq*pitch;
             }
-            if (adjust) {
-                fprintf(output, " auto=\"%s\"", format_float3(adjust));
-            }
-
-            fprintf(output, ">%s</param>", format_float3(dsp->slot[s].param[p].value));
-            if (debug && adjust)
+            if (adjust)
             {
-               if (info->note.min && info->note.max)
-               {
-                   float freq1 = note2freq(info->note.min);
-                   float freq2 = note2freq(info->note.max);
-                   float value = dsp->slot[s].param[p].value;
-                   float lin = _MAX(value - adjust*_lin2log(freq), 0.01f);
-                   float lin1 = _MAX(value - adjust*_lin2log(freq1), 0.01f);
-                   float lin2 = _MAX(value - adjust*_lin2log(freq2), 0.01f);
-                   fprintf(output, "  <!-- %iHz: %s", (int)freq1, format_float3(lin1));
-                   fprintf(output, " - %iHz: %s" , (int)freq2, format_float3(lin2));
-                   fprintf(output, ", %iHz: %s -->\n", (int)freq, format_float3(lin));
-               }
-               else
-               {
-                   float value = dsp->slot[s].param[p].value;
-                   float lin = _MAX(value - adjust*_lin2log(freq), 0.01f);
-                   fprintf(output, "  <!-- %s -->", format_float3(lin));
-               }
+                fprintf(output, " auto=\"%s\"", format_float3(adjust));
+
+                if (info->note.min && info->note.max)
+                {
+                    float freq1 = note2freq(info->note.min);
+                    float freq2 = note2freq(info->note.max);
+                    float value = dsp->slot[s].param[p].value;
+                    float lin1 = _MAX(value - adjust*_lin2log(freq1), 0.01f);
+                    float lin2 = _MAX(value - adjust*_lin2log(freq2), 0.01f);
+
+                    if (dsp->env && (p % 2) == 0)
+                    {
+                        fprintf(output, " min=\"%s\"", format_float3(lin1));
+                        fprintf(output, " max=\"%s\"", format_float3(lin2));
+                    }
+                    fprintf(output, ">%s</param>", format_float3(value));
+
+                    if (debug)
+                    {
+                        float lin = _MAX(value - adjust*_lin2log(freq), 0.01f);
+
+                        fprintf(output, "  <!-- %iHz: %s", (int)freq1, format_float3(lin1));
+                        fprintf(output, " - %iHz: %s" , (int)freq2, format_float3(lin2));
+                        fprintf(output, ", %iHz: %s -->\n", (int)freq, format_float3(lin));
+                    }
+                }
+                else
+                {
+                    float value = dsp->slot[s].param[p].value;
+
+                    fprintf(output, ">%s</param>", format_float3(value));
+
+                    if (debug)
+                    {
+                        float lin = _MAX(value - adjust*_lin2log(freq), 0.01f);
+                        fprintf(output, "  <!-- %s -->", format_float3(lin));
+                    }
+                }
+            }
+            else {
+                fprintf(output, ">%s</param>", format_float3(dsp->slot[s].param[p].value));
             }
             fprintf(output, "\n");
         }
