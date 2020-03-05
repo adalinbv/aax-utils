@@ -108,10 +108,8 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
     if (grep) devname = (char*)"None"; // fastest for searching
     aax::MIDIFile midi(devname, infile, track, mode, config);
     aax::Sensor file;
-    int64_t sleep_us, dt_us;
     uint64_t time_parts = 0;
     uint32_t wait_parts;
-    struct timeval now;
     char obuf[256];
 
     if (outfile)
@@ -143,21 +141,20 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
         wait_parts = 1000;
         set_mode(1);
 
-        gettimeofday(&now, NULL);
-        dt_us = -(now.tv_sec * 1000000 + now.tv_usec);
+        auto now = std::chrono::high_resolution_clock::now();
         do
         {
             if (!midi.process(time_parts, wait_parts)) break;
 
             if (wait_parts > 0 && midi.get_pos_sec() >= time_offs)
             {
-                uint32_t wait_us;
+                double sleep_us, wait_us;
 
-                gettimeofday(&now, NULL);
-                dt_us += now.tv_sec * 1000000 + now.tv_usec;
+                auto next = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double, std::micro> dt_us = next - now;
 
                 wait_us = wait_parts*midi.get_uspp();
-                sleep_us = wait_us - dt_us;
+                sleep_us = wait_us - dt_us.count();
 
                 if (sleep_us > 0)
                 {
@@ -172,8 +169,7 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
                     }
                 }
 
-                gettimeofday(&now, NULL);
-                dt_us = -(now.tv_sec * 1000000 + now.tv_usec);
+                now = std::chrono::high_resolution_clock::now();
             }
             time_parts += wait_parts;
         }
