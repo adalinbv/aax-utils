@@ -1223,7 +1223,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             uint64_t size = pull_message();
             uint64_t offs = offset();
             uint8_t byte = pull_byte();
-            const char *s = NULL;
+            const char *s = nullptr;
 
 #if 0
  uint8_t *p = (uint8_t*)*this;

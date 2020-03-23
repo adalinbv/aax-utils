@@ -80,7 +80,7 @@ class MIDIChannel;
 class MIDI : public AeonWave
 {
 private:
-    typedef std::map<uint8_t,std::pair<uint8_t,std::string>> _patch_t;
+    using _patch_t = std::map<uint8_t,std::pair<uint8_t,std::string>>;
 
 public:
     MIDI(const char* n, const char *tnames = nullptr,
