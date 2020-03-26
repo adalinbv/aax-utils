@@ -333,6 +333,7 @@ void free_info(struct info_t *info)
 struct dsp_t
 {
     enum type_t dtype;
+    int eff_type;
     char *type;
     char *src;
     char *repeat;
@@ -364,6 +365,8 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
 
     dsp->dtype = t;
     dsp->type = lwrstr(xmlAttributeGetString(xid, "type"));
+    dsp->eff_type = (t == FILTER) ? aaxFilterGetByName(NULL, dsp->type) :
+                                    aaxEffectGetByName(NULL, dsp->type);
     if (!final && (!strcasecmp(dsp->type, "volume") || !strcasecmp(dsp->type, "timed-gain") || !strcasecmp(dsp->type, "dynamic-gain"))) {
         dsp->src = false_const;
     }
@@ -853,8 +856,16 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
         {
             char *type = lwrstr(xmlAttributeGetString(xdid, "type"));
             if (!simplify || !emitter || strcasecmp(type, "frequency")) {
-                float m = fill_dsp(&obj->dsp[p++], xdid, FILTER, final, env_fact, simplify, emitter);
+                float m = fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter);
                 if (!max) max = m;
+
+                int n;
+                for (n=0; n < p; ++n) {
+                    if (obj->dsp[n].eff_type == obj->dsp[p].eff_type) {
+                        printf("\033[0;31mWarning:\033[0m %s filter is defined mutiple times.\n", type);
+                    }
+                }
+                p++;
             }
         }
     }
@@ -871,8 +882,16 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
                                          !strcasecmp(type, "ringmodulator"))) ||
                              (emitter && !strcasecmp(type, "timed-pitch")))
             {
-                float m = fill_dsp(&obj->dsp[p++], xdid, EFFECT, final, env_fact, simplify, emitter);
+                float m = fill_dsp(&obj->dsp[p], xdid, EFFECT, final, env_fact, simplify, emitter);
                 if (!max) max = m;
+
+                int n;
+                for (n=0; n < p; ++n) {
+                    if (obj->dsp[n].eff_type == obj->dsp[p].eff_type) {
+                        printf("\033[0;31mWarning:\033[0m %s effect is defined mutiple times.\n", type);
+                    }
+                }
+                p++;
             }
         }
     }
