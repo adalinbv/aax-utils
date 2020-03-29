@@ -2088,13 +2088,14 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                         midi.set_ppqn(PPQN);
                     }
 
-                    while (stream.remaining() >= sizeof(header))
+                    while (stream.remaining() > sizeof(header))
                     {
                         header = stream.pull_long();
                         if (header == 0x4d54726b) // "MTrk"
                         {
                             uint32_t length = stream.pull_long();
-                            if (length >= sizeof(uint32_t))
+                            if (length >= sizeof(uint32_t) &&
+                                length <= stream.remaining())
                             {
                                 track.push_back(new MIDITrack(*this, stream,
                                                            length, track_no++));
@@ -2260,7 +2261,14 @@ MIDIFile::process(uint64_t time_parts, uint32_t& next)
     for (size_t t=0; t<no_tracks; ++t)
     {
         wait_parts = next;
-        rv |= track[t]->process(time_parts, elapsed_parts, wait_parts);
+
+        try {
+            rv |= track[t]->process(time_parts, elapsed_parts, wait_parts);
+        } catch (const std::exception& e) {
+            throw(e);
+            break;
+        }
+
         if (next > wait_parts) {
             next = wait_parts;
         }
