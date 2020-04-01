@@ -488,3 +488,40 @@ _vec3fMagnitude(const aaxVec3f v)
    return sqrtf(val);
 }
 
+#ifdef WIN32
+void *
+simple_mmap(int fd, size_t length, SIMPLE_UNMMAP *un)
+{
+    HANDLE f;
+    HANDLE m;
+    void *p;
+
+    f = (HANDLE)_get_osfhandle(fd);
+    if (!f) return (void *)-1;
+
+    m = CreateFileMapping(f, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (!m) return (void *)-1;
+
+    p = MapViewOfFile(m, FILE_MAP_READ, 0, 0, 0);
+    if (!p)
+    {
+        CloseHandle(m);
+        return (void *)-1;
+    }
+
+    if (un)
+    {
+        un->m = m;
+        un->p = p;
+    }
+
+    return p;
+}
+
+void
+simple_unmmap(void *addr, size_t len, SIMPLE_UNMMAP *un)
+{
+    UnmapViewOfFile(un->p);
+    CloseHandle(un->m);
+}
+#endif

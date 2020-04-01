@@ -54,6 +54,28 @@ extern "C" {
     if (!(a)) printf("Error at line %i: %s\n", __LINE__, aax.strerror()); \
 } while(0)
 
+struct mmap_t {
+    int fd;
+    size_t len;
+    char *start;
+#ifdef WIN32
+    struct {
+        HANDLE m;
+        void *p;
+    } un;
+#else
+    int un;                             /* referenced but not used */
+#endif
+};
+
+#ifdef WIN32
+void * simple_mmap(int fd, size_t length, SIMPLE_UNMMAP *un);
+void simple_unmmap(void *addr, size_t len, SIMPLE_UNMMAP *un);
+#else
+# define simple_mmap(a, b, c)   mmap(0, (b), PROT_READ, MAP_PRIVATE, (a), 0L)
+# define simple_unmmap(a, b, c) munmap((a), (b))
+#endif
+
 void set_mode(int want_key);
 int get_key();
 
