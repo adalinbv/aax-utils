@@ -610,6 +610,7 @@ void print_waveform(struct waveform_t *wave, FILE *output)
         }
     }
     if (wave->pitch && wave->pitch != 1.0f) fprintf(output, " pitch=\"%s\"", format_float6(wave->pitch));
+    if (wave->phase) fprintf(output, " phase=\"%s\"", format_float3(wave->phase));
     if (wave->staticity > 0) fprintf(output, " staticity=\"%s\"", format_float3(wave->staticity));
     if (wave->voices > 1)
     {
@@ -619,7 +620,6 @@ void print_waveform(struct waveform_t *wave, FILE *output)
             if (wave->phasing) fprintf(output, " phasing=\"true\"");
         }
     }
-    if (wave->phase) fprintf(output, " phase=\"%s\"", format_float3(wave->phase));
     fprintf(output, "/>\n");
 }
 
