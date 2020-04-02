@@ -576,7 +576,8 @@ struct waveform_t
     float staticity;
     int voices;
     float spread;
-    char phase;
+    char phasing;
+    float phase;
 };
 
 char fill_waveform(struct waveform_t *wave, void *xid, char simplify)
@@ -586,11 +587,12 @@ char fill_waveform(struct waveform_t *wave, void *xid, char simplify)
     wave->ratio = xmlAttributeGetDouble(xid, "ratio");
     wave->pitch = _MAX(xmlAttributeGetDouble(xid, "pitch"), 0.0f);
     wave->staticity =_MINMAX(xmlAttributeGetDouble(xid, "staticity"),0.0f,1.0f);
+    wave->phase = _MINMAX(xmlAttributeGetDouble(xid, "phase"), 0.0f,1.0f);
     if (!simplify)
     {
         wave->voices = _MIN(abs(xmlAttributeGetInt(xid, "voices")), 9);
         wave->spread = _MINMAX(xmlAttributeGetDouble(xid, "spread"), 0.0f,1.0f);
-        wave->phase = xmlAttributeGetBool(xid, "phase");
+        wave->phasing = xmlAttributeGetBool(xid, "phasing");
     }
 
     return wave->src ? (strstr(wave->src, "noise") ? 1 : 0) : 0;
@@ -614,9 +616,10 @@ void print_waveform(struct waveform_t *wave, FILE *output)
         fprintf(output, " voices=\"%i\"", wave->voices);
         if (wave->spread) {
             fprintf(output, " spread=\"%s\"", format_float3(wave->spread));
-            if (wave->phase) fprintf(output, " phase=\"true\"");
+            if (wave->phasing) fprintf(output, " phasing=\"true\"");
         }
     }
+    if (wave->phase) fprintf(output, " phase=\"%s\"", format_float3(wave->phase));
     fprintf(output, "/>\n");
 }
 
@@ -634,7 +637,7 @@ struct sound_t
     float duration;
     int voices;
     float spread;
-    char phase;
+    char phasing;
 
     float loop_start;
     float loop_end;
@@ -707,7 +710,7 @@ void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gai
     {
         sound->voices = _MIN(abs(xmlAttributeGetInt(xid, "voices")), 9);
         sound->spread = _MINMAX(xmlAttributeGetDouble(xid, "spread"),0.0f,1.0f);
-        sound->phase = xmlAttributeGetBool(xid, "phase");
+        sound->phasing = xmlAttributeGetBool(xid, "phasing");
     }
 
     p = 0;
@@ -805,7 +808,7 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
         fprintf(output, " voices=\"%i\"", sound->voices);
         if (sound->spread) {
             fprintf(output, " spread=\"%s\"", format_float3(sound->spread));
-            if (sound->phase) fprintf(output, " phase=\"true\"");
+            if (sound->phasing) fprintf(output, " phasing=\"true\"");
         }
     }
     fprintf(output, ">\n");
