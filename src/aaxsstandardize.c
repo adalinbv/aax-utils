@@ -574,6 +574,7 @@ struct waveform_t
     float ratio;
     float pitch;
     float staticity;
+    float random;
     int voices;
     float spread;
     char phasing;
@@ -587,6 +588,7 @@ char fill_waveform(struct waveform_t *wave, void *xid, char simplify)
     wave->ratio = xmlAttributeGetDouble(xid, "ratio");
     wave->pitch = _MAX(xmlAttributeGetDouble(xid, "pitch"), 0.0f);
     wave->staticity =_MINMAX(xmlAttributeGetDouble(xid, "staticity"),0.0f,1.0f);
+    wave->random =_MINMAX(xmlAttributeGetDouble(xid, "random"),0.0f,1.0f);
     wave->phase = _MINMAX(xmlAttributeGetDouble(xid, "phase"), 0.0f,1.0f);
     if (!simplify)
     {
@@ -611,6 +613,7 @@ void print_waveform(struct waveform_t *wave, FILE *output)
     }
     if (wave->pitch && wave->pitch != 1.0f) fprintf(output, " pitch=\"%s\"", format_float6(wave->pitch));
     if (wave->phase) fprintf(output, " phase=\"%s\"", format_float3(wave->phase));
+    if (wave->random > 0) fprintf(output, " random=\"%s\"", format_float3(wave->random));
     if (wave->staticity > 0) fprintf(output, " staticity=\"%s\"", format_float3(wave->staticity));
     if (wave->voices > 1)
     {
