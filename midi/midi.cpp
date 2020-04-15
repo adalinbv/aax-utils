@@ -695,7 +695,7 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
         it = ret.first;
         AeonWave::add(*it->second);
     } catch(const std::invalid_argument& e) {
-        throw;
+        throw(e);
     }
     return *it->second;
 }
@@ -744,7 +744,11 @@ MIDI::process(uint8_t channel_no, uint8_t message, uint8_t key, uint8_t velocity
     // Omni mode: Device responds to MIDI data regardless of channel
     if (message == MIDI_NOTE_ON && velocity) {
         if (is_track_active(channel_no)) {
-            channel(channel_no).play(key, velocity, pitch);
+            try {
+                channel(channel_no).play(key, velocity, pitch);
+            } catch (const std::runtime_error &e) {
+                throw(e);
+            }
         }
     }
     else
@@ -1682,7 +1686,11 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     pitch = midi.channel(channel).get_tuning();
                     pitch *= midi.get_tuning();
                 }
-                midi.process(channel, message & 0xf0, key, velocity, omni, pitch);
+                try {
+                    midi.process(channel, message & 0xf0, key, velocity, omni, pitch);
+                } catch (const std::runtime_error &e) {
+                    throw(e);
+                }
                 CSV("Note_on_c, %d, %d, %d\n", channel, key, velocity);
                 break;
             }
@@ -2155,10 +2163,14 @@ MIDIFile::initialize(const char *grep)
     uint64_t time_parts = 0;
     uint32_t wait_parts = 1000000;
     t= clock();
-    while (process(time_parts, wait_parts))
-    {
-        time_parts += wait_parts;
-        duration_sec += wait_parts*midi.get_uspp()*1e-6f;
+    try {
+        while (process(time_parts, wait_parts))
+        {
+            time_parts += wait_parts;
+            duration_sec += wait_parts*midi.get_uspp()*1e-6f;
+        }
+    } catch (const std::runtime_error &e) {
+       throw(e);
     }
     eps = (double)(clock() - t)/ CLOCKS_PER_SEC;
 
@@ -2264,7 +2276,7 @@ MIDIFile::process(uint64_t time_parts, uint32_t& next)
 
         try {
             rv |= track[t]->process(time_parts, elapsed_parts, wait_parts);
-        } catch (const std::exception& e) {
+        } catch (const std::runtime_error &e) {
             throw(e);
             break;
         }
