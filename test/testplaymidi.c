@@ -47,6 +47,7 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 #include <sys/mman.h>
+#include <limits.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <stdint.h>
@@ -105,8 +106,8 @@ getInt16(char **start, const char *end)
     uint16_t rv = 0;
     if (ptr+sizeof(uint16_t) < end)
     {
-        rv = *ptr++ << 8;
-        rv |= *ptr++;
+        rv = (uint16_t)(*ptr++) << 8;
+        rv |= (uint16_t)(*ptr++);
         *start = ptr;
     }
     return rv;
@@ -119,10 +120,10 @@ getInt32(char **start, const char *end)
     uint32_t rv = 0;
     if (ptr+sizeof(uint32_t) < end)
     {
-        rv = *ptr++ << 24;
-        rv |= *ptr++ << 16;
-        rv |= *ptr++ << 8;
-        rv |= *ptr++;
+        rv = (uint32_t)(*ptr++) << 24;
+        rv |= (uint32_t)(*ptr++) << 16;
+        rv |= (uint32_t)(*ptr++) << 8;
+        rv |= (uint32_t)(*ptr++);
         *start = ptr;
     }
     return rv;
@@ -143,7 +144,7 @@ midiFileOpen(const char *filename)
             file->mm.len = statbuf.st_size;
             
             file->mm.start = simple_mmap(file->mm.fd, file->mm.len, &file->mm.un);
-            if (file->mm.start != (void *)-1)
+            if (file->mm.start != (void*)-1)
             {
             }
         }
@@ -229,6 +230,45 @@ abort:
 }
 
 int
+midiTrackProcess(struct track_data_t *track, uint64_t time_offs_parts, uint32_t *elapsed_parts, uint32_t *next)
+{
+    int rv = track->ptr < (track->start + track->len);
+
+}
+
+
+int
+midiFileProcess(struct midi_file_t *file, uint64_t time_parts, uint32_t *next)
+{
+    uint32_t elapsed_parts = *next;
+    uint32_t nval = *next;
+    uint32_t wait_parts;
+    char rv = AAX_FALSE;
+    size_t t;
+
+    nval = UINT_MAX;
+    for (t=0; t<file->midi.no_tracks; ++t)
+    {
+        wait_parts = nval;
+
+        rv |= midiTrackProcess(&file->midi.track[t], time_parts, &elapsed_parts,
+                               &wait_parts);
+
+        if (nval > wait_parts) {
+            nval = wait_parts;
+        }
+    }
+
+    if (nval == UINT_MAX) {
+        nval = 100;
+    }
+    *next = nval;
+
+    return rv;
+}
+    
+
+int
 main(int argc, char **argv)
 {
     char *filename, *devname;
@@ -278,7 +318,7 @@ main(int argc, char **argv)
     dt_us = -(now.tv_sec * 1000000 + now.tv_usec);
     do
     {
-        if (!midiFileProcess(file, time_parts, wait_parts)) break;
+        if (!midiFileProcess(file, time_parts, &wait_parts)) break;
 
         if (wait_parts > 0)
         {
