@@ -1915,11 +1915,27 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     midi.channel(channel).set_vibrato_delay(val);
                     break;
                 }
+                case MIDI_PORTAMENTO_CONTROL:
+                {
+                    int16_t key = value;
+                    float pitch = 1.0f;
+                    if (!midi.channel(channel).is_drums()) {
+                        key = (key-0x20) + param[MIDI_CHANNEL_COARSE_TUNING].coarse;
+                        pitch = midi.channel(channel).get_tuning();
+                        pitch *= midi.get_tuning();
+                    }
+                    midi.channel(channel).set_pitch_start(pitch);
+                    break;
+                }
                 case MIDI_PORTAMENTO_TIME:
                 {
                     float val = powf(10.0f, 2.0f-3.0f*value/127.0f);
-                    val = cents2pitch(val, channel)*1e-3f;
+//                  val = cents2pitch(val, channel)*1e-3f;
                     midi.channel(channel).set_pitch_rate(val);
+                    break;
+                }
+                case MIDI_PORTAMENTO_TIME|MIDI_FINE:
+                {
                     break;
                 }
                 case MIDI_PORTAMENTO_SWITCH:
@@ -1940,7 +1956,6 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 case MIDI_PHASER_EFFECT_DEPTH:
                     midi.channel(channel).set_phaser_depth((float)value/64.0f);
                     break;
-                case MIDI_PORTAMENTO_CONTROL:
                 case MIDI_HOLD2:
                 case MIDI_PAN|MIDI_FINE:
                 case MIDI_EXPRESSION|MIDI_FINE:
