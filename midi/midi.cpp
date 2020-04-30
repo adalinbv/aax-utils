@@ -1933,7 +1933,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 case MIDI_PORTAMENTO_TIME:
                 {
                     float v = value/100.0f;
-                    float val = 5.0f*(v*v*v*v - v*v + v);
+                    float val = v*5.0f*(v*v*v*v - v*v + v);
                     midi.channel(channel).set_pitch_rate(val);
                     break;
                 }
