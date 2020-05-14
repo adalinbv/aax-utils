@@ -61,6 +61,7 @@ help()
     printf("Optionally writes the audio to an output file.\n");
 
     printf("\nOptions:\n");
+    printf("  -g, --gain <volume>\t\tchange the volume setting\n");
     printf("  -i, --input <file>\t\tplayback audio from a file\n");
     printf("  -c, --capture <device>\tcapture from an audio device\n");
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
@@ -118,6 +119,7 @@ int main(int argc, char **argv)
     aaxConfig config = NULL;
     aaxConfig record = NULL;
     aaxConfig file = NULL;
+    float gain = 1.0f;
     int res, rv = 0;
     int verbose = 0;
 
@@ -133,6 +135,7 @@ int main(int argc, char **argv)
        verbose = 1;
     }
 
+    gain = getGain(argc, argv);
     idevname = getCaptureName(argc, argv);
     infile = getInputFile(argc, argv, IFILE_PATH);
     if (!idevname)
@@ -193,7 +196,7 @@ int main(int argc, char **argv)
         int key, paused;
         aaxFrame frame = NULL;
         aaxEffect effect;
-//      aaxFilter filter;
+        aaxFilter filter;
         char tstr[80];
         int state;
         float dt;
@@ -326,16 +329,15 @@ int main(int argc, char **argv)
             testForState(res, "aaxMixerRegisterSensor file out");
         }
 
-#if 0
         /** set capturing Auto-Gain Control (AGC): 0dB */
-        filter = aaxMixerGetFilter(record, AAX_VOLUME_FILTER);
+        filter = aaxMixerGetFilter(config, AAX_VOLUME_FILTER);
         if (filter)
         {
+            aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
             aaxFilterSetParam(filter, AAX_AGC_RESPONSE_RATE, AAX_LINEAR, 1.5f);
-            aaxMixerSetFilter(record, filter);
+            aaxMixerSetFilter(config, filter);
             res = aaxFilterDestroy(filter);
         }
-#endif
 
         /** must be called after aaxMixerRegisterSensor */
         if (record)
