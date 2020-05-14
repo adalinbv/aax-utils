@@ -39,6 +39,7 @@
 #include <climits>
 #include <cassert>
 #include <cstdlib>
+#include <iomanip>	// std::hex
 #include <xml.h>
 #include <aax/strings.hpp>
 
@@ -1628,23 +1629,22 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 break;
             }
             case MIDI_TIME_SIGNATURE:
-            {
+            {	// the signature as notated on sheet music.
                 uint8_t nn = pull_byte();
                 uint8_t dd = pull_byte();
                 uint8_t cc = pull_byte(); // 1 << cc
                 uint8_t bb = pull_byte();
                 uint16_t QN = 100000.0f / (float)cc;
                 CSV("Time_signature, %d, %d, %d, %d\n", nn, dd, cc, bb);
-
                 break;
             }
             case MIDI_SMPTE_OFFSET:
             {
-                uint8_t hr = pull_byte();
-                uint8_t mn = pull_byte();
-                uint8_t se = pull_byte();
-                uint8_t fr = pull_byte();
-                uint8_t ff = pull_byte();
+                uint8_t hr = pull_byte(); // 0sshhhhha: ss is the frame rate
+                uint8_t mn = pull_byte(); // ss = 00: 24 frames per second
+                uint8_t se = pull_byte(); // ss = 01: 25 frames per second
+                uint8_t fr = pull_byte(); // ss = 10: 29.97 frames per second
+                uint8_t ff = pull_byte(); // ss = 11: 30 frames per second
                 CSV( "SMPTE_offset, %d, %d, %d, %d, %d\n", hr, mn, se, fr, ff);
                 break;
             }
@@ -1664,6 +1664,11 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 CSV("\n");
                 break;
             default:        // unsupported
+                for (int i=0; i<size; ++i) {
+                    c = pull_byte();
+                }
+                std::cerr << "Error: Unsupported system message: " << meta
+                          << " (0x" << std::hex << meta << ")" << std::endl;
                 LOG("Unsupported system message: 0x%x\n", meta);
                 break;
             }
@@ -2293,7 +2298,8 @@ MIDIFile::process(uint64_t time_parts, uint32_t& next)
         wait_parts = next;
 
         try {
-            rv |= track[t]->process(time_parts, elapsed_parts, wait_parts);
+            bool res = track[t]->process(time_parts, elapsed_parts, wait_parts);
+            if (t || !midi.get_format()) rv |= res;
         } catch (const std::runtime_error &e) {
             throw(e);
             break;
