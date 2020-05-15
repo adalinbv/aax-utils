@@ -610,9 +610,6 @@ const std::pair<std::string,int>
 MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 {
     auto itb = instruments.find(bank_no);
-    if (itb == instruments.end() && bank_no > 0) {
-         itb = instruments.find(0);
-    }
 
     do
     {
@@ -635,7 +632,7 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
             bank_no &= ~0x7F;
             itb = instruments.find(bank_no);
         }
-        if (bank_no & 0x3F80)	// MSB (GS-MIDI / GM-MIDI 2)
+        else if (bank_no & 0x3F80)	// MSB (GS-MIDI / GM-MIDI 2)
         {
             bank_no &= ~0x3F80;
             itb = instruments.find(bank_no);
