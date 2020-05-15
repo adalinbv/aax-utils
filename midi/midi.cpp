@@ -2061,6 +2061,12 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                    const char *config)
     : MIDI(devname, selection, mode), file(filename)
 {
+    struct stat info;
+    if (stat(filename, &info) != 0 || (info.st_mode & S_IFDIR)) {
+        std::cerr << "Error opening: " << filename << std::endl;
+        return;
+    }
+
     std::ifstream file(filename, std::ios::in|std::ios::binary|std::ios::ate);
     ssize_t size = file.tellg();
     file.seekg(0, std::ios::beg);
