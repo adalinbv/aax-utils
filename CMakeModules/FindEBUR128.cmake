@@ -1,42 +1,50 @@
-# Copyright (c) 2014 Andrew Kelley
-# This file is MIT licensed.
-# See http://opensource.org/licenses/MIT
+# Locate libebur128 library
+# This module defines
+# EBUR128_LIBRARY, the name of the library to link against
+# EBUR128_FOUND, if false, do not try to link
+# EBUR128_INCLUDE_DIR, where to find header
+#
+set(EBUR128_FOUND FALSE)
 
-# EBUR128_FOUND
-# EBUR128_INCLUDE_DIR
-# EBUR128_LIBRARY
+# use pkg-config to get the directories and then use these values
+# in the find_path() and find_library() calls
+find_package(PkgConfig)
 
-set(ProgramFilesx86 "ProgramFiles(x86)")
+if(PKG_CONFIG_FOUND)
+  pkg_check_modules(_EBUR128 libebur128)
+endif(PKG_CONFIG_FOUND)
 
-find_path(EBUR128_INCLUDE_DIR
-  NAMES ebur128.h
+find_path(EBUR128_INCLUDE_DIR ebur128.h
   HINTS
-  "$ENV{${ProgramFilesx86}}/libebur128"
   PATH_SUFFIXES include
   PATHS
+  ${_EBUR128_INCLUDE_DIRS}
   ~/Library/Frameworks
   /Library/Frameworks
-  /usr/local
-  /usr
-  /opt
+  /usr/local/include
+  /usr/include
+  /sw/include
+  /opt/local/include
+  /opt/csw/include
+  /opt/include
+  /mingw
 )
 
 find_library(EBUR128_LIBRARY
   NAMES ebur128
   HINTS
-  "$ENV{${ProgramFilesx86}}/libebur128"
-  PATH_SUFFIXES lib64
+  PATH_SUFFIXES lib64 lib
   PATHS
-    ~/Library/Frameworks
-    /Library/Frameworks
-    /usr/local
-    /usr
-    /opt
+  ${_EBUR128_LIBRARY_DIRS}
+  /usr/local
+  /usr
+  /sw
+  /opt/local
+  /opt/csw
+  /opt
+  /mingw
 )
 
-if(EBUR128_LIBRARY AND EBUR128_INCLUDE_DIR)
-  include_directories(${EBUR128INCLUDE_DIR})
-  set(EBUR128FOUND "YES")
-else()
-  set(EBUR128FOUND "NO")
-endif()
+if(EBUR128_LIBRARY)
+  set(EBUR128_FOUND TRUE)
+endif(EBUR128_LIBRARY)
