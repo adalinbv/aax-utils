@@ -316,7 +316,7 @@ void
 MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
 {
     const char *filename, *type = "instrument";
-    auto map = instruments;
+    auto imap = instruments;
 
     std::string iname;
     if (!gmmidi.empty())
@@ -401,9 +401,9 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                 {
                     if (xmlNodeGetPos(xmid, xbid, "bank", b) != 0)
                     {
-                        long int bank_no = xmlAttributeGetInt(xbid, "n") << 7;
                         unsigned int slen, inum = xmlNodeGetNum(xbid, type);
                         void *xiid = xmlMarkId(xbid);
+                        unsigned int bank_no;
 
                         bank_no = xmlAttributeGetInt(xbid, "n") << 7;
                         bank_no += xmlAttributeGetInt(xbid, "l");
@@ -416,7 +416,7 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                             frames.insert({bank_no,std::string(file)});
                         }
 
-                        auto bank = map[bank_no];
+                        auto bank = imap[bank_no];
                         for (unsigned int i=0; i<inum; i++)
                         {
                             if (xmlNodeGetPos(xbid, xiid, type, i) != 0)
@@ -456,7 +456,7 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                                 }
                             }
                         }
-                        map[bank_no] = bank;
+                        imap[bank_no] = bank;
                         xmlFree(xiid);
                     }
                 }
@@ -475,7 +475,7 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
 
         if (id == 0)
         {
-            instruments = std::move(map);
+            instruments = std::move(imap);
 
             // next up: drums
             if (!gmdrums.empty())
@@ -496,10 +496,10 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
             }
             filename = iname.c_str();
             type = "drum";
-            map = drums;
+            imap = drums;
         }
         else {
-            drums = std::move(map);
+            drums = std::move(imap);
         }
     }
 }
@@ -611,12 +611,12 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 {
     auto itb = instruments.find(bank_no);
     if (itb == instruments.end() && bank_no > 0) {
-        itb = instruments.find(0);
+         itb = instruments.find(0);
     }
 
-    if (itb != instruments.end())
+    do
     {
-        do
+        if (itb != instruments.end())
         {
             auto bank = itb->second;
             auto iti = bank.find(program_no);
@@ -628,26 +628,31 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
                     return empty_map;
                 }
             }
-
-            if (bank_no & 0x7F)
-            {
-                bank_no &= ~0x7F;
-                itb = instruments.find(bank_no);
-            }
-            else if (bank_no > 0)
-            {
-                bank_no = 0;
-                itb = instruments.find(bank_no);
-            }
-            else
-            {
-               LOG("Instrument %i not found in bank %i-%i\n",
-                    program_no, bank_no >> 7, bank_no & 0x7F);
-               break;
-            }
         }
-        while (bank_no >= 0);
+
+        if (bank_no & 0x7F)	// LSB (XG-MIDI)
+        {
+            bank_no &= ~0x7F;
+            itb = instruments.find(bank_no);
+        }
+        if (bank_no & 0x3F80)	// MSB (GS-MIDI / GM-MIDI 2)
+        {
+            bank_no &= ~0x3F80;
+            itb = instruments.find(bank_no);
+        }
+        else if (bank_no > 0)	// fall back to bank-0, (GM-MIDI 0)
+        {
+            bank_no = 0;
+            itb = instruments.find(bank_no);
+        }
+        else
+        {
+           LOG("Instrument %i not found in bank %i-%i\n",
+                program_no, bank_no >> 7, bank_no & 0x7F);
+           break;
+        }
     }
+    while (bank_no >= 0);
     LOG("Instrument not found\n");
     return empty_map;
 }
