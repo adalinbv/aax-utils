@@ -53,7 +53,7 @@ install(TARGETS aaxplaymidi
         COMPONENT Applications
 )
 
-if(EBUR128FOUND)
+if(EBUR128_FOUND)
   CREATE_UTIL(aaxsstandardize)
   target_link_libraries(aaxsstandardize "${EBUR128_LIBRARY}")
   install(TARGETS aaxsstandardize
