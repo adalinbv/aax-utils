@@ -2075,11 +2075,15 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
 
     if (config)
     {
-        std::string s(config);
-        auto separator = s.find(',');
-        gmmidi = s.substr(0, separator);
-        if (separator != std::string::npos) {
-           gmdrums = s.substr(separator+1);
+        static const char *prefix = "gmmidi-";
+        static const char *ext = ".xml";
+        gmmidi = config;
+
+        if (gmmidi.compare(0, strlen(prefix), prefix)) {
+            gmmidi.insert(0, prefix);
+        }
+        if (gmmidi.compare(gmmidi.length()-strlen(ext), strlen(ext), ext)) {
+            gmmidi.append(ext);
         }
     }
 
