@@ -679,7 +679,7 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
     int level = 0;
     std::string name = "";
     bool drums = is_drums(channel_no);
-    if (drums && !frames.empty())
+    if (!frames.empty())
     {
         auto it = frames.find(program_no);
         if (it != frames.end()) {
@@ -689,8 +689,10 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
     }
 
     Buffer& buffer = midi.buffer(name, level);
-    if (buffer) {
+    if (buffer)
+    {
         buffer.set(AAX_CAPABILITIES, int(instrument_mode));
+        Sensor::add(buffer);
     }
 
     try {
