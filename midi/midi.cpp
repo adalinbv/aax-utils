@@ -395,6 +395,10 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                     xmlFree(set);
                 }
 
+                if (xmlAttributeExists(xmid, "file")) {
+                    effects = xmlAttributeGetString(xmid, "file");
+                }
+
                 unsigned int bnum = xmlNodeGetNum(xmid, "bank");
                 void *xbid = xmlMarkId(xmid);
                 for (unsigned int b=0; b<bnum; b++)
@@ -679,7 +683,7 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
     int level = 0;
     std::string name = "";
     bool drums = is_drums(channel_no);
-    if (!frames.empty())
+    if (drums && !frames.empty())
     {
         auto it = frames.find(program_no);
         if (it != frames.end()) {
@@ -689,10 +693,8 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
     }
 
     Buffer& buffer = midi.buffer(name, level);
-    if (buffer)
-    {
+    if (buffer) {
         buffer.set(AAX_CAPABILITIES, int(instrument_mode));
-        Sensor::add(buffer);
     }
 
     try {
@@ -2238,6 +2240,11 @@ MIDIFile::initialize(const char *grep)
         }
 
         midi.set(AAX_INITIALIZED);
+        if (midi.get_effects().length())
+        {
+           Buffer &buffer = midi.buffer(midi.get_effects(), 0);
+           Sensor::add(buffer);
+        }
 
         if (midi.get_verbose())
         {

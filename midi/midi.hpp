@@ -145,6 +145,8 @@ public:
         instrument_mode = m; set(AAX_CAPABILITIES, m); set_path();
     }
 
+    inline std::string& get_effects() { return effects; }
+
     inline unsigned int get_refresh_rate() { return refresh_rate; }
     inline unsigned int get_polyphony() { return polyphony; }
 
@@ -248,6 +250,7 @@ private:
     std::string patch_set = "default";
     std::string patch_version = "1.0.0";
 
+    std::string effects;
     std::string track_name;
     std::map<uint16_t,MIDIChannel*> channels;
     std::map<uint16_t,MIDIChannel*> reverb_channels;
@@ -257,6 +260,7 @@ private:
     std::map<std::string,_patch_t> patches;
 
     std::unordered_map<std::string,std::pair<size_t,std::shared_ptr<Buffer>>> buffers;
+
     Buffer nullBuffer;
 
     std::vector<std::string> loaded;
