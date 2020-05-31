@@ -126,10 +126,13 @@ int main(int argc, char **argv)
                 testForError(emitter[q], "Unable to set emitter mode");
 
                 /* gain */
-                filter = aaxFilterCreate(config, AAX_VOLUME_FILTER);
+                filter = aaxEmitterGetFilter(emitter[q], AAX_VOLUME_FILTER);
                 testForError(filter, "Unable to create the volume filter");
 
                 res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
+                testForState(res, "aaxFilterSetParam");
+
+                res = aaxFilterSetParam(filter, AAX_MAX_GAIN, AAX_LINEAR, 16.f);
                 testForState(res, "aaxFilterSetParam");
 
                 res = aaxEmitterSetFilter(emitter[q], filter);
@@ -237,14 +240,14 @@ int main(int argc, char **argv)
                 if (get_key()) break;
 
                 /* gain */
-                if (gain_step >= 0.0f) {
+                if (gain_step > 0.0f) {
                     gain = _MIN(gain+gain_step, gain2);
-                } else {
+                } else if (gain_step < 0.0f) {
                     gain = _MAX(gain+gain_step, gain2);
                 }
                 for (i=0; i<nsrc; i++)
                 {
-                    filter = aaxFilterCreate(config, AAX_VOLUME_FILTER);
+                    filter = aaxEmitterGetFilter(emitter[i], AAX_VOLUME_FILTER);
                     testForError(filter, "Unable to create the volume filter");
 
                     res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
