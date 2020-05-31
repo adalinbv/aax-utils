@@ -358,7 +358,7 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
 {
     char *keep_volume = getenv("KEEP_VOLUME");
     unsigned int s, snum;
-    float max = 0.0f;
+    float f, max = 0.0f;
     char dist = 0;
     char env = 0;
     void *xsid;
@@ -367,7 +367,10 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
     dsp->type = lwrstr(xmlAttributeGetString(xid, "type"));
     dsp->eff_type = (t == FILTER) ? aaxFilterGetByName(NULL, dsp->type) :
                                     aaxEffectGetByName(NULL, dsp->type);
-    if (!final && (!strcasecmp(dsp->type, "volume") || !strcasecmp(dsp->type, "timed-gain") || !strcasecmp(dsp->type, "dynamic-gain"))) {
+    if (!final && (!strcasecmp(dsp->type, "volume") ||
+                   !strcasecmp(dsp->type, "timed-gain") ||
+                   !strcasecmp(dsp->type, "dynamic-gain")))
+    {
         dsp->src = false_const;
     }
     else
@@ -375,22 +378,28 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
         dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
         if (dsp->src && !emitter && final)
         {
-           int slen = strlen(dsp->src);
-           int tlen = strlen("timed");
-           if (slen >= tlen && !strcmp(dsp->src+slen-tlen, "timed")) {
-             printf("Warning, timed transision filters and effects are single-shot only and therefore\n\tof little use inside audio-frames.\n");
-          }
-       }
+            int slen = strlen(dsp->src);
+            int tlen = strlen("timed");
+            int itlen = strlen("inverse-timed");
+            if ((slen >= tlen && !strcmp(dsp->src+slen-tlen, "timed")) ||
+               (slen >= itlen && !strcmp(dsp->src+slen-itlen, "inverse-timed")))
+            {
+                printf("Warning, timed transision filters and effects are "
+                       "single-shot only and therefore\n\tof little use inside "
+                       "audio-frames.\n");
+            }
+        }
     }
     dsp->stereo = xmlAttributeGetBool(xid, "stereo");
     dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
     dsp->optional = xmlAttributeGetBool(xid, "optional");
     if (!strcasecmp(dsp->type, "timed-gain")) {
         if (xmlAttributeExists(xid, "release-time")) {
-           dsp->release_time = _MAX(xmlAttributeGetDouble(xid, "release-time"), 0.0f);
+           f = _MAX(xmlAttributeGetDouble(xid, "release-time"), 0.0f);
         } else {
-           dsp->release_time = _MAX(xmlAttributeGetDouble(xid, "release-factor")/2.5f, 0.0f);
+           f = _MAX(xmlAttributeGetDouble(xid, "release-factor")/2.5f, 0.0f);
         }
+        dsp->release_time = f;
         env = 1;
     } else if (!strcasecmp(dsp->type, "distortion")) {
         dist = 1;
@@ -422,7 +431,8 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
                         pn = _MINMAX(xmlAttributeGetInt(xpid, "n"), 0, 3);
                     }
 
-                    dsp->slot[sn].param[pn].pitch = _MAX(xmlAttributeGetDouble(xpid, "pitch"), 0.0f);
+                    f = _MAX(xmlAttributeGetDouble(xpid, "pitch"), 0.0f);
+                    dsp->slot[sn].param[pn].pitch = f;
 
                     if (dsp->slot[sn].param[pn].adjust == 0.0f) {
                        adjust = xmlAttributeGetDouble(xpid, "auto-sustain");
@@ -433,18 +443,12 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
                     v = _MAX(value - adjust*_lin2log(220.0f), 0.01f);
 
                     if (env && (p % 2 == 0) && v > max) max = v;
-//                  else if (dist && !p) max = -_lin2db(3.0f*powf(v, 1.f/3.5f));
 
                     if (simplify)
                     {
                         if (adjust) {
                             value = v;
                         }
-#if 0
-                        if (env && value > 1.0f && (pn % 2)) {
-                            value = AAX_FPINFINITE;
-                        }
-#endif
                         adjust = 0.0f;
                     }
 
@@ -867,7 +871,8 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
 
                 int n;
                 for (n=0; n < p; ++n) {
-                    if (obj->dsp[n].eff_type == obj->dsp[p].eff_type) {
+                    if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
+                        obj->dsp[n].dtype == obj->dsp[p].dtype) {
                         printf("\033[0;31mWarning:\033[0m %s filter is defined mutiple times.\n", type);
                     }
                 }
@@ -893,7 +898,8 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
 
                 int n;
                 for (n=0; n < p; ++n) {
-                    if (obj->dsp[n].eff_type == obj->dsp[p].eff_type) {
+                    if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
+                        obj->dsp[n].dtype == obj->dsp[p].dtype) {
                         printf("\033[0;31mWarning:\033[0m %s effect is defined mutiple times.\n", type);
                     }
                 }
