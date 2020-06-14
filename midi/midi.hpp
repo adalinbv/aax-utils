@@ -75,6 +75,14 @@ struct param_t
    uint8_t fine;
 };
 
+struct wide_t
+{
+    int wide;
+    float spread;
+};
+
+using inst_t = std::pair<std::string,struct wide_t>;
+
 class MIDIChannel;
 
 class MIDI : public AeonWave
@@ -159,8 +167,8 @@ public:
     inline void set_grep(bool g) { grep_mode = g; }
     inline bool get_grep() { return grep_mode; }
 
-    const std::pair<std::string,int> get_drum(uint16_t program, uint8_t key, bool all=false);
-    const std::pair<std::string,int> get_instrument(uint16_t bank, uint8_t program, bool all=false);
+    const inst_t get_drum(uint16_t program, uint8_t key, bool all=false);
+    const inst_t get_instrument(uint16_t bank, uint8_t program, bool all=false);
     std::map<std::string,_patch_t>& get_patches() { return patches; }
 
     inline void set_initialize(bool i) { initialize = i; };
@@ -255,8 +263,9 @@ private:
     std::map<uint16_t,MIDIChannel*> channels;
     std::map<uint16_t,MIDIChannel*> reverb_channels;
     std::map<uint16_t,std::string> frames;
-    std::map<uint16_t,std::map<uint16_t,std::pair<std::string,int>>> drums;
-    std::map<uint16_t,std::map<uint16_t,std::pair<std::string,int>>> instruments;
+
+    std::map<uint16_t,std::map<uint16_t,inst_t>> drums;
+    std::map<uint16_t,std::map<uint16_t,inst_t>> instruments;
     std::map<std::string,_patch_t> patches;
 
     std::unordered_map<std::string,std::pair<size_t,std::shared_ptr<Buffer>>> buffers;
@@ -268,7 +277,7 @@ private:
     std::vector<std::string> selection;
     std::vector<uint16_t> active_track;
 
-    std::pair<std::string,int> empty_map = {"", 0};
+    inst_t empty_map = {"",{0,1.0f}};
     std::string instr = "gmmidi.xml";
     std::string drum = "gmdrums.xml";
     std::string path;

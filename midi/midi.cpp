@@ -426,10 +426,15 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                             if (xmlNodeGetPos(xbid, xiid, type, i) != 0)
                             {
                                 long int n = xmlAttributeGetInt(xiid, "n");
-                                int stereo = xmlAttributeGetInt(xiid, "wide");
-                                if (!stereo && xmlAttributeGetBool(xiid, "wide"))
+                                int wide = xmlAttributeGetInt(xiid, "wide");
+                                float spread = 1.0f;
+
+                                if (!wide && xmlAttributeGetBool(xiid, "wide"))
                                 {
-                                    stereo = 1;
+                                    wide = 1;
+                                }
+                                if (xmlAttributeExists(xiid, "spread")) {
+                                   spread = xmlAttributeGetDouble(xiid, "spread");
                                 }
 
                                 // instrument file-name
@@ -438,7 +443,7 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                                 if (slen)
                                 {
                                     file[slen] = 0;
-                                    bank.insert({n,{file,stereo}});
+                                    bank.insert({n,{file,{wide,spread}}});
 
                                     _patch_t p;
                                     p.insert({0,{i,file}});
@@ -453,7 +458,7 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                                     if (slen)
                                     {
                                         file[slen] = 0;
-                                        bank.insert({n,{file,stereo}});
+                                        bank.insert({n,{file,{wide,spread}}});
 
                                         add_patch(file);
                                     }
@@ -557,7 +562,7 @@ MIDI::add_patch(const char *file)
  * For drum mapping the program_no is stored in the bank number of the map
  * and the key_no in the program number of the map.
  */
-const std::pair<std::string,int>
+const inst_t
 MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
 {
     auto itb = drums.find(program_no << 7);
@@ -610,7 +615,7 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
     return empty_map;
 }
 
-const std::pair<std::string,int>
+const inst_t
 MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 {
     auto itb = instruments.find(bank_no);
@@ -879,7 +884,8 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
                         // AAX_AFTERTOUCH_SENSITIVITY == AAX_VELOCITY_FACTOR
                         pressure_sensitivity = 0.01f*buffer.get(AAX_VELOCITY_FACTOR);
                     }
-                    midi.channel(channel_no).set_wide(inst.second);
+                    midi.channel(channel_no).set_wide(inst.second.wide);
+                    midi.channel(channel_no).set_wide(inst.second.spread);
                 }
             }
         }
