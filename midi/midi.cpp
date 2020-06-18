@@ -426,9 +426,12 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                             if (xmlNodeGetPos(xbid, xiid, type, i) != 0)
                             {
                                 long int n = xmlAttributeGetInt(xiid, "n");
-                                int wide = xmlAttributeGetInt(xiid, "wide");
                                 float spread = 1.0f;
+                                int wide = 0;
 
+                                if (simd64) {
+                                    wide = xmlAttributeGetInt(xiid, "wide");
+                                }
                                 if (!wide && xmlAttributeGetBool(xiid, "wide"))
                                 {
                                     wide = 1;
@@ -1838,7 +1841,9 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     LOG("Unsupported control change: MIDI_BALANCE, ch: %u, value: %u\n", channel, value);
                     break;
                 case MIDI_PAN:
-                    midi.channel(channel).set_pan(((float)value-64.0f)/64.0f);
+                    if (midi.cores >= 4 && midi.simd) {
+                        midi.channel(channel).set_pan(((float)value-64.f)/64.f);
+                    }
                     break;
                 case MIDI_EXPRESSION:
                     midi.channel(channel).set_expression((float)value/127.0f);
@@ -2227,13 +2232,7 @@ MIDIFile::initialize(const char *grep)
         rewind();
         pos_sec = 0;
 
-        int capabilities = midi.get(AAX_CAPABILITIES);
-        int midi_mode = (capabilities & AAX_RENDER_MASK);
-        int cores = (capabilities & AAX_CPU_CORES)+1;
-        int simd64 = (capabilities & AAX_SIMD256);
-        int simd = (capabilities & AAX_SIMD);
         float refrate;
-
         if (rrate) refrate = atof(rrate);
         else if (midi.get_refresh_rate() > 0.0f) refrate = midi.get_refresh_rate();
         else if (simd64 && cores >=4) refrate = 90.0f;
@@ -2267,12 +2266,17 @@ MIDIFile::initialize(const char *grep)
             }
 
             enum aaxRenderMode render_mode = aaxRenderMode(midi.render_mode());
-            if (!midi_mode) {
-                MESSAGE("Rendering : %s\n", to_string(render_mode).c_str());
+            std::string r = "Rendering : ";
+            if (cores < 4 || !simd) {
+                r += " mono playback";
             } else {
-                MESSAGE("Rendering : %s, %s\n", to_string(render_mode).c_str(),
-                              to_string(aaxCapabilities(midi_mode)).c_str());
+                r += to_string(render_mode);
             }
+            if (midi_mode) {
+                r += ", ";
+                r += to_string(aaxCapabilities(midi_mode));
+            }
+            MESSAGE("Rendering : %s\n", r.c_str());
             MESSAGE("Patch set : %s", midi.get_patch_set().c_str());
             MESSAGE(" instrument set version %s\n", midi.get_patch_version().c_str());
             MESSAGE("Directory : %s\n", midi.info(AAX_SHARED_DATA_DIR));

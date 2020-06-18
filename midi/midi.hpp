@@ -238,6 +238,11 @@ public:
     }
 
     MIDI &midi = *this;
+    int capabilities = midi.get(AAX_CAPABILITIES);
+    int cores = (capabilities & AAX_CPU_CORES)+1;
+    int midi_mode = (capabilities & AAX_RENDER_MASK);
+    int simd64 = (capabilities & AAX_SIMD256);
+    int simd = (capabilities & AAX_SIMD);
 private:
     void set_path();
 
