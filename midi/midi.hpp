@@ -174,6 +174,9 @@ public:
     inline void set_initialize(bool i) { initialize = i; };
     inline bool get_initialize() { return initialize; }
 
+    inline void set_mono(bool m) { mono = m; }
+    inline bool get_mono() { return mono; }
+
     inline void set_verbose(bool v) { verbose = v; }
     inline bool get_verbose() { return verbose; }
 
@@ -302,6 +305,7 @@ private:
     bool verbose = false;
     bool lyrics = false;
     bool grep_mode = false;
+    bool mono = false;
 
     uint8_t reverb_type = 4;
     Param reverb_decay_depth = 0.15f;

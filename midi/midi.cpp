@@ -1841,7 +1841,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     LOG("Unsupported control change: MIDI_BALANCE, ch: %u, value: %u\n", channel, value);
                     break;
                 case MIDI_PAN:
-                    if (midi.cores >= 4 && midi.simd) {
+                    if (!midi.get_mono()) {
                         midi.channel(channel).set_pan(((float)value-64.f)/64.f);
                     }
                     break;
@@ -2269,6 +2269,7 @@ MIDIFile::initialize(const char *grep)
             std::string r = "Rendering : ";
             if (cores < 4 || !simd) {
                 r += " mono playback";
+                midi.set_mono(true);
             } else {
                 r += to_string(render_mode);
             }
