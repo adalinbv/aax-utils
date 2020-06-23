@@ -42,17 +42,21 @@
 #include "base/timer.h"
 #include "driver.h"
 
+#define NUM_FILTERS		3
 #define	SAMPLE_FREQ		48000
 
-#define LF_FILTER_FREQUENCY	 100
-#define LF_GAIN 		0.0f
-#define LF_Q			5.0f
+#define LF_FILTER_FREQUENCY	 100.0f
+#define LF_GAIN 		0.2f		//
+#define LF_Q			1.2f
 
-#define MF_GAIN			1.0f
+#define MF_FILTER_FREQUENCY	1000.0f
+#define MF_GAIN1		1.0f		//
+#define MF_Q			1.5f
 
-#define HF_FILTER_FREQUENCY	1000
-#define HF_GAIN			0.2f
-#define HF_Q			5.0f
+#define HF_FILTER_FREQUENCY	8000.0f
+#define MF_GAIN2		0.1f		//
+#define HF_GAIN			0.0f		//
+#define HF_Q			1.5f
 
 
 int main()
@@ -107,18 +111,28 @@ int main()
         res = aaxEmitterSetMode(emitter, AAX_LOOPING, AAX_TRUE);
         testForState(res, "aaxEmitterSetMode");
 
+        printf("%2.1f | %5.0f Hz | %2.1f | %5.0f Hz | %2.1f | %5.0f Hz | %2.1f\n",
+                LF_GAIN, LF_FILTER_FREQUENCY, MF_GAIN1, MF_FILTER_FREQUENCY,
+                MF_GAIN2, HF_FILTER_FREQUENCY, HF_GAIN);
+
         /* equalizer */
         filter = aaxFilterCreate(config, AAX_EQUALIZER);
         testForError(filter, "aaxFilterCreate");
 
         res = aaxFilterSetSlot(filter, 0, AAX_LINEAR, LF_FILTER_FREQUENCY,
-                                             LF_GAIN, MF_GAIN, LF_Q);
+                                             LF_GAIN, MF_GAIN1, LF_Q);
         testForState(res, "aaxFilterSetSlot 0");
 
-        res = aaxFilterSetSlot(filter, 1, AAX_LINEAR, HF_FILTER_FREQUENCY,
-                                             MF_GAIN , HF_GAIN, HF_Q);
+#if (NUM_FILTERS > 1)
+        res = aaxFilterSetSlot(filter, 1, AAX_LINEAR, MF_FILTER_FREQUENCY,
+                                             MF_GAIN1, MF_GAIN2, MF_Q);
         testForState(res, "aaxFilterSetSlot 1");
-
+#endif
+#if (NUM_FILTERS > 2)
+        res = aaxFilterSetSlot(filter, 2, AAX_LINEAR, HF_FILTER_FREQUENCY,
+                                             MF_GAIN2 , HF_GAIN, HF_Q);
+        testForState(res, "aaxFilterSetSlot 2");
+#endif
         res = aaxFilterSetState(filter, AAX_TRUE);
         testForState(res, "aaxFilterSetState");
 
