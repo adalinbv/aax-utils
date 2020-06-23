@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018 by Erik Hofman.
- * Copyright (C) 2018 by Adalin B.V.
+ * Copyright (C) 2018-2020 by Erik Hofman.
+ * Copyright (C) 2018-2020 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -376,17 +376,34 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
     else
     {
         dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
-        if (dsp->src && !emitter && final)
+        if (!emitter && final)
         {
-            int slen = strlen(dsp->src);
-            int tlen = strlen("timed");
-            int itlen = strlen("inverse-timed");
-            if ((slen >= tlen && !strcmp(dsp->src+slen-tlen, "timed")) ||
-               (slen >= itlen && !strcmp(dsp->src+slen-itlen, "inverse-timed")))
+            if (dsp->src)
             {
-                printf("Warning, timed transision filters and effects are "
-                       "single-shot only and therefore\n\tof little use inside "
-                       "audio-frames.\n");
+               int slen = strlen(dsp->src);
+               int tlen = strlen("timed");
+               int itlen = strlen("inverse-timed");
+               if ((slen >= tlen && !strcmp(dsp->src+slen-tlen, "timed")) ||
+                  (slen >= itlen && !strcmp(dsp->src+slen-itlen, "inverse-timed")))
+               {
+                   printf("\033[0;31mWarning:\033[0m timed transision filters "
+                          "and effects are le-shot only and therefore\n\t of "
+                          "little use inside audio-frames.\n");
+               }
+            }
+
+            if (!emitter && !strcasecmp(dsp->type, "frequency"))
+            {
+               int slen = dsp->src ? strlen(dsp->src) : 0;
+               int tlen = strlen("envelope");
+               int itlen = strlen("inverse-envelope");
+                if (!slen ||
+                   ((slen >= tlen && strcmp(dsp->src+slen-tlen, "envelope")) ||
+                    (slen >= itlen && strcmp(dsp->src+slen-itlen, "inverse-envelope")))) {
+                  printf("\033[0;31mWarning:\033[0m A frequency filter is "
+                         "defined in an autio frame\n\t\tConsider using a one,"
+                         " two or three band equalizer.\n");
+               }
             }
         }
     }
@@ -843,6 +860,9 @@ struct object_t		// emitter and audioframe
     int looping;
     float pan;
 
+    int freqfilter;
+    int equalizer;
+
     uint8_t no_dsps;
     struct dsp_t dsp[16];
 };
@@ -853,6 +873,8 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
     float max = 0.0f;
     void *xdid;
 
+    obj->freqfilter = -1;
+    obj->equalizer = -1;
     obj->mode = lwrstr(xmlAttributeGetString(xid, "mode"));
     obj->looping = xmlAttributeGetBool(xid, "looping");
     obj->pan = _MINMAX(xmlAttributeGetDouble(xid, "pan"), -1.0f, 1.0f);
@@ -865,6 +887,14 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
         if (xmlNodeGetPos(xid, xdid, "filter", d) != 0)
         {
             char *type = lwrstr(xmlAttributeGetString(xdid, "type"));
+
+            if (!emitter && !strcasecmp(type, "frequency")) {
+               obj->freqfilter = d;
+            }
+            if (!emitter && !strcasecmp(type, "equalizer")) {
+               obj->equalizer = d;
+            }
+
             if (!simplify || !emitter || strcasecmp(type, "frequency")) {
                 float m = fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter);
                 if (!max) max = m;
