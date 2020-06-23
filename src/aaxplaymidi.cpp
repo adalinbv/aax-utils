@@ -69,7 +69,8 @@ help()
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
     printf("  -s, --select <name|num>\tonly play the track with this name or number\n");
     printf("  -t, --time\t\t\ttime offset in seconds or (hh:)mm:ss\n");
-    printf("  -l, --load <instr,drums>\tmidi isntrument and drum configration files\n");
+    printf("  -l, --load <instr>\tmidi isntrument configration overlay file\n");
+    printf("  -m, --mono\t\t\tplay back in mono mode\n");
 //  printf("  -b, --batched\t\t\tprocess the file in batched (high-speed) mode.\n");
     printf("  -v, --verbose\t\t\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
@@ -103,7 +104,7 @@ static void sleep_for(float dt)
 
 void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
           const char *track, const char *config, float time_offs,
-          const char *grep, bool verbose, bool batched, bool fm)
+          const char *grep, bool mono, bool verbose, bool batched, bool fm)
 {
     if (grep) devname = (char*)"None"; // fastest for searching
     aax::MIDIFile midi(devname, infile, track, mode, config);
@@ -122,6 +123,7 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
         file.set(AAX_PLAYING);
     }
 
+    midi.set_mono(mono);
     midi.set_verbose(verbose);
     if (fm)
     {
@@ -197,6 +199,7 @@ int main(int argc, char **argv)
     char *infile = getInputFile(argc, argv, IFILE_PATH);
     bool verbose = false;
     bool batched = false;
+    char mono = false;
     bool fm = false;
     try
     {
@@ -230,13 +233,18 @@ int main(int argc, char **argv)
         {
             batched = true;
         }
+        if (getCommandLineOption(argc, argv, "-m") ||
+            getCommandLineOption(argc, argv, "--mono"))
+        {
+            mono = true;
+        }
 
         if (getCommandLineOption(argc, argv, "--fm")) {
             fm = 1;
         }
 
 
-        std::thread midiThread(play, devname, render_mode, infile, outfile, track, config, time_offs, grep, verbose, batched, fm);
+        std::thread midiThread(play, devname, render_mode, infile, outfile, track, config, time_offs, grep, mono, verbose, batched, fm);
         midiThread.join();
 
     } catch (const std::exception& e) {
