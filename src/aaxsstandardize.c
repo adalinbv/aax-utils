@@ -345,6 +345,7 @@ struct dsp_t
     uint8_t no_slots;
     struct slot_t
     {
+        char *state;
         struct param_t
         {
             float value;
@@ -437,6 +438,7 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
                 sn = _MINMAX(xmlAttributeGetInt(xsid, "n"), 0, 3);
             }
 
+            dsp->slot[sn].state = lwrstr(xmlAttributeGetString(xsid, "src"));
             for (p=0; p<pnum; p++)
             {
                 if (xmlNodeGetPos(xsid, xpid, "param", p) != 0)
@@ -513,7 +515,11 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
 
     for(s=0; s<dsp->no_slots; ++s)
     {
-        fprintf(output, "   <slot n=\"%i\">\n", s);
+        if (dsp->slot[s].state) {
+            fprintf(output, "   <slot n=\"%i\" src=\"%s\">\n", s, dsp->slot[s].state);
+        } else {
+            fprintf(output, "   <slot n=\"%i\">\n", s);
+        }
         for(p=0; p<4; ++p)
         {
             float adjust = dsp->slot[s].param[p].adjust;
