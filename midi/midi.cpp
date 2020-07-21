@@ -126,7 +126,7 @@ void
 MIDI::start()
 {
     reverb_state = AAX_REVERB_2ND_ORDER;
-    set_reverb("reverb/concerthall");
+    set_reverb("reverb/concerthall-large");
     reverb.set(AAX_INITIALIZED);
     reverb.set(AAX_PLAYING);
     AeonWave::add(reverb);
