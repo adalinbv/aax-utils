@@ -681,8 +681,9 @@ MIDI::grep(std::string& filename, const char *grep)
 MIDIChannel&
 MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
 {
+    bool drums = is_drums(channel_no);
     auto it = channels.find(channel_no);
-    if (it != channels.end())
+    if (!drums && it != channels.end())
     {
         if (it->second) AeonWave::remove(*it->second);
         channels.erase(it);
@@ -690,7 +691,6 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
 
     int level = 0;
     std::string name = "";
-    bool drums = is_drums(channel_no);
     if (drums && !frames.empty())
     {
         auto it = frames.find(program_no);
