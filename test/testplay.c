@@ -43,7 +43,7 @@
 #include "wavfile.h"
 
 
-#define SLEEP_TIME			50e-3f
+#define SLEEP_TIME			10e-3f
 #define SLIDE_TIME			7.0f
 #define FILE_PATH			SRC_PATH"/tictac.wav"
 
@@ -52,6 +52,7 @@ int main(int argc, char **argv)
     char *devname, *infile;
     aaxConfig config;
     char verbose = 0;
+    char repeat = 0;
     char fm = 0;
     int res;
 
@@ -59,6 +60,10 @@ int main(int argc, char **argv)
         getCommandLineOption(argc, argv, "--verbose"))
     {
         verbose = 1;
+    }
+
+    if (getCommandLineOption(argc, argv, "--repeat")) {
+        repeat = 5;
     }
 
     if (getCommandLineOption(argc, argv, "--fm")) {
@@ -256,6 +261,17 @@ int main(int argc, char **argv)
                     res = aaxEmitterSetFilter(emitter[i], filter);
                     testForState(res, "aaxEmitterSetGain");
                     aaxFilterDestroy(filter);
+
+                   if (repeat && dt > 0.1f) {
+                      aaxEmitterSetState(emitter[i], AAX_INITIALIZED);
+                      aaxEmitterSetState(emitter[i], AAX_PLAYING);
+                   }
+                }
+
+                if (repeat && dt > 0.1f)
+                {
+                   dt = 0.0f;
+                   repeat--;
                 }
             }
             while ((dt < duration) && (state == AAX_PLAYING));
