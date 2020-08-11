@@ -69,6 +69,9 @@ struct mmap_t {
 };
 
 #ifdef WIN32
+#define setenv(a,b,c)	(SetEnvironmentVariable((a), (b)) == 0 ? 1 : 0)
+#define unsetenv(a)	(SetEnvironmentVariable((a), NULL) == 0 ? 1 : 0)
+
 typedef struct
 {
     HANDLE m;
