@@ -18,6 +18,7 @@ find_path(EBUR128_INCLUDE_DIR ebur128.h
   HINTS
   PATH_SUFFIXES include
   PATHS
+  $ENV{ProgramFiles}/libebur128
   ${_EBUR128_INCLUDE_DIRS}
   ~/Library/Frameworks
   /Library/Frameworks
@@ -31,7 +32,7 @@ find_path(EBUR128_INCLUDE_DIR ebur128.h
 )
 
 find_library(EBUR128_LIBRARY
-  NAMES ebur128
+  NAMES ebur128 libebur128
   HINTS
   PATH_SUFFIXES lib64 lib
   PATHS
