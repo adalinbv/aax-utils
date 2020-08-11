@@ -69,6 +69,12 @@ struct mmap_t {
 };
 
 #ifdef WIN32
+typedef struct
+{
+    HANDLE m;
+    void *p;
+} SIMPLE_UNMMAP;
+
 void * simple_mmap(int fd, size_t length, SIMPLE_UNMMAP *un);
 void simple_unmmap(void *addr, size_t len, SIMPLE_UNMMAP *un);
 #else
