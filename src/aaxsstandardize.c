@@ -68,6 +68,7 @@
 static char debug = 0;
 static float freq = 220.0f;
 static char* false_const = "false";
+static float sound_frequency = 0.0f;
 
 static float _lin2log(float v) { return log10f(v); }
 //  static float _log2lin(float v) { return powf(10.f,v); }
@@ -730,7 +731,11 @@ void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gai
         sound->loop_end = xmlAttributeGetDouble(xid, "loop-end");
     }
 
-    sound->frequency = _MINMAX(xmlAttributeGetDouble(xid, "frequency"), 8.176f, 12543.854f);
+    if (sound_frequency == 0.0f) {
+       sound->frequency = _MINMAX(xmlAttributeGetDouble(xid, "frequency"), 8.176f, 12543.854f);
+    } else {
+       sound->frequency = sound_frequency;
+    }
     if (xmlAttributeGetDouble(xid, "duration")) {
         sound->duration = _MAX(xmlAttributeGetDouble(xid, "duration"), 0.0f);
     } else {
@@ -1336,12 +1341,16 @@ int main(int argc, char **argv)
     char *infile, *outfile;
     char simplify = 0;
     char commons = 1;
+    char *arg;
 
     if (argc == 1 || getCommandLineOption(argc, argv, "-h") ||
                     getCommandLineOption(argc, argv, "--help"))
     {
         help();
     }
+
+    arg = getCommandLineOption(argc, argv, "--frequency");
+    if (arg) sound_frequency = atof(arg);
 
     if (getCommandLineOption(argc, argv, "--omit-cc-by")) {
         commons = 0;
