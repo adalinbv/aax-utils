@@ -68,6 +68,10 @@
 static char debug = 0;
 static float freq = 220.0f;
 static char* false_const = "false";
+
+static char *sound_name = NULL;
+static int sound_bank = 0;
+static int sound_program = 0;
 static float sound_frequency = 0.0f;
 
 static float _lin2log(float v) { return log10f(v); }
@@ -202,13 +206,21 @@ void fill_info(struct info_t *info, void *xid, const char *filename)
     info->pan = _MINMAX(xmlAttributeGetDouble(xid, "pan"), -1.0f, 1.0f);
     info->program = info->bank = -1;
 
-    if (xmlAttributeExists(xid, "program")) {
-        info->program = _MINMAX(xmlAttributeGetInt(xid, "program"), 0, 127);
+    if (sound_name) {
+        info->name = sound_name;
+    } else {
+        info->name = prttystr(xmlAttributeGetString(xid, "name"));
     }
-    if (xmlAttributeExists(xid, "bank")) {
+    if (sound_bank) {
+        info->bank = sound_bank;
+    } else if (xmlAttributeExists(xid, "bank")) {
         info->bank = _MINMAX(xmlAttributeGetInt(xid, "bank"), 0, 127);
     }
-    info->name = prttystr(xmlAttributeGetString(xid, "name"));
+    if (sound_program) {
+        info->program = sound_program;
+    } else if (xmlAttributeExists(xid, "program")) {
+        info->program = _MINMAX(xmlAttributeGetInt(xid, "program"), 0, 127);
+    }
 
     xtid = xmlNodeGet(xid, "aftertouch");
     if (xtid)
@@ -323,7 +335,7 @@ void free_info(struct info_t *info)
     assert(info);
 
     if (info->path) free(info->path);
-    if (info->name) xmlFree(info->name);
+    if (!sound_name && info->name) xmlFree(info->name);
     if (info->license) xmlFree(info->license);
     for (i=0; i<2; ++i) {
        if (info->copyright[i].by) xmlFree(info->copyright[i].by);
@@ -1349,6 +1361,11 @@ int main(int argc, char **argv)
         help();
     }
 
+    sound_name = getCommandLineOption(argc, argv, "--name");
+    arg = getCommandLineOption(argc, argv, "--bank");
+    if (arg) sound_bank = atoi(arg);
+    arg = getCommandLineOption(argc, argv, "--program");
+    if (arg) sound_program = atoi(arg);
     arg = getCommandLineOption(argc, argv, "--frequency");
     if (arg) sound_frequency = atof(arg);
 
