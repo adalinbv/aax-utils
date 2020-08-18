@@ -98,8 +98,8 @@ public:
 
     virtual ~MIDI() {
         AeonWave::remove(reverb);
-        for(auto it=buffers.begin(); it!=buffers.end(); ++it) {
-            aaxBufferDestroy(*it->second.second); it->second.first = 0;
+        for (auto it : buffers) {
+            aaxBufferDestroy(*it.second.second); it.second.first = 0;
         }
         buffers.clear();
     }
@@ -110,7 +110,8 @@ public:
 
     MIDIChannel& channel(uint8_t channel_no);
 
-    inline std::map<uint16_t,MIDIChannel*>& channel() {
+    using channelMap = std::map<uint16_t,std::unique_ptr<MIDIChannel>>;
+    inline channelMap& channel() {
         return channels;
     }
 
@@ -268,8 +269,8 @@ private:
 
     std::string effects;
     std::string track_name;
-    std::map<uint16_t,MIDIChannel*> channels;
-    std::map<uint16_t,MIDIChannel*> reverb_channels;
+    channelMap channels;
+    channelMap reverb_channels;
     std::map<uint16_t,std::string> frames;
 
     std::map<uint16_t,std::map<uint16_t,inst_t>> drums;

@@ -146,7 +146,7 @@ MIDI::rewind()
     channels.clear();
     uSPP = 500000/PPQN;
 
-    for (auto it : reverb_channels)
+    for (const auto& it : reverb_channels)
     {
         reverb.remove(*it.second);
         AeonWave::add(*it.second);
@@ -292,7 +292,7 @@ MIDI::set_reverb_level(uint8_t channel, uint8_t value)
             {
                 AeonWave::remove(*it->second);
                 reverb.add(*it->second);
-                reverb_channels[it->first] = it->second;
+                reverb_channels[it->first] = std::move(it->second);
             }
         }
     }
@@ -707,8 +707,9 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
 
     try {
         auto ret = channels.insert(
-            { channel_no, new MIDIChannel(*this, buffer, channel_no,
-                                          bank_no, program_no, drums)
+            { channel_no, std::unique_ptr<MIDIChannel>(
+                                new MIDIChannel(*this, buffer, channel_no,
+                                          bank_no, program_no, drums))
             } );
         it = ret.first;
         AeonWave::add(*it->second);
