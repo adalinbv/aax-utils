@@ -138,7 +138,15 @@ ENDIF(MSVC)
 
 # Required libraries
 find_package(AAX COMPONENTS aax REQUIRED)
-find_package(XML COMPONENTS xml REQUIRED)
+if((GCC OR CLANG) AND RMALLOC)
+  set(C_FLAGS "${C_FLAGS} -fsanitize=address")
+  set(CXX_FLAGS "${CXX_FLAGS} -fsanitize=address")
+  set(LDFLAGS "${LD_FLAGS} -fsanitize=address")
+  set(RMALLOC OFF)
+  find_package(XML REQUIRED)
+else((GCC OR CLANG) AND RMALLOC)
+  find_package(XML REQUIRED)
+endif((GCC OR CLANG) AND RMALLOC)
 find_package(EBUR128 COMPONENTS ebur128)
 
 # Add definitions, compiler switches, etc.
