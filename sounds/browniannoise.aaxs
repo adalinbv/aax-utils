@@ -2,19 +2,11 @@
 
 <aeonwave>
  <sound frequency="440">
-  <waveform src="white-noise"/>
+  <waveform src="brownian-noise" duration="0.1"/>
  </sound>
 
  <emitter looping="true">
-  <filter type="frequency" src="4th-order">
-   <slot n="0">
-    <param n="0">2000</param>
-    <param n="1">1.0</param>
-    <param n="2">0.1</param>
-    <param n="3">10.0</param>
-   </slot>
-  </filter>
-  <filter type="envelope">
+    <filter type="envelope">
    <slot n="0">
     <param n="0">1.0</param>
     <param n="1">2.0</param>

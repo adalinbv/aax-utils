@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+
+<aeonwave>
+ <sound frequency="440">
+  <waveform src="white-noise"/>
+ </sound>
+
+ <emitter looping="true">
+  <filter type="envelope">
+   <slot n="0">
+    <param n="0">1.0</param>
+    <param n="1">2.0</param>
+    <param n="2">1.0</param>
+    <param n="3">0.3</param>
+   </slot>
+  </filter>
+ </emitter>
+
+ <audioframe>
+  <filter type="equalizer">
+   <slot n="0" src="48db" src="48db">
+    <param n="0">100</param>
+    <param n="1">0.1</param>
+    <param n="2">1.0</param>
+    <param n="3">1.0</param>
+   </slot>
+   <slot n="1" src="12db">
+    <param n="0">2000</param>
+    <param n="1">1.0</param>
+    <param n="2">0.1</param>
+    <param n="3">1.0</param>
+   </slot>
+  </filter>
+  <effect type="reverb" src="1st-order">
+   <slot n="0">
+    <param n="0">2200.0</param>
+    <param n="1">0.027</param>
+    <param n="2">1.0</param>
+    <param n="3">0.15</param>
+   </slot>
+  </effect>
+ </audioframe>
+
+ <mixer>
+  <effect type="reverb" src="2nd-order">
+   <slot n="0">
+    <param n="0">2200.0</param>
+    <param n="1">0.027</param>
+    <param n="2">1.0</param>
+    <param n="3">0.15</param>
+   </slot>
+  </effect>
+  <effect type="chorus" src="envelope" optional="true">
+   <slot n="0">
+    <param n="0">0.6</param>
+    <param n="1">0.05</param>
+    <param n="2">0.4</param>
+    <param n="3">0.4</param>
+   </slot>
+  </effect>
+ </mixer>
+
+</aeonwave>
