@@ -89,6 +89,7 @@ class MIDI : public AeonWave
 {
 private:
     using _patch_t = std::map<uint8_t,std::pair<uint8_t,std::string>>;
+    using _channel_map_t = std::map<uint16_t,std::shared_ptr<MIDIChannel>>;
 
 public:
     MIDI(const char* n, const char *tnames = nullptr,
@@ -110,8 +111,7 @@ public:
 
     MIDIChannel& channel(uint8_t channel_no);
 
-    using channelMap = std::map<uint16_t,std::unique_ptr<MIDIChannel>>;
-    inline channelMap& channel() {
+    inline _channel_map_t& channel() {
         return channels;
     }
 
@@ -269,8 +269,8 @@ private:
 
     std::string effects;
     std::string track_name;
-    channelMap channels;
-    channelMap reverb_channels;
+    _channel_map_t channels;
+    _channel_map_t reverb_channels;
     std::map<uint16_t,std::string> frames;
 
     std::map<uint16_t,std::map<uint16_t,inst_t>> drums;

@@ -292,7 +292,7 @@ MIDI::set_reverb_level(uint8_t channel, uint8_t value)
             {
                 AeonWave::remove(*it->second);
                 reverb.add(*it->second);
-                reverb_channels[it->first] = std::move(it->second);
+                reverb_channels[it->first] = it->second;
             }
         }
     }
@@ -303,7 +303,6 @@ MIDI::set_reverb_level(uint8_t channel, uint8_t value)
         {
             reverb.remove(*it->second);
             AeonWave::add(*it->second);
-            reverb_channels.erase(it);
         }
     }
 }
