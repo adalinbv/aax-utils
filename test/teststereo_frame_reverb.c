@@ -182,6 +182,7 @@ int main(int argc, char **argv)
             if (xbuffer) aaxBufferDestroy(xbuffer);
             res = aaxAudioFrameDeregisterEmitter(frame, emitter);
             res = aaxMixerDeregisterAudioFrame(config, frame);
+            res = aaxAudioFrameDestroy(frame);
             res = aaxMixerSetState(config, AAX_STOPPED);
             res = aaxEmitterDestroy(emitter);
             res = aaxBufferDestroy(buffer);
