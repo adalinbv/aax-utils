@@ -102,7 +102,6 @@ public:
         for (auto it : buffers) {
             aaxBufferDestroy(*it.second.second); it.second.first = 0;
         }
-        buffers.clear();
     }
 
     bool process(uint8_t channel, uint8_t message, uint8_t key, uint8_t velocity, bool omni, float pitch=1.0f);
@@ -337,6 +336,8 @@ public:
     }
 
     MIDIChannel(MIDIChannel&&) = default;
+
+    virtual ~MIDIChannel() = default;
 
     MIDIChannel& operator=(MIDIChannel&&) = default;
 

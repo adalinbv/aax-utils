@@ -706,7 +706,7 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
 
     try {
         auto ret = channels.insert(
-            { channel_no, std::unique_ptr<MIDIChannel>(
+            { channel_no, std::shared_ptr<MIDIChannel>(
                                 new MIDIChannel(*this, buffer, channel_no,
                                           bank_no, program_no, drums))
             } );
