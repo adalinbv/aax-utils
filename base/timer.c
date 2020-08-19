@@ -127,6 +127,7 @@ int usecSleep(unsigned int dt_us)
  */
 #include <poll.h>
 #include <unistd.h>
+#include <stdlib.h>
 int msecSleep(unsigned int dt_ms)
 {
     if (dt_ms > 0)
