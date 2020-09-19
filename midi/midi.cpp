@@ -68,6 +68,8 @@
 #define CSV_ISOPRINT(c)	if ((c<' ')||((c>'~')&&(c<=160))) { CSV("\\%03o", c); }\
                         else { CSV("%c", c); }
 
+#define DEFAULT_DEVICE_VOLUME	1.2f
+
 using namespace aax;
 
 MIDI::MIDI(const char* n, const char *selections, enum aaxRenderMode m)
@@ -130,6 +132,7 @@ MIDI::start()
     reverb.set(AAX_INITIALIZED);
     reverb.set(AAX_PLAYING);
     AeonWave::add(reverb);
+    midi.set_gain(DEFAULT_DEVICE_VOLUME);
     midi.set(AAX_PLAYING);
 }
 
@@ -177,6 +180,7 @@ MIDI::set_gain(float g)
 {
     aax::dsp dsp = AeonWave::get(AAX_VOLUME_FILTER);
     dsp.set(AAX_GAIN, g);
+//  dsp.set(AAX_AGC_RESPONSE_RATE, 1.5f);
     AeonWave::set(dsp);
 }
 
@@ -1403,7 +1407,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     {
                     case MIDI_DEVICE_VOLUME:
                         byte = pull_byte();
-                        midi.set_gain((float)byte/127.0f);
+                        midi.set_gain(DEFAULT_DEVICE_VOLUME*(float)byte/127.0f);
                         break;
                     case MIDI_DEVICE_BALANCE:
                         byte = pull_byte();
