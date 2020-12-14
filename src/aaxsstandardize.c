@@ -1173,6 +1173,7 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
     aaxEmitter emitter;
     aaxFrame frame;
     void **data;
+    int state;
     int res;
 
     ptr = strrchr(infile, PATH_SEPARATOR);
@@ -1245,8 +1246,14 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
         }
         while (dt < 2.5f && aaxEmitterGetState(emitter) == AAX_PLAYING);
 
-        res = aaxEmitterSetState(emitter, AAX_SUSPENDED);
-        testForState(res, "aaxEmitterStop");
+        res = aaxEmitterSetState(emitter, AAX_STOPPED);
+        do
+        {
+            aaxMixerSetState(config, AAX_UPDATE);
+            msecSleep(50);
+            state = aaxEmitterGetState(emitter);
+        }
+        while (state != AAX_PROCESSED);
 
         res = aaxAudioFrameSetState(frame, AAX_STOPPED);
         res = aaxAudioFrameDeregisterEmitter(frame, emitter);
