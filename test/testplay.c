@@ -284,8 +284,19 @@ int main(int argc, char **argv)
 
             do
             {
+                unsigned long offs, offs_bytes;
+                float off_s;
+
+                off_s = aaxEmitterGetOffsetSec(emitter[0]);
+                offs = aaxEmitterGetOffset(emitter[0], AAX_SAMPLES);
+                offs_bytes = aaxEmitterGetOffset(emitter[0], AAX_BYTES);
+                printf("playing time: %5.2f, buffer position: %5.2f "
+                       "(%li samples/ %li bytes)\n", dt, off_s,
+                       offs, offs_bytes);
+
                 msecSleep(50);
                 state = aaxEmitterGetState(emitter[0]);
+                dt += 0.05f;
             }
             while (state != AAX_PROCESSED);
 
