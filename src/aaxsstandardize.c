@@ -1290,24 +1290,34 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
             st = ebur128_init(tracks, freq, EBUR128_MODE_I|EBUR128_MODE_SAMPLE_PEAK);
             if (st)
             {
+                int res;
+
                 ebur128_add_frames_float(st, bdata, no_samples);
-                ebur128_loudness_global(st, &loudness);
+                res = ebur128_loudness_global(st, &loudness);
                 ebur128_sample_peak(st, 0, &peak);
                 ebur128_destroy(&st);
-                loudness = _db2lin(loudness);
-            }
-#else
-            double rms_total = 0.0;
-            size_t j = no_samples;
-            do
-            {
-                float samp = (float)*bdata++;
-                rms_total += samp*samp;
-            }
-            while (--j);
 
-            loudness = _lin2db(sqrt(rms_total/no_samples));
+                if (res == EBUR128_SUCCESS && loudness != -HUGE_VAL) {
+                    loudness = _db2lin(loudness);
+                } else {
+                    loudness = 0.0;
+                }
+            }
 #endif
+            if (loudness == 0.0)
+            {
+                double rms_total = 0.0;
+                size_t j = no_samples;
+                do
+                {
+                    float samp = (float)*bdata++;
+                    rms_total += samp*samp;
+                }
+                while (--j);
+
+                loudness = sqrt(rms_total/no_samples);
+                loudness = _lin2db(loudness);
+            }
             aaxFree(data);
         }
         aaxBufferDestroy(buffer);
