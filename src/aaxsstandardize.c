@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018-2020 by Erik Hofman.
- * Copyright (C) 2018-2020 by Adalin B.V.
+ * Copyright (C) 2018-2021 by Erik Hofman.
+ * Copyright (C) 2018-2021 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -511,9 +511,9 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
     }
 
     if (dsp->dtype == FILTER) {
-        fprintf(output, "  <filter type=\"%s\"", dsp->type);
+        fprintf(output, "   <filter type=\"%s\"", dsp->type);
     } else {
-        fprintf(output, "  <effect type=\"%s\"", dsp->type);
+        fprintf(output, "   <effect type=\"%s\"", dsp->type);
     }
     if (dsp->src && (strcmp(dsp->src, "12db") && strcmp(dsp->src, "true"))) {
         fprintf(output, " src=\"%s\"", dsp->src);
@@ -529,16 +529,16 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
     for(s=0; s<dsp->no_slots; ++s)
     {
         if (dsp->slot[s].state) {
-            fprintf(output, "   <slot n=\"%i\" src=\"%s\">\n", s, dsp->slot[s].state);
+            fprintf(output, "    <slot n=\"%i\" src=\"%s\">\n", s, dsp->slot[s].state);
         } else {
-            fprintf(output, "   <slot n=\"%i\">\n", s);
+            fprintf(output, "    <slot n=\"%i\">\n", s);
         }
         for(p=0; p<4; ++p)
         {
             float adjust = dsp->slot[s].param[p].adjust;
             float pitch = dsp->slot[s].param[p].pitch;
 
-            fprintf(output, "    <param n=\"%i\"", p);
+            fprintf(output, "     <param n=\"%i\"", p);
             if (pitch)
             {
                 fprintf(output, " pitch=\"%s\"", format_float3(pitch));
@@ -590,13 +590,13 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
             }
             fprintf(output, "\n");
         }
-        fprintf(output, "   </slot>\n");
+        fprintf(output, "    </slot>\n");
     }
 
     if (dsp->dtype == FILTER) {
-        fprintf(output, "  </filter>\n");
+        fprintf(output, "   </filter>\n");
     } else {
-        fprintf(output, "  </effect>\n");
+        fprintf(output, "   </effect>\n");
     }
 }
 
@@ -642,7 +642,7 @@ char fill_waveform(struct waveform_t *wave, void *xid, char simplify)
 
 void print_waveform(struct waveform_t *wave, FILE *output)
 {
-    fprintf(output, "  <waveform src=\"%s\"", wave->src);
+    fprintf(output, "   <waveform src=\"%s\"", wave->src);
     if (wave->processing) fprintf(output, " processing=\"%s\"", wave->processing);
     if (wave->ratio) {
         if (wave->processing && !strcasecmp(wave->processing, "mix") && wave->ratio != 0.5f) {
@@ -860,6 +860,7 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
     }
     fprintf(output, ">\n");
 
+    fprintf(output, "  <layer>\n");
     for (e=0; e<sound->no_entries; ++e)
     {
         if (sound->entry[e].type == WAVEFORM) {
@@ -868,6 +869,7 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
             print_dsp(&sound->entry[e].slot.dsp, info, output);
         }
     }
+    fprintf(output, "  </layer>\n");
     fprintf(output, " </%s>\n\n", section);
 }
 
