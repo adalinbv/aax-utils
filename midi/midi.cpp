@@ -572,6 +572,8 @@ const inst_t
 MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
 {
     auto itb = drums.find(program_no << 7);
+    uint16_t req_program_no = program_no;
+
     if (itb == drums.end() && program_no > 0)
     {
         if ((program_no & 0xF8) == program_no) program_no = 0;
@@ -590,7 +592,8 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
         {
             auto bank = itb->second;
             auto iti = bank.find(key_no);
-            if (iti != bank.end()) {
+            if (iti != bank.end())
+            {
                 if (all || selection.empty() || std::find(selection.begin(), selection.end(), iti->second.first) != selection.end()) {
                     return iti->second;
                 } else {
@@ -598,22 +601,28 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
                 }
             }
 
-            if (program_no > 0)
-            {
-                if ((program_no & 0xF8) == program_no) program_no = 0;
-                else program_no &= 0xF8;
-                itb = drums.find(program_no << 7);
-                if (itb == drums.end())
-                {
-                    program_no = 0;
-                    itb = drums.find(program_no);
-                }
-            }
-            else
+            if (program_no == 0)
             {
                LOG("Drum %i not found in bank %i\n", key_no, program_no);
                break;
             }
+
+            if ((program_no % 10) == 0) {
+               program_no = 0;
+            } else if ((program_no & 0xF8) == program_no) {
+                program_no -= (program_no % 10);
+            } else {
+               program_no &= 0xF8;
+            }
+
+            itb = drums.find(program_no << 7);
+            if (itb == drums.end()) {
+                itb = drums.find(program_no);
+            }
+
+            DISPLAY("Drum %i not found in bank %i, trying bank: %i\n",
+                    key_no,  req_program_no, program_no);
+            req_program_no = program_no;
         }
         while (program_no >= 0);
     }
@@ -625,6 +634,7 @@ const inst_t
 MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 {
     auto itb = instruments.find(bank_no);
+    uint16_t req_bank_no = bank_no;
 
     do
     {
@@ -663,6 +673,11 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
                 program_no, bank_no >> 7, bank_no & 0x7F);
            break;
         }
+
+        DISPLAY("Instrument %i not found in bank %i/%i, trying: %i/%i\n",
+                 program_no, req_bank_no >> 7, req_bank_no & 0x7F,
+                 bank_no >> 7, bank_no & 0x7F);
+        req_bank_no = bank_no;
     }
     while (bank_no >= 0);
     LOG("Instrument not found\n");
