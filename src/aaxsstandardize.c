@@ -672,6 +672,115 @@ void free_waveform(struct waveform_t *wave)
     if (wave->processing) xmlFree(wave->processing);
 }
 
+struct layer_t
+{
+    float ratio;
+    float pitch;
+
+    int voices;
+    float spread;
+    char phasing;
+
+    uint8_t no_entries;
+    struct entry_t
+    {
+        enum type_t type;
+        union
+        {
+            struct waveform_t waveform;
+            struct dsp_t dsp;
+        } slot;
+    } entry[32];
+};
+
+char fill_layer(struct layer_t *layer, void *xid, char simplify)
+{
+    int p, s, smax;
+    void *xlid;
+    char noise;
+
+    layer->ratio = xmlAttributeGetDouble(xid, "ratio");
+    layer->pitch= xmlAttributeGetDouble(xid, "pitch");
+
+    if (!simplify)
+    {
+        layer->voices = _MIN(abs(xmlAttributeGetInt(xid, "voices")), 9);
+        layer->spread = _MINMAX(xmlAttributeGetDouble(xid, "spread"),0.0f,1.0f);
+        layer->phasing = xmlAttributeGetBool(xid, "phasing");
+    }
+
+    p = 0;
+    noise = 0;
+    xlid = xmlMarkId(xid);
+    smax = xmlNodeGetNum(xlid, "*");
+    layer->no_entries = smax;
+    for (s=0; s<smax; s++)
+    {
+        if (xmlNodeGetPos(xlid, xid, "*", s) != 0)
+        {
+            char *name = xmlNodeGetName(xid);
+                if (!strcasecmp(name, "waveform"))
+            {
+                layer->entry[p].type = WAVEFORM;
+                noise |= fill_waveform(&layer->entry[p++].slot.waveform,
+                                       xid, simplify);
+            }
+            else if (!strcasecmp(name, "filter"))
+            {
+                layer->entry[p].type = FILTER;
+                fill_dsp(&layer->entry[p++].slot.dsp, xid, FILTER, 1, 1.0f,
+                        0, 0);
+            }
+            else if (!strcasecmp(name, "effect"))
+            {
+                layer->entry[p].type = EFFECT;
+                fill_dsp(&layer->entry[p++].slot.dsp, xid, EFFECT, 1, 1.0f,
+                         0, 0);
+            }
+
+            xmlFree(name);
+        }
+    }
+    xmlFree(xlid);
+
+    return noise;
+}
+
+void print_layer(struct layer_t *layer, struct info_t *info, FILE *output)
+{
+    unsigned int e;
+
+    fprintf(output, "  <layer");
+
+    if (layer->ratio != 0.0 && layer->ratio != 1.0) {
+        fprintf(output, " ratio=\"%s\"", format_float3(layer->ratio));
+    }
+    if (layer->pitch != 0.0  && layer->pitch != 1.0) {
+        fprintf(output, " pitch=\"%s\"", format_float3(layer->pitch));
+    }
+
+    if (layer->voices > 1)
+    {
+        fprintf(output, " voices=\"%i\"", layer->voices);
+        if (layer->spread) {
+            fprintf(output, " spread=\"%s\"", format_float3(layer->spread));
+            if (layer->phasing) fprintf(output, " phasing=\"true\"");
+        }
+    }
+
+    fprintf(output, ">\n");
+
+    for (e=0; e<layer->no_entries; ++e)
+    {
+        if (layer->entry[e].type == WAVEFORM) {
+            print_waveform(&layer->entry[e].slot.waveform, output);
+        } else {
+            print_dsp(&layer->entry[e].slot.dsp, info, output);
+        }
+    }
+    fprintf(output, "  </layer>\n");
+}
+
 struct sound_t
 {
     int mode;
@@ -686,22 +795,14 @@ struct sound_t
     float loop_end;
     char *file;
 
-    uint8_t no_entries;
-    struct entry_t
-    {
-        enum type_t type;
-        union
-        {
-            struct waveform_t waveform;
-            struct dsp_t dsp;
-        } slot;
-    } entry[32];
+    uint8_t no_layers;
+    struct layer_t layer[3];
 };
 
 void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gain, float db, char simplify, char emitter)
 {
-    int p, e, emax, layer, layers;
-    void *xeid, *xlid;
+    int layer, layers;
+    void *xlid;
     char noise;
 
     if (!info->program && xmlAttributeExists(xid, "program")) {
@@ -761,65 +862,40 @@ void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gai
     }
 
     layers = xmlNodeGetNum(xid, "layer");
-    if (layers == 0) // backwards compatibility (v3.9 and earlier)
+    if (layers == 0) // backwards compatibility (pre version 3.10);
     {
        layers = 1;
        xlid = xid;
     }
     else
     {
-       layers = 1;
+       layers = _MIN(layers, 2);
        xlid = xmlMarkId(xid);
     }
 
+    noise = 0;
+    sound->no_layers = layers;
     for (layer=0; layer<layers; ++layer)
     {
         if (xlid != xid) {
             if (!xmlNodeGetPos(xid, xlid, "layer", layer)) continue;
         }
 
-        p = 0;
-        noise = 0;
-        xeid = xmlMarkId(xlid);
-        emax = xmlNodeGetNum(xlid, "*");
-        for (e=0; e<emax; e++)
-        {
-            if (xmlNodeGetPos(xlid, xeid, "*", e) != 0)
-            {
-                char *name = xmlNodeGetName(xeid);
-                    if (!strcasecmp(name, "waveform"))
-                {
-                    sound->entry[p].type = WAVEFORM;
-                    noise |= fill_waveform(&sound->entry[p++].slot.waveform,
-                                           xeid, simplify);
-                }
-                else if (!strcasecmp(name, "filter"))
-                {
-                    sound->entry[p].type = FILTER;
-                    fill_dsp(&sound->entry[p++].slot.dsp, xeid, FILTER, 1, 1.0f,
-                            0, emitter);
-                }
-                else if (!strcasecmp(name, "effect"))
-                {
-                    sound->entry[p].type = EFFECT;
-                    fill_dsp(&sound->entry[p++].slot.dsp, xeid, EFFECT, 1, 1.0f,
-                             0, emitter);
-                }
+        noise |= fill_layer(&sound->layer[layer], xlid, simplify);
 
-                xmlFree(name);
-            }
+        // Layer voices replaces sound voices
+        if (sound->layer[layer].voices) {
+            sound->voices = 0;
         }
-        sound->no_entries = p;
-        xmlFree(xeid);
-
-        if (noise) sound->duration = _MAX(sound->duration, 0.3f);
     }
+
+    if (noise) sound->duration = _MAX(sound->duration, 0.3f);
     if (xlid != xid) xmlFree(xlid);
 }
 
 void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char tmp, const char *section)
 {
-    unsigned int e;
+    unsigned int l;
 
     fprintf(output, " <%s", section);
     if (sound->mode) {
@@ -845,8 +921,8 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
        } else {
            fprintf(output, " gain=\"%3.2f\"", sound->gain);
        }
+       fprintf(output, " db=\"%3.1f\"", sound->db);
     }
-    fprintf(output, " db=\"%3.1f\"", sound->db);
 
     if (sound->loop_start > 0) {
         fprintf(output, " loop-start=\"%g\"", sound->loop_start);
@@ -883,16 +959,9 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
     }
     fprintf(output, ">\n");
 
-    fprintf(output, "  <layer>\n");
-    for (e=0; e<sound->no_entries; ++e)
-    {
-        if (sound->entry[e].type == WAVEFORM) {
-            print_waveform(&sound->entry[e].slot.waveform, output);
-        } else {
-            print_dsp(&sound->entry[e].slot.dsp, info, output);
-        }
+    for (l=0; l<sound->no_layers; ++l) {
+       print_layer(&sound->layer[l], info, output);
     }
-    fprintf(output, "  </layer>\n");
     fprintf(output, " </%s>\n\n", section);
 }
 
@@ -935,6 +1004,7 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
         if (xmlNodeGetPos(xid, xdid, "filter", d) != 0)
         {
             char *type = lwrstr(xmlAttributeGetString(xdid, "type"));
+            if (!type) continue;
 
             if (!emitter && !strcasecmp(type, "frequency")) {
                obj->freqfilter = d;
@@ -956,6 +1026,7 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
                 }
                 p++;
             }
+            free(type);
         }
     }
     xmlFree(xdid);
@@ -967,6 +1038,8 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
         if (xmlNodeGetPos(xid, xdid, "effect", d) != 0)
         {
             char *type = lwrstr(xmlAttributeGetString(xdid, "type"));
+            if (!type) continue;
+
             if (!simplify || (!emitter && (!strcasecmp(type, "distortion") ||
                                          !strcasecmp(type, "ringmodulator"))) ||
                              (emitter && !strcasecmp(type, "timed-pitch")))
@@ -983,6 +1056,7 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
                 }
                 p++;
             }
+            free(type);
         }
     }
     xmlFree(xdid);
