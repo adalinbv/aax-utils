@@ -347,8 +347,13 @@ public:
     inline bool is_drums() { return drum_channel; }
 
     inline uint8_t get_channel_no() { return channel_no; }
+    inline void set_channel_no(uint8_t channel) { channel_no = channel; }
+
     inline uint8_t get_program_no() { return program_no; }
+    inline void set_program_no(uint8_t program) { program_no = program; }
+
     inline uint16_t get_bank_no() { return bank_no; }
+    inline void set_bank_no(uint16_t bank) { bank_no = bank; }
 
     inline void set_tuning(float pitch) { tuning = powf(2.0f, pitch/12.0f); }
     inline float get_tuning() { return tuning; }

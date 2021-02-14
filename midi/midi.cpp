@@ -723,19 +723,26 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
         buffer.set(AAX_CAPABILITIES, int(instrument_mode));
     }
 
-    try {
-        auto ret = channels.insert(
-            { channel_no, std::shared_ptr<MIDIChannel>(
-                                new MIDIChannel(*this, buffer, channel_no,
-                                          bank_no, program_no, drums))
-            } );
-        it = ret.first;
-        AeonWave::add(*it->second);
-    } catch(const std::invalid_argument& e) {
-        throw(e);
+    it = channels.find(channel_no);
+    if (it == channels.end())
+    {
+        try {
+            auto ret = channels.insert(
+                { channel_no, std::shared_ptr<MIDIChannel>(
+                                    new MIDIChannel(*this, buffer, channel_no,
+                                              bank_no, program_no, drums))
+                } );
+            it = ret.first;
+            AeonWave::add(*it->second);
+        } catch(const std::invalid_argument& e) {
+            throw(e);
+        }
     }
 
     MIDIChannel& rv = *it->second;
+    rv.set_program_no(program_no);
+    rv.set_bank_no(bank_no);
+
     char *env = getenv("AAX_KEY_FINISH");
     if (env && atoi(env)) {
         rv.set_key_finish(true);
