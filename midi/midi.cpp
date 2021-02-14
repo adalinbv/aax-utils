@@ -619,6 +619,10 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
             if (itb == drums.end()) {
                 itb = drums.find(program_no);
             }
+            if (itb == drums.end()) {
+                program_no = 0;
+                itb = drums.find(program_no);
+            }
 
             DISPLAY("Drum %i not found in bank %i, trying bank: %i\n",
                     key_no,  req_program_no, program_no);
