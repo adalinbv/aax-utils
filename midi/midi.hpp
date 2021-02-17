@@ -177,8 +177,8 @@ public:
     inline void set_mono(bool m) { mono = m; }
     inline bool get_mono() { return mono; }
 
-    inline void set_verbose(bool v) { verbose = v; }
-    inline bool get_verbose() { return verbose; }
+    inline void set_verbose(char v) { verbose = v; }
+    inline char get_verbose() { return verbose; }
 
     inline void set_lyrics(bool v) { lyrics = v; }
     inline bool get_lyrics() { return lyrics; }
@@ -302,7 +302,7 @@ private:
     enum aaxCapabilities instrument_mode = AAX_RENDER_NORMAL;
     uint8_t mode = MIDI_MODE0;
     bool initialize = false;
-    bool verbose = false;
+    char verbose = 0;
     bool lyrics = false;
     bool grep_mode = false;
     bool mono = false;

@@ -56,8 +56,8 @@
 # define CSV(...)
 #endif
 
-#define DISPLAY(...)	if(midi.get_initialize() && midi.get_verbose()) printf(__VA_ARGS__)
-#define MESSAGE(...)	if(!midi.get_initialize() && midi.get_verbose()) printf(__VA_ARGS__)
+#define DISPLAY(l,...)	if(midi.get_initialize() && l <= midi.get_verbose()) printf(__VA_ARGS__)
+#define MESSAGE(...)	if(!midi.get_initialize() && midi.get_verbose() >= 1) printf(__VA_ARGS__)
 
 #ifndef NDEBUG
 # define LOG(...)	printf(__VA_ARGS__)
@@ -624,7 +624,7 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
                 itb = drums.find(program_no);
             }
 
-            DISPLAY("Drum %i not found in bank %i, trying bank: %i\n",
+            DISPLAY(3, "Drum %i not found in bank %i, trying bank: %i\n",
                     key_no,  req_program_no, program_no);
             req_program_no = program_no;
         }
@@ -678,7 +678,7 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
            break;
         }
 
-        DISPLAY("Instrument %i not found in bank %i/%i, trying: %i/%i\n",
+        DISPLAY(3, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
                  program_no, req_bank_no >> 7, req_bank_no & 0x7F,
                  bank_no >> 7, bank_no & 0x7F);
         req_bank_no = bank_no;
@@ -852,7 +852,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
             {
                 if (!midi.buffer_avail(name))
                 {
-                    DISPLAY("Loading drum:  %3i bank: %3i/%3i, program: %3i: %s\n",
+                    DISPLAY(2, "Loading drum:  %3i bank: %3i/%3i, program: %3i: %s\n",
                              key_no, bank_no >> 7, bank_no & 0x7F,
                              program_no, name.c_str());
                     midi.load(name);
@@ -891,7 +891,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
             if (!patch_name.empty())
             {
                 if (!midi.buffer_avail(patch_name)) {
-                    DISPLAY("Loading instrument bank: %3i/%3i, program: %3i: %s\n",
+                    DISPLAY(2, "Loading instrument bank: %3i/%3i, program: %3i: %s\n",
                              bank_no >> 7, bank_no & 0x7F, program_no,
                              inst.first.c_str());
                     midi.load(patch_name);

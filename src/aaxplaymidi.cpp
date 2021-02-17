@@ -72,7 +72,7 @@ help()
     printf("  -l, --load <instr>\tmidi isntrument configration overlay file\n");
     printf("  -m, --mono\t\t\tplay back in mono mode\n");
 //  printf("  -b, --batched\t\t\tprocess the file in batched (high-speed) mode.\n");
-    printf("  -v, --verbose\t\t\tshow extra playback information\n");
+    printf("  -v, --verbose <0-3>\t\t\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
 
     printf("\nUse aaxplay for playing other audio file formats.\n");
@@ -104,7 +104,7 @@ static void sleep_for(float dt)
 
 void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
           const char *track, const char *config, float time_offs,
-          const char *grep, bool mono, bool verbose, bool batched, bool fm)
+          const char *grep, bool mono, char verbose, bool batched, bool fm)
 {
     if (grep) devname = (char*)"None"; // fastest for searching
     aax::MIDIFile midi(devname, infile, track, mode, config);
@@ -197,10 +197,12 @@ int main(int argc, char **argv)
     enum aaxRenderMode render_mode = aaxRenderMode(getMode(argc, argv));
     char *devname = getDeviceName(argc, argv);
     char *infile = getInputFile(argc, argv, IFILE_PATH);
-    bool verbose = false;
     bool batched = false;
     char mono = false;
+    char verbose = 0;
     bool fm = false;
+    char *arg;
+
     try
     {
         float time_offs = getTime(argc, argv);
@@ -222,11 +224,9 @@ int main(int argc, char **argv)
             grep = getCommandLineOption(argc, argv, "--grep");
         }
 
-        if (getCommandLineOption(argc, argv, "-v") ||
-            getCommandLineOption(argc, argv, "--verbose"))
-        {
-            verbose = true;
-        }
+        arg = getCommandLineOption(argc, argv, "-v");
+        if (!arg) arg = getCommandLineOption(argc, argv, "--verbose");
+        if (arg) verbose = atoi(arg);
 
         if (getCommandLineOption(argc, argv, "-b") ||
             getCommandLineOption(argc, argv, "--batched"))
