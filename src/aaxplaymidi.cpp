@@ -227,6 +227,7 @@ int main(int argc, char **argv)
         arg = getCommandLineOption(argc, argv, "-v");
         if (!arg) arg = getCommandLineOption(argc, argv, "--verbose");
         if (arg) verbose = atoi(arg);
+        if (arg && !verbose) verbose = 1;
 
         if (getCommandLineOption(argc, argv, "-b") ||
             getCommandLineOption(argc, argv, "--batched"))
