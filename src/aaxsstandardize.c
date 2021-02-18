@@ -390,6 +390,11 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
     {
         dsp->src = false_const;
     }
+    else if (!strcasecmp(dsp->type, "dynamic-timbre") &&
+             (simplify & NO_LAYER_SUPPORT))
+    {
+        dsp->src = false_const;
+    }
     else
     {
         dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
