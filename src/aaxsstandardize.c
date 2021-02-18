@@ -64,6 +64,9 @@
 #define LEVEL_16DB		0.15848931670f
 #define LEVEL_20DB		0.1f
 
+#define SIMPLIFY		0x01
+#define NO_LAYER_SUPPORT	0x02
+
 
 static char debug = 0;
 static float freq = 220.0f;
@@ -476,7 +479,7 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
 
                     if (env && (p % 2 == 0) && v > max) max = v;
 
-                    if (simplify)
+                    if (simplify & SIMPLIFY)
                     {
                         if (adjust) {
                             value = v;
@@ -502,8 +505,9 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
     return max;
 }
 
-void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
+void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, char simplify)
 {
+    char *ident = simplify ? "  " : "   ";
     unsigned int s, p;
 
     if (dsp->src == false_const) {
@@ -511,9 +515,9 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
     }
 
     if (dsp->dtype == FILTER) {
-        fprintf(output, "   <filter type=\"%s\"", dsp->type);
+        fprintf(output, "%s<filter type=\"%s\"", ident, dsp->type);
     } else {
-        fprintf(output, "   <effect type=\"%s\"", dsp->type);
+        fprintf(output, "%s<effect type=\"%s\"", ident, dsp->type);
     }
     if (dsp->src && (strcmp(dsp->src, "12db") && strcmp(dsp->src, "true"))) {
         fprintf(output, " src=\"%s\"", dsp->src);
@@ -529,16 +533,16 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
     for(s=0; s<dsp->no_slots; ++s)
     {
         if (dsp->slot[s].state) {
-            fprintf(output, "    <slot n=\"%i\" src=\"%s\">\n", s, dsp->slot[s].state);
+            fprintf(output, "%s <slot n=\"%i\" src=\"%s\">\n", ident, s, dsp->slot[s].state);
         } else {
-            fprintf(output, "    <slot n=\"%i\">\n", s);
+            fprintf(output, "%s <slot n=\"%i\">\n", ident, s);
         }
         for(p=0; p<4; ++p)
         {
             float adjust = dsp->slot[s].param[p].adjust;
             float pitch = dsp->slot[s].param[p].pitch;
 
-            fprintf(output, "     <param n=\"%i\"", p);
+            fprintf(output, "%s  <param n=\"%i\"", ident, p);
             if (pitch)
             {
                 fprintf(output, " pitch=\"%s\"", format_float3(pitch));
@@ -576,7 +580,7 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
                 {
                     float value = dsp->slot[s].param[p].value;
 
-                    fprintf(output, ">%s</param>", format_float3(value));
+                    fprintf(output, ">%s</param>",  format_float3(value));
 
                     if (debug)
                     {
@@ -590,13 +594,13 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output)
             }
             fprintf(output, "\n");
         }
-        fprintf(output, "    </slot>\n");
+        fprintf(output, "%s </slot>\n", ident);
     }
 
     if (dsp->dtype == FILTER) {
-        fprintf(output, "   </filter>\n");
+        fprintf(output, "%s</filter>\n", ident);
     } else {
-        fprintf(output, "   </effect>\n");
+        fprintf(output, "%s</effect>\n", ident);
     }
 }
 
@@ -630,7 +634,7 @@ char fill_waveform(struct waveform_t *wave, void *xid, char simplify)
     wave->staticity =_MINMAX(xmlAttributeGetDouble(xid, "staticity"),0.0f,1.0f);
     wave->random =_MINMAX(xmlAttributeGetDouble(xid, "random"),0.0f,1.0f);
     wave->phase = _MINMAX(xmlAttributeGetDouble(xid, "phase"), 0.0f,1.0f);
-    if (!simplify)
+    if (!(simplify & SIMPLIFY))
     {
         wave->voices = _MIN(abs(xmlAttributeGetInt(xid, "voices")), 9);
         wave->spread = _MINMAX(xmlAttributeGetDouble(xid, "spread"), 0.0f,1.0f);
@@ -640,9 +644,11 @@ char fill_waveform(struct waveform_t *wave, void *xid, char simplify)
     return wave->src ? (strstr(wave->src, "noise") ? 1 : 0) : 0;
 }
 
-void print_waveform(struct waveform_t *wave, FILE *output)
+void print_waveform(struct waveform_t *wave, FILE *output, char simplify)
 {
-    fprintf(output, "   <waveform src=\"%s\"", wave->src);
+    char *ident = simplify ? "  " : "   ";
+
+    fprintf(output, "%s<waveform src=\"%s\"", ident, wave->src);
     if (wave->processing) fprintf(output, " processing=\"%s\"", wave->processing);
     if (wave->ratio) {
         if (wave->processing && !strcasecmp(wave->processing, "mix") && wave->ratio != 0.5f) {
@@ -693,94 +699,6 @@ struct layer_t
     } entry[32];
 };
 
-char fill_layer(struct layer_t *layer, void *xid, char simplify)
-{
-    int p, s, smax;
-    void *xlid;
-    char noise;
-
-    layer->ratio = xmlAttributeGetDouble(xid, "ratio");
-    layer->pitch= xmlAttributeGetDouble(xid, "pitch");
-
-    if (!simplify)
-    {
-        layer->voices = _MIN(abs(xmlAttributeGetInt(xid, "voices")), 9);
-        layer->spread = _MINMAX(xmlAttributeGetDouble(xid, "spread"),0.0f,1.0f);
-        layer->phasing = xmlAttributeGetBool(xid, "phasing");
-    }
-
-    p = 0;
-    noise = 0;
-    xlid = xmlMarkId(xid);
-    smax = xmlNodeGetNum(xlid, "*");
-    layer->no_entries = smax;
-    for (s=0; s<smax; s++)
-    {
-        if (xmlNodeGetPos(xlid, xid, "*", s) != 0)
-        {
-            char *name = xmlNodeGetName(xid);
-                if (!strcasecmp(name, "waveform"))
-            {
-                layer->entry[p].type = WAVEFORM;
-                noise |= fill_waveform(&layer->entry[p++].slot.waveform,
-                                       xid, simplify);
-            }
-            else if (!strcasecmp(name, "filter"))
-            {
-                layer->entry[p].type = FILTER;
-                fill_dsp(&layer->entry[p++].slot.dsp, xid, FILTER, 1, 1.0f,
-                        0, 0);
-            }
-            else if (!strcasecmp(name, "effect"))
-            {
-                layer->entry[p].type = EFFECT;
-                fill_dsp(&layer->entry[p++].slot.dsp, xid, EFFECT, 1, 1.0f,
-                         0, 0);
-            }
-
-            xmlFree(name);
-        }
-    }
-    xmlFree(xlid);
-
-    return noise;
-}
-
-void print_layer(struct layer_t *layer, struct info_t *info, FILE *output)
-{
-    unsigned int e;
-
-    fprintf(output, "  <layer");
-
-    if (layer->ratio != 0.0 && layer->ratio != 1.0) {
-        fprintf(output, " ratio=\"%s\"", format_float3(layer->ratio));
-    }
-    if (layer->pitch != 0.0  && layer->pitch != 1.0) {
-        fprintf(output, " pitch=\"%s\"", format_float3(layer->pitch));
-    }
-
-    if (layer->voices > 1)
-    {
-        fprintf(output, " voices=\"%i\"", layer->voices);
-        if (layer->spread) {
-            fprintf(output, " spread=\"%s\"", format_float3(layer->spread));
-            if (layer->phasing) fprintf(output, " phasing=\"true\"");
-        }
-    }
-
-    fprintf(output, ">\n");
-
-    for (e=0; e<layer->no_entries; ++e)
-    {
-        if (layer->entry[e].type == WAVEFORM) {
-            print_waveform(&layer->entry[e].slot.waveform, output);
-        } else {
-            print_dsp(&layer->entry[e].slot.dsp, info, output);
-        }
-    }
-    fprintf(output, "  </layer>\n");
-}
-
 struct sound_t
 {
     int mode;
@@ -799,10 +717,131 @@ struct sound_t
     struct layer_t layer[3];
 };
 
+char fill_layers(struct sound_t *sound, void *xid, char simplify)
+{
+    unsigned int l, layers;
+    void *xlid, *xsid;
+    int p, s, smax;
+    char noise;
+
+    layers = xmlNodeGetNum(xid, "layer");
+    if (layers == 0) // backwards compatibility (pre version 3.10);
+    {
+       layers = 1;
+       xlid = xid;
+    }
+    else
+    {
+       layers = _MIN(layers, 2);
+       xlid = xmlMarkId(xid);
+    }
+
+    noise = 0;
+    sound->no_layers = (simplify & NO_LAYER_SUPPORT) ? 1 : layers;
+    for (l=0; l<sound->no_layers; ++l)
+    {
+        struct layer_t *layer = &sound->layer[l];
+
+        if (xlid != xid) {
+            if (!xmlNodeGetPos(xid, xlid, "layer", l)) continue;
+        }
+
+        layer->ratio = xmlAttributeGetDouble(xlid, "ratio");
+        layer->pitch= xmlAttributeGetDouble(xlid, "pitch");
+
+        if (!(simplify & SIMPLIFY))
+        {
+            layer->voices = _MIN(abs(xmlAttributeGetInt(xlid, "voices")), 9);
+            layer->spread = _MINMAX(xmlAttributeGetDouble(xlid, "spread"),0.0f,1.0f);
+            layer->phasing = xmlAttributeGetBool(xlid, "phasing");
+        }
+
+        p = 0;
+        noise = 0;
+        xsid = xmlMarkId(xlid);
+        smax = xmlNodeGetNum(xlid, "*");
+        layer->no_entries = smax;
+
+        for (s=0; s<smax; s++)
+        {
+            if (xmlNodeGetPos(xlid, xsid, "*", s) != 0)
+            {
+                char *name = xmlNodeGetName(xsid);
+                if (!strcasecmp(name, "waveform"))
+                {
+                    layer->entry[p].type = WAVEFORM;
+                    noise |= fill_waveform(&layer->entry[p++].slot.waveform,
+                                           xsid, simplify);
+                }
+                else if (!strcasecmp(name, "filter"))
+                {
+                    layer->entry[p].type = FILTER;
+                    fill_dsp(&layer->entry[p++].slot.dsp, xsid, FILTER, 1, 1.0f,
+                            0, 0);
+                }
+                else if (!strcasecmp(name, "effect"))
+                {
+                    layer->entry[p].type = EFFECT;
+                    fill_dsp(&layer->entry[p++].slot.dsp, xsid, EFFECT, 1, 1.0f,
+                             0, 0);
+                }
+                xmlFree(name);
+            }
+
+            // Layer voices replaces sound voices
+            if (layer->voices) {
+                sound->voices = 0;
+            }
+        }
+    }
+    if (xlid != xid) xmlFree(xlid);
+
+    return noise;
+}
+
+void print_layers(struct sound_t *sound, struct info_t *info, FILE *output)
+{
+    char simplify = sound->no_layers <= 1;
+    unsigned int e, l;
+
+    for (l=0; l<sound->no_layers; ++l)
+    {
+        struct layer_t *layer = &sound->layer[l];
+
+        if (!simplify) fprintf(output, "  <layer");
+
+        if (layer->ratio != 0.0 && layer->ratio != 1.0) {
+            fprintf(output, " ratio=\"%s\"", format_float3(layer->ratio));
+        }
+        if (layer->pitch != 0.0  && layer->pitch != 1.0) {
+            fprintf(output, " pitch=\"%s\"", format_float3(layer->pitch));
+        }
+
+        if (layer->voices > 1)
+        {
+            fprintf(output, " voices=\"%i\"", layer->voices);
+            if (layer->spread) {
+                fprintf(output, " spread=\"%s\"", format_float3(layer->spread));
+                if (layer->phasing) fprintf(output, " phasing=\"true\"");
+            }
+        }
+
+        if (!simplify) fprintf(output, ">\n");
+
+        for (e=0; e<layer->no_entries; ++e)
+        {
+            if (layer->entry[e].type == WAVEFORM) {
+                print_waveform(&layer->entry[e].slot.waveform, output, simplify);
+            } else {
+                print_dsp(&layer->entry[e].slot.dsp, info, output, simplify);
+            }
+        }
+        if (!simplify) fprintf(output, "  </layer>\n");
+    }
+}
+
 void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gain, float db, char simplify, char emitter)
 {
-    int layer, layers;
-    void *xlid;
     char noise;
 
     if (!info->program && xmlAttributeExists(xid, "program")) {
@@ -854,49 +893,19 @@ void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gai
     } else {
         sound->duration = 1.0f;
     }
-    if (!simplify)
+    if (!(simplify & SIMPLIFY))
     {
         sound->voices = _MIN(abs(xmlAttributeGetInt(xid, "voices")), 9);
         sound->spread = _MINMAX(xmlAttributeGetDouble(xid, "spread"),0.0f,1.0f);
         sound->phasing = xmlAttributeGetBool(xid, "phasing");
     }
 
-    layers = xmlNodeGetNum(xid, "layer");
-    if (layers == 0) // backwards compatibility (pre version 3.10);
-    {
-       layers = 1;
-       xlid = xid;
-    }
-    else
-    {
-       layers = _MIN(layers, 2);
-       xlid = xmlMarkId(xid);
-    }
-
-    noise = 0;
-    sound->no_layers = layers;
-    for (layer=0; layer<layers; ++layer)
-    {
-        if (xlid != xid) {
-            if (!xmlNodeGetPos(xid, xlid, "layer", layer)) continue;
-        }
-
-        noise |= fill_layer(&sound->layer[layer], xlid, simplify);
-
-        // Layer voices replaces sound voices
-        if (sound->layer[layer].voices) {
-            sound->voices = 0;
-        }
-    }
-
+    noise = fill_layers(sound, xid, simplify);
     if (noise) sound->duration = _MAX(sound->duration, 0.3f);
-    if (xlid != xid) xmlFree(xlid);
 }
 
 void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char tmp, const char *section)
 {
-    unsigned int l;
-
     fprintf(output, " <%s", section);
     if (sound->mode) {
         fprintf(output, " mode=\"%i\"", sound->mode);
@@ -957,11 +966,32 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
             if (sound->phasing) fprintf(output, " phasing=\"true\"");
         }
     }
+
+    if (sound->no_layers <= 1)
+    {
+        struct layer_t *layer = &sound->layer[0];
+
+        if (layer->ratio != 0.0 && layer->ratio != 1.0) {
+            fprintf(output, " ratio=\"%s\"", format_float3(layer->ratio));
+        }
+        if (layer->pitch != 0.0  && layer->pitch != 1.0) {
+            fprintf(output, " pitch=\"%s\"", format_float3(layer->pitch));
+        }
+
+        if (layer->voices > 1)
+        {
+            fprintf(output, " voices=\"%i\"", layer->voices);
+            if (layer->spread) {
+                fprintf(output, " spread=\"%s\"", format_float3(layer->spread));
+                if (layer->phasing) fprintf(output, " phasing=\"true\"");
+            }
+        }
+    }
+
     fprintf(output, ">\n");
 
-    for (l=0; l<sound->no_layers; ++l) {
-       print_layer(&sound->layer[l], info, output);
-    }
+    print_layers(sound, info, output);
+
     fprintf(output, " </%s>\n\n", section);
 }
 
@@ -1013,7 +1043,9 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
                obj->equalizer = d;
             }
 
-            if (!simplify || !emitter || strcasecmp(type, "frequency")) {
+            if (!(simplify & SIMPLIFY) || !emitter
+                  || strcasecmp(type, "frequency"))
+            {
                 float m = fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter);
                 if (!max) max = m;
 
@@ -1040,9 +1072,10 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
             char *type = lwrstr(xmlAttributeGetString(xdid, "type"));
             if (!type) continue;
 
-            if (!simplify || (!emitter && (!strcasecmp(type, "distortion") ||
-                                         !strcasecmp(type, "ringmodulator"))) ||
-                             (emitter && !strcasecmp(type, "timed-pitch")))
+            if (!(simplify & SIMPLIFY)
+                || (!emitter && (!strcasecmp(type, "distortion")
+                || !strcasecmp(type, "ringmodulator")))
+                || (emitter && !strcasecmp(type, "timed-pitch")))
             {
                 float m = fill_dsp(&obj->dsp[p], xdid, EFFECT, final, env_fact, simplify, emitter);
                 if (!max) max = m;
@@ -1090,7 +1123,7 @@ void print_object(struct object_t *obj, enum type_t type, struct info_t *info, F
         fprintf(output, ">\n");
 
         for (d=0; d<obj->no_dsps; ++d) {
-            print_dsp(&obj->dsp[d], info, output);
+            print_dsp(&obj->dsp[d], info, output, 1);
         }
 
         if (type == EMITTER) {
@@ -1453,6 +1486,7 @@ void help()
     printf(" -i, --input <file>\t\tthe .aaxs configuration file to standardize.\n");
     printf(" -o, --output <file>\t\twrite the new .aaxs configuration to this file.\n");
     printf("     --debug\t\t\tAdd some debug information to the AAXS file.\n");
+    printf("     --no-layers\t\t\tDo not add layers.\n");
     printf("     --omit-cc-by\t\tDo not add the CC-BY license reference.\n");
     printf("     --force-cc-by\t\tForce the CC-BY license reference.\n");
     printf("     --force-simplify\t\tForce simplification of the configuration file.\n");
@@ -1491,8 +1525,11 @@ int main(int argc, char **argv)
         commons |= 0x80;
     }
 
+    if (getCommandLineOption(argc, argv, "--no-layers")) {
+        simplify |= NO_LAYER_SUPPORT;
+    }
     if (getCommandLineOption(argc, argv, "--force-simplify")) {
-        simplify = 1;
+        simplify |= (SIMPLIFY | NO_LAYER_SUPPORT);
     }
 
     if (getCommandLineOption(argc, argv, "--debug")) {
