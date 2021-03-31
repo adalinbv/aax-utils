@@ -376,7 +376,8 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
     char *keep_volume = getenv("KEEP_VOLUME");
     unsigned int s, snum;
     float f, max = 0.0f;
-    char dist = 0;
+    char distortion = 0;
+    char distance = 0;
     char env = 0;
     void *xsid;
 
@@ -441,7 +442,10 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
         dsp->release_time = f;
         env = 1;
     } else if (!strcasecmp(dsp->type, "distortion")) {
-        dist = 1;
+        distortion = 1;
+    }
+    else if (!strcasecmp(dsp->type, "distance")) {
+       distance = 1;
     }
     dsp->env = env;
 
@@ -505,6 +509,12 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
             xmlFree(xpid);
         }
     }
+
+    if (!distance)
+    {
+// TODO: add a missing distance filter
+    }
+
     xmlFree(xsid);
 
     return max;
@@ -822,7 +832,7 @@ void print_layers(struct sound_t *sound, struct info_t *info, FILE *output)
             fprintf(output, " pitch=\"%s\"", format_float3(layer->pitch));
         }
 
-        if (layer->voices > 1)
+        if (sound->no_layers > 1 && layer->voices > 1)
         {
             fprintf(output, " voices=\"%i\"", layer->voices);
             if (layer->spread) {
