@@ -67,6 +67,7 @@ help()
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
     printf("  -o, --output <file>\t\talso write to an audio file (optional)\n");
     printf("  -b, --batch\t\t\tprocess as fast as possible (Audio Files only)\n");
+    printf("  -t, --time\t\t\ttime offset in seconds or (hh:)mm:ss\n");
     printf("  -v, --verbose\t\t\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
     printf("Either --input or --capture can be used but not both.\n");
@@ -345,6 +346,12 @@ int main(int argc, char **argv)
             res = aaxMixerSetState(record, AAX_INITIALIZED);
             testForState(res, "aaxMixerSetInitialize");
 
+            if (aaxMixerGetSetup(record, AAX_SEEKABLE_SUPPORT))
+            {
+                float time_offs = getTime(argc, argv);
+                aaxSensorSetOffsetSec(record, time_offs);
+            }
+
             res = aaxSensorSetState(record, AAX_CAPTURING);
             testForState(res, "aaxSensorCaptureStart");
         }
@@ -394,6 +401,9 @@ int main(int argc, char **argv)
 
             s = aaxDriverGetSetup(record, AAX_WEBSITE_STRING);
             if (s) printf(" Website  : %s\n", s);
+
+            s = aaxDriverGetSetup(record, AAX_SONG_COMMENT_STRING);
+            if (s) printf(" Comment  : %s\n", s);
         }
 
         if (file)
