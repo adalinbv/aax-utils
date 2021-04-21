@@ -360,17 +360,18 @@ getCommandLineOption(int argc, char **argv, char const *option)
     int slen = strlen(option);
     char *rv = 0;
     int i;
-    
+
     for (i=0; i<argc; i++)
     {
         if (strncmp(argv[i], option, slen) == 0)
         {
-            rv = "";
-            i++;
-            if (i<argc) rv = argv[i];
+            int alen = strlen(argv[i]);
+
+            if (alen > slen && *(argv[i]+slen) == '=')  rv = argv[i]+slen+1;
+            else if (++i<argc) rv = argv[i];
+            else rv = "";
         }
     }
-
     return rv;
 }
 
