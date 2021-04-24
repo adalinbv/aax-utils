@@ -209,7 +209,7 @@ public:
         if (level) { name = name + "?patch=" + std::to_string(level); }
         auto it = buffers.find(name);
         if (it == buffers.end()) {
-            auto b = std::shared_ptr<Buffer>{new Buffer(ptr,name.c_str(),false,true)};
+            std::shared_ptr<Buffer> b(new Buffer(ptr,name.c_str(),false,true));
             if (b) {
                 auto ret = buffers.insert({name,{0,b}});
                 it = ret.first;
@@ -486,7 +486,7 @@ private:
     std::string gmmidi;
     std::string gmdrums;
     std::vector<uint8_t> midi_data;
-    std::vector<MIDITrack*> track;
+    std::vector<std::shared_ptr<MIDITrack>> track;
 
     uint16_t no_tracks = 0;
     float duration_sec = 0.0f;

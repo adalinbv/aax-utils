@@ -2192,8 +2192,9 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                             if (length >= sizeof(uint32_t) &&
                                 length <= stream.remaining())
                             {
-                                track.push_back(new MIDITrack(*this, stream,
-                                                           length, track_no++));
+                                track.push_back(std::shared_ptr<MIDITrack>(
+                                                   new MIDITrack(*this, stream,
+                                                         length, track_no++)));
                                 stream.forward(length);
                             }
                             PRINT_CSV("%d, 0, Start_track\n", track_no);
