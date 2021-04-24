@@ -408,7 +408,7 @@ public:
 
     MIDITrack(const MIDITrack&) = default;
 
-    ~MIDITrack() = default;
+    virtual ~MIDITrack() = default;
 
     void rewind();
     bool process(uint64_t, uint32_t&, uint32_t&);
@@ -464,6 +464,8 @@ public:
 
     explicit MIDIFile(std::string& devname, std::string& filename)
        :  MIDIFile(devname.c_str(), filename.c_str()) {}
+
+    virtual ~MIDIFile() = default;
 
     inline operator bool() {
         return midi_data.capacity();
