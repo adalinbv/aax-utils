@@ -1579,7 +1579,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             {
                 auto selections = midi.get_selections();
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 MESSAGE("%s % 3i : ", type_name[meta-1].c_str(), channel_no);
                 MESSAGE("%s", text.c_str());
@@ -1599,7 +1599,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             case MIDI_COPYRIGHT:
             case MIDI_INSTRUMENT_NAME:
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 MESSAGE("%-10s: ", type_name[meta-1].c_str());
                 MESSAGE("%s", text.c_str());
@@ -1611,7 +1611,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 break;
             case MIDI_TEXT:
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 DISPLAY(4, "Text: ");
                 if (size > 64) DISPLAY(4, "\n");
@@ -1624,7 +1624,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             case MIDI_LYRICS:
                 midi.set_lyrics(true);
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 MESSAGE("%s", text.c_str());
                 CSV("%s, ", csv_name[meta-1].c_str());
@@ -1637,7 +1637,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 break;
             case MIDI_MARKER:
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 MESSAGE("%s", text.c_str());
                 CSV("Marker_t, ");
@@ -1648,7 +1648,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 break;
             case MIDI_CUE_POINT:
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 MESSAGE("%s", text.c_str());
                 CSV("Cue_point_t, ");
@@ -1658,7 +1658,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 CSV("\n");
             case MIDI_DEVICE_NAME:
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 MESSAGE("%s", text.c_str());
                 CSV("Device_name_t, ");
@@ -1725,7 +1725,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             }
             case MIDI_SEQUENCERSPECIFICMETAEVENT:
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 CSV("Sequencer_specific, %lu", size);
                 for (int i=0; i<size; ++i) {
@@ -1735,7 +1735,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 break;
             default:        // unsupported
                 for (int i=0; i<size; ++i) {
-                   text += pull_byte();
+                   toUTF8(text, pull_byte());
                 }
                 std::cerr << "Error: Unsupported system message: " << meta
                           << " (0x" << std::hex << meta << ")" << std::endl;

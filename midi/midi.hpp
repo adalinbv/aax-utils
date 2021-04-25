@@ -423,6 +423,10 @@ private:
         float r = midi.channel(channel).get_modulation_depth();
         return powf(2.0f, p*r/12.0f);
     }
+    inline void toUTF8(std::string& text, uint8_t c) {
+       if (c < 128) text += c;
+       else { text += 0xc2+(c > 0xbf); text += (c & 0x3f)+0x80; }
+    }
 
     uint32_t pull_message();
     bool registered_param(uint8_t, uint8_t, uint8_t);
