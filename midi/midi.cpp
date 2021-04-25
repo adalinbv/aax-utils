@@ -1583,6 +1583,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 }
                 MESSAGE("%s % 3i : ", type_name[meta-1].c_str(), channel_no);
                 MESSAGE("%s", text.c_str());
+
                 CSV("%s, \"", csv_name[meta-1].c_str());
                 for (int i=0; i<size; ++i) {
                     CSV_ISOPRINT(text[i]);

@@ -184,7 +184,7 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
 int verbose = 0;
 int main(int argc, char **argv)
 {
-//  std::setlocale(LC_ALL, "");
+    std::setlocale(LC_ALL, "");
 //  std::locale::global(std::locale(""));
 //  std::cout.imbue(std::locale());
 
