@@ -1565,6 +1565,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
         }
         case MIDI_FILE_META_EVENT:
         {
+            std::string text;
             uint8_t meta = pull_byte();
             uint64_t size = pull_message();
             uint64_t offs = offset();
@@ -1576,19 +1577,18 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             {
             case MIDI_TRACK_NAME:
             {
-                std::string tname;
                 auto selections = midi.get_selections();
-                CSV("%s, \"", csv_name[meta-1].c_str());
-                MESSAGE("%s % 3i : ", type_name[meta-1].c_str(), channel_no);
-                for (int i=0; i<size; ++i)
-                {
-                    c = pull_byte();
-                    MESSAGE("%c", c);
-                    CSV_ISOPRINT(c);
-                    tname += c;
+                for (int i=0; i<size; ++i) {
+                   text += pull_byte();
                 }
-                midi.channel(channel_no).set_track_name(tname);
-                if (std::find(selections.begin(), selections.end(), tname) != selections.end()) {
+                MESSAGE("%s % 3i : ", type_name[meta-1].c_str(), channel_no);
+                MESSAGE("%s", text.c_str());
+                CSV("%s, \"", csv_name[meta-1].c_str());
+                for (int i=0; i<size; ++i) {
+                    CSV_ISOPRINT(text[i]);
+                }
+                midi.channel(channel_no).set_track_name(text);
+                if (std::find(selections.begin(), selections.end(), text) != selections.end()) {
                     midi.set_track_active(channel_no);
                 }
                 MESSAGE("\n");
@@ -1597,62 +1597,72 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             }
             case MIDI_COPYRIGHT:
             case MIDI_INSTRUMENT_NAME:
-                CSV("%s, \"", csv_name[meta-1].c_str());
-                MESSAGE("%-10s: ", type_name[meta-1].c_str());
-             for (int i=0; i<size; ++i) {
-                    c = pull_byte();
-                    MESSAGE("%c", c);
-                    CSV_ISOPRINT(c);
+                for (int i=0; i<size; ++i) {
+                   text += pull_byte();
                 }
-                MESSAGE("\n");
+                MESSAGE("%-10s: ", type_name[meta-1].c_str());
+                MESSAGE("%s", text.c_str());
+                CSV("%s, \"", csv_name[meta-1].c_str());
+                for (int i=0; i<size; ++i) {
+                    CSV_ISOPRINT(text[i]);
+                }
                 CSV("\"\n");
                 break;
             case MIDI_TEXT:
+                for (int i=0; i<size; ++i) {
+                   text += pull_byte();
+                }
                 DISPLAY(4, "Text: ");
                 if (size > 64) DISPLAY(4, "\n");
+                DISPLAY(4, "%s\n", text.c_str());
                 for (int i=0; i<size; ++i) {
-                    c = pull_byte();
-                    DISPLAY(4, "%c", c);
-                    CSV_ISOPRINT(c);
+                    CSV_ISOPRINT(text[i]);
                 }
-                DISPLAY(4, "\n");
                 CSV("\"\n");
                 break;
             case MIDI_LYRICS:
                 midi.set_lyrics(true);
+                for (int i=0; i<size; ++i) {
+                   text += pull_byte();
+                }
+                MESSAGE("%s", text.c_str());
                 CSV("%s, ", csv_name[meta-1].c_str());
                 for (int i=0; i<size; ++i) {
-                    c = pull_byte();
-                    MESSAGE("%c", c);
-                    CSV_ISOPRINT(c);
-                    if (c == '\r') MESSAGE("\n");
+                    CSV_ISOPRINT(text[i]);
+                    if (text[i] == '\r') MESSAGE("\n");
                 }
-                if (!midi.get_initialize() && midi.get_verbose()) fflush(stdout);
                 CSV("\n");
+                if (!midi.get_initialize() && midi.get_verbose()) fflush(stdout);
                 break;
             case MIDI_MARKER:
+                for (int i=0; i<size; ++i) {
+                   text += pull_byte();
+                }
+                MESSAGE("%s", text.c_str());
                 CSV("Marker_t, ");
                 for (int i=0; i<size; ++i) {
-                    c = pull_byte();
-                    MESSAGE("%c", c);
-                    CSV_ISOPRINT(c);
+                    CSV_ISOPRINT(text[i]);
                 }
                 CSV("\n");
                 break;
             case MIDI_CUE_POINT:
+                for (int i=0; i<size; ++i) {
+                   text += pull_byte();
+                }
+                MESSAGE("%s", text.c_str());
                 CSV("Cue_point_t, ");
                 for (int i=0; i<size; ++i) {
-                    c = pull_byte();
-                    MESSAGE("%c", c);
-                    CSV_ISOPRINT(c);
+                    CSV_ISOPRINT(text[i]);
                 }
                 CSV("\n");
             case MIDI_DEVICE_NAME:
+                for (int i=0; i<size; ++i) {
+                   text += pull_byte();
+                }
+                MESSAGE("%s", text.c_str());
                 CSV("Device_name_t, ");
                 for (int i=0; i<size; ++i) {
-                    c = pull_byte();
-                    MESSAGE("%c", c);
-                    CSV_ISOPRINT(c);
+                    CSV_ISOPRINT(text[i]);
                 }
                 CSV("\n");
                 break;
@@ -1713,16 +1723,18 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 break;
             }
             case MIDI_SEQUENCERSPECIFICMETAEVENT:
+                for (int i=0; i<size; ++i) {
+                   text += pull_byte();
+                }
                 CSV("Sequencer_specific, %lu", size);
                 for (int i=0; i<size; ++i) {
-                    c = pull_byte();
-                    CSV(", %d", c);
+                    CSV(", %d", text[i]);
                 }
                 CSV("\n");
                 break;
             default:        // unsupported
                 for (int i=0; i<size; ++i) {
-                    c = pull_byte();
+                   text += pull_byte();
                 }
                 std::cerr << "Error: Unsupported system message: " << meta
                           << " (0x" << std::hex << meta << ")" << std::endl;
