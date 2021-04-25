@@ -424,7 +424,10 @@ private:
         return powf(2.0f, p*r/12.0f);
     }
     inline void toUTF8(std::string& text, uint8_t c) {
-       if (c < 128) text += c;
+       if (c < 128) {
+          if (c == '\r') text += '\n';
+          else text += c;
+       }
        else { text += 0xc2+(c > 0xbf); text += (c & 0x3f)+0x80; }
     }
 
@@ -453,8 +456,10 @@ private:
     const std::string type_name[5] = {
         "Text", "Copyright", "Track", "Instrument", "Lyrics"
     };
-    const std::string csv_name[5] = {
-        "Text_t", "Copyright_t", "Title_t", "Instrument_name_t", "Lyrics_t"
+    const std::string csv_name[9] = {
+        "Sequence_number", "Text_t", "Copyright_t", "Title_t",
+        "Instrument_name_t", "Lyrics_t", "Marker_t", "Cue_point_t",
+        "Device_name_t"
     };
 };
 
