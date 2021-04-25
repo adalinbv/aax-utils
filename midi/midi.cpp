@@ -58,6 +58,7 @@
 # define PRINT_CSV(...)	printf(__VA_ARGS__);
 # define CSV(...)	if(midi.get_initialize()) PRINT_CSV(__VA_ARGS__)
 #else
+# define CSV_TEXT(...)
 # define PRINT_CSV(...)
 # define CSV(...)
 #endif
