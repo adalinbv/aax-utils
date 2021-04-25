@@ -72,7 +72,7 @@ help()
     printf("  -l, --load <instr>\tmidi isntrument configration overlay file\n");
     printf("  -m, --mono\t\t\tplay back in mono mode\n");
 //  printf("  -b, --batched\t\t\tprocess the file in batched (high-speed) mode.\n");
-    printf("  -v, --verbose <0-3>\t\t\tshow extra playback information\n");
+    printf("  -v, --verbose <0-4>\t\t\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
 
     printf("\nUse aaxplay for playing other audio file formats.\n");

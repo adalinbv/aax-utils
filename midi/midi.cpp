@@ -1608,10 +1608,15 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 CSV("\"\n");
                 break;
             case MIDI_TEXT:
+                DISPLAY(4, "Text: ");
+                if (size > 64) DISPLAY(4, "\n");
                 for (int i=0; i<size; ++i) {
                     c = pull_byte();
+                    DISPLAY(4, "%c", c);
                     CSV_ISOPRINT(c);
                 }
+                DISPLAY(4, "\n");
+                CSV("\"\n");
                 break;
             case MIDI_LYRICS:
                 midi.set_lyrics(true);
