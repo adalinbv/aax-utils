@@ -260,6 +260,35 @@ getInputFile(int argc, char **argv, const char *filename)
 }
 
 char *
+getInputFileExt(int argc, char **argv, const char *ext, const char *filename)
+{
+    int elen = strlen(ext);
+    char *rv = 0;
+    int i;
+
+    for (i=0; i<argc; i++)
+    {
+        int alen;
+
+        if (!strcmp(argv[i], "-o") || !strcmp(argv[i], "--output") ||
+            !strcmp(argv[i], "-d") || !strcmp(argv[i], "--device") ||
+            !strcmp(argv[i], "-r") || !strcmp(argv[i], "--renderer"))
+        {
+           i++;
+           continue;
+        }
+
+        alen = strlen(argv[i]);
+        if (alen > elen && strcasecmp(argv[i]+alen-elen, ext) == 0)
+        {
+            rv = argv[i];
+            break;
+        }
+    }
+    return rv;
+}
+
+char *
 getOutputFile(int argc, char **argv, const char *filename)
 {
     char *fn = getCommandLineOption(argc, argv, "-o");

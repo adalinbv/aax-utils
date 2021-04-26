@@ -57,7 +57,7 @@ extern "C" {
 struct mmap_t {
     int fd;
     size_t len;
-    char *start;
+    char*start;
 #ifdef WIN32
     struct {
         HANDLE m;
@@ -88,27 +88,28 @@ void simple_unmmap(void *addr, size_t len, SIMPLE_UNMMAP *un);
 void set_mode(int want_key);
 int get_key();
 
-char *getDeviceName(int, char **);
-char *getCaptureName(int, char **);
-char *getCommandLineOption(int, char **, char const *);
-char *getInputFile(int, char **, const char *);
-char *getOutputFile(int, char**, const char *);
-enum aaxFormat getAudioFormat(int, char **, enum aaxFormat);
-int getNumEmitters(int, char **);
-float getPitch(int, char **);
-float getPitchRange(int, char **);
-float getGain(int, char **);
-float getGainRange(int, char **);
-float getTime(int, char **);
-float getDuration(int, char **);
-int getMode(int, char **);
-char *getRenderer(int, char **);
-aaxBuffer setFiltersEffects(int, char **, aaxConfig, aaxConfig, aaxFrame, aaxEmitter, const char*);
-int printCopyright(int, char **);
-char *strDup(const char *);
+char*getDeviceName(int, char**);
+char*getCaptureName(int, char**);
+char*getCommandLineOption(int, char**, char const *);
+char*getInputFile(int, char**, const char*);
+char*getInputFileExt(int, char**, const char*, const char*);
+char*getOutputFile(int, char**, const char*);
+enum aaxFormat getAudioFormat(int, char**, enum aaxFormat);
+int getNumEmitters(int, char**);
+float getPitch(int, char**);
+float getPitchRange(int, char**);
+float getGain(int, char**);
+float getGainRange(int, char**);
+float getTime(int, char**);
+float getDuration(int, char**);
+int getMode(int, char**);
+char*getRenderer(int, char**);
+aaxBuffer setFiltersEffects(int, char**, aaxConfig, aaxConfig, aaxFrame, aaxEmitter, const char*);
+int printCopyright(int, char**);
+char*strDup(const char*);
 
 void testForError(void *, char const *);
-void testForState(int, const char *);
+void testForState(int, const char*);
 void testForALCError(void *);
 void testForALError();
 
