@@ -69,11 +69,17 @@ help()
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
     printf("  -s, --select <name|num>\tonly play the track with this name or number\n");
     printf("  -t, --time\t\t\ttime offset in seconds or (hh:)mm:ss\n");
-    printf("  -l, --load <instr>\tmidi isntrument configration overlay file\n");
+    printf("  -l, --load <instr>\t\tmidi isntrument configration overlay file\n");
     printf("  -m, --mono\t\t\tplay back in mono mode\n");
 //  printf("  -b, --batched\t\t\tprocess the file in batched (high-speed) mode.\n");
-    printf("  -v, --verbose <0-4>\t\t\tshow extra playback information\n");
+    printf("  -v, --verbose <0-4>\t\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
+
+    printf("\nVerbosity levels:\n");
+    printf("1: General playback information and lyrics.\n");
+    printf("2: Loading instrument messages.\n");
+    printf("3: MIDI Text message.\n");
+    printf("4: Instrument not found, trying another bank messages.\n");
 
     printf("\nUse aaxplay for playing other audio file formats.\n");
 
@@ -184,7 +190,7 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
 int verbose = 0;
 int main(int argc, char **argv)
 {
-  // setting the locale messes up playback
+    // setting the locale messes up playback
 //  std::setlocale(LC_ALL, "");
 //  std::locale::global(std::locale(""));
 //  std::cout.imbue(std::locale());
@@ -197,7 +203,7 @@ int main(int argc, char **argv)
 
     enum aaxRenderMode render_mode = aaxRenderMode(getMode(argc, argv));
     char *devname = getDeviceName(argc, argv);
-    char *infile = getInputFile(argc, argv, IFILE_PATH);
+    char *infile = getInputFileExt(argc, argv, ".mid", IFILE_PATH);
     bool batched = false;
     char mono = false;
     char verbose = 0;
