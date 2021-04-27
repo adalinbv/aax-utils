@@ -1610,9 +1610,20 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 for (int i=0; i<size; ++i) {
                    toUTF8(text, pull_byte());
                 }
-                DISPLAY(4, "Text: ");
-                if (size > 64) DISPLAY(4, "\n");
-                DISPLAY(4, "%s\n", text.c_str());
+                if (text.back() == '\n') {
+                    DISPLAY(4, "Text: ");
+                    if (size > 64) DISPLAY(4, "\n");
+                    DISPLAY(4, "%s\n", text.c_str());
+                } else {
+                    if (text.front() == '\\') {
+                        MESSAGE("\n\n");
+                        midi.set_lyrics(true);
+                    }
+                    if (text.front() == '/') MESSAGE("\n");
+                    MESSAGE("%s", text.c_str());
+                    if (size > 64) MESSAGE("\n");
+                    if (!midi.get_initialize() && midi.get_verbose()) fflush(stdout);
+                }
                 CSV("%s, \"", csv_name[meta].c_str());
                 CSV_TEXT("%s", text.c_str());
                 CSV("\"\n");
