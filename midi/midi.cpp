@@ -628,7 +628,7 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
                 itb = drums.find(program_no);
             }
 
-            DISPLAY(3, "Drum %i not found in bank %i, trying bank: %i\n",
+            DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
                     key_no,  req_program_no, program_no);
             req_program_no = program_no;
         }
@@ -682,7 +682,7 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
            break;
         }
 
-        DISPLAY(3, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
+        DISPLAY(4, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
                  program_no, req_bank_no >> 7, req_bank_no & 0x7F,
                  bank_no >> 7, bank_no & 0x7F);
         req_bank_no = bank_no;
@@ -1611,9 +1611,9 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                    toUTF8(text, pull_byte());
                 }
                 if (text.back() == '\n') {
-                    DISPLAY(4, "Text: ");
+                    DISPLAY(3, "Text: ");
                     if (size > 64) DISPLAY(4, "\n");
-                    DISPLAY(4, "%s\n", text.c_str());
+                    DISPLAY(3, "%s\n", text.c_str());
                 } else {
                     if (text.front() == '\\') {
                         MESSAGE("\n\n");
