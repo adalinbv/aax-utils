@@ -1610,7 +1610,10 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 for (int i=0; i<size; ++i) {
                    toUTF8(text, pull_byte());
                 }
-                if (text.back() == '\n') {
+                if (text.front() == '\\') {
+                    midi.set_lyrics(true);
+                }
+                if (!midi.get_lyrics()) {
                     DISPLAY(3, "Text: ");
                     if (size > 64) DISPLAY(4, "\n");
                     DISPLAY(3, "%s\n", text.c_str());
@@ -2361,6 +2364,7 @@ void
 MIDIFile::rewind()
 {
     midi.rewind();
+    midi.set_lyrics(false);
     for (auto it : track) {
         it->rewind();
     }
