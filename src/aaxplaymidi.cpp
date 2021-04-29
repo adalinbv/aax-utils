@@ -149,39 +149,66 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
         wait_parts = 1000;
         set_mode(1);
 
+        int key, paused = AAX_FALSE;
         auto now = std::chrono::high_resolution_clock::now();
         do
         {
-            if (!midi.process(time_parts, wait_parts)) break;
-
-            if (wait_parts > 0 && midi.get_pos_sec() >= time_offs)
+            if (!paused)
             {
-                double sleep_us, wait_us;
+                if (!midi.process(time_parts, wait_parts)) break;
 
-                auto next = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double, std::micro> dt_us = next - now;
-
-                wait_us = wait_parts*midi.get_uspp();
-                sleep_us = wait_us - dt_us.count();
-
-                if (sleep_us > 0)
+                if (wait_parts > 0 && midi.get_pos_sec() >= time_offs)
                 {
-                    if (batched)
+                    double sleep_us, wait_us;
+
+                    auto next = std::chrono::high_resolution_clock::now();
+                    std::chrono::duration<double, std::micro> dt_us = next - now;
+
+                    wait_us = wait_parts*midi.get_uspp();
+                    sleep_us = wait_us - dt_us.count();
+
+                    if (sleep_us > 0)
                     {
-                        midi.sensor(AAX_UPDATE);
-                        midi.wait(sleep_us*1e-6f);
-                        midi.get_buffer();
+                        if (batched)
+                        {
+                            midi.sensor(AAX_UPDATE);
+                            midi.wait(sleep_us*1e-6f);
+                            midi.get_buffer();
+                        }
+                        else {
+                            sleep_for(sleep_us*1e-6f);
+                        }
                     }
-                    else {
-                        sleep_for(sleep_us*1e-6f);
+
+                    now = std::chrono::high_resolution_clock::now();
+                }
+                time_parts += wait_parts;
+            }
+
+            key = get_key();
+            if (key)
+            {
+                if (key == ' ')
+                {
+                    if (paused)
+                    {
+                        midi.set(AAX_PLAYING);
+                        printf("\nRestart playback.\n");
+                        paused = AAX_FALSE;
+                    }
+                    else
+                    {
+                        midi.set(AAX_SUSPENDED);
+                        printf("\nPause playback.\n");
+                        paused = AAX_TRUE;
                     }
                 }
-
-                now = std::chrono::high_resolution_clock::now();
+                else {
+                    break;
+                }
             }
-            time_parts += wait_parts;
         }
-        while(!get_key());
+        while(true);
         set_mode(0);
         midi.stop();
     }
