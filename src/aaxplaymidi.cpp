@@ -184,6 +184,9 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
                 }
                 time_parts += wait_parts;
             }
+            else {
+                sleep_for(0.1f);
+            }
 
             key = get_key();
             if (key)
