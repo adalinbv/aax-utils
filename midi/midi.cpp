@@ -66,12 +66,6 @@
 #define DISPLAY(l,...)	if(midi.get_initialize() && l <= midi.get_verbose()) printf(__VA_ARGS__)
 #define MESSAGE(...)	if(!midi.get_initialize() && midi.get_verbose() >= 1) printf(__VA_ARGS__)
 
-#ifndef NDEBUG
-# define LOG(...)	printf(__VA_ARGS__)
-#else
-# define LOG
-#endif
-
 #define DEFAULT_DEVICE_VOLUME	1.2f
 
 using namespace aax;
@@ -576,6 +570,7 @@ const inst_t
 MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
 {
     auto itb = drums.find(program_no << 7);
+    uint16_t prev_program_no = program_no;
     uint16_t req_program_no = program_no;
 
     if (itb == drums.end() && program_no > 0)
@@ -599,42 +594,38 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
             if (iti != bank.end())
             {
                 if (all || selection.empty() || std::find(selection.begin(), selection.end(), iti->second.first) != selection.end()) {
+                    auto bank = drums[prev_program_no];
+                    bank[key_no] = iti->second;
                     return iti->second;
                 } else {
                     return empty_map;
                 }
             }
 
-            if (program_no == 0)
+            if (!prev_program_no && !program_no)
             {
-               LOG("Drum %i not found in bank %i\n", key_no, program_no);
-               break;
+                bank[key_no] = empty_map;
+                break;
             }
+            prev_program_no = program_no;
 
             if ((program_no % 10) == 0) {
-               program_no = 0;
+                program_no = 0;
             } else if ((program_no & 0xF8) == program_no) {
                 program_no -= (program_no % 10);
             } else {
-               program_no &= 0xF8;
+                program_no &= 0xF8;
             }
 
             itb = drums.find(program_no << 7);
-            if (itb == drums.end()) {
-                itb = drums.find(program_no);
-            }
-            if (itb == drums.end()) {
-                program_no = 0;
-                itb = drums.find(program_no);
-            }
 
             DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
-                    key_no,  req_program_no, program_no);
-            req_program_no = program_no;
+                    key_no,  prev_program_no, program_no);
         }
-        while (program_no >= 0 && itb != drums.end());
+        while (itb != drums.end());
     }
-    LOG("Drum not found (bank: %i, key: %i)\n", program_no, key_no);
+    DISPLAY(4, "Drum %i not found in bank 0\n", key_no);
+
     return empty_map;
 }
 
@@ -677,8 +668,8 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
         }
         else
         {
-           LOG("Instrument %i not found in bank %i-%i\n",
-                program_no, bank_no >> 7, bank_no & 0x7F);
+           DISPLAY(4, "Instrument %i not found in bank %i-%i\n",
+                       program_no, bank_no >> 7, bank_no & 0x7F);
            break;
         }
 
@@ -688,7 +679,7 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
         req_bank_no = bank_no;
     }
     while (bank_no >= 0);
-    LOG("Instrument not found\n");
+    DISPLAY(4, "Instrument not found\n");
     return empty_map;
 }
 
@@ -852,7 +843,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
         {
             auto inst = midi.get_drum(program_no, key_no, all);
             std::string name = inst.first;
-            if (!name.empty())
+            if (!name.empty() && name != "")
             {
                 if (!midi.buffer_avail(name))
                 {
@@ -1157,7 +1148,7 @@ MIDITrack::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
     case MIDI_UNREGISTERED_PARAM_COARSE:
         break;
     default:
-        LOG("Unsupported registered parameter: %x\n", controller);
+        DISPLAY(4, "Unsupported registered parameter: %x\n", controller);
         rv = false;
         break;
     }
@@ -1203,7 +1194,7 @@ MIDITrack::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
         case MIDI_TUNING_BANK_SELECT:
             break;
         default:
-            LOG("Unsupported registered parameter: 0x%x\n", type);
+            DISPLAY(4, "Unsupported registered parameter: 0x%x\n", type);
             break;
         }
     }
@@ -1544,7 +1535,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                         break;
                     }
                     default:
-                        LOG("Unsupported sysex parameter: %x\n", byte);
+                        DISPLAY(99, "Unsupported sysex parameter: %x\n", byte);
                         byte = pull_byte();
                         break;
                     }
@@ -1735,7 +1726,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 }
                 std::cerr << "Error: Unsupported system message: " << meta
                           << " (0x" << std::hex << meta << ")" << std::endl;
-                LOG("Unsupported system message: 0x%x\n", meta);
+                DISPLAY(99, "Unsupported system message: 0x%x\n", meta);
                 break;
             }
 
@@ -1889,7 +1880,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     // useful, because then you can use Pan, Volume, and Balance
                     // controllers to internally mix all of the Parts to the
                     // device's stereo outputs
-                    LOG("Unsupported control change: MIDI_BALANCE, ch: %u, value: %u\n", channel, value);
+                    DISPLAY(99, "Unsupported control change: MIDI_BALANCE, ch: %u, value: %u\n", channel, value);
                     break;
                 case MIDI_PAN:
                     if (!midi.get_mono()) {
@@ -1943,7 +1934,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     midi.channel(channel).set_soft(value >= 0x40);
                     break;
                 case MIDI_LEGATO_SWITCH:
-                    LOG("Unsupported control change: MIDI_LEGATO_SWITCH, ch: %u, value: %u\n", channel, value);
+                    DISPLAY(99, "Unsupported control change: MIDI_LEGATO_SWITCH, ch: %u, value: %u\n", channel, value);
                     break;
                 case MIDI_DAMPER_PEDAL_SWITCH:
                     midi.channel(channel).set_hold(value >= 0x40);
@@ -2048,10 +2039,10 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 case MIDI_GENERAL_PURPOSE_CONTROL6:
                 case MIDI_GENERAL_PURPOSE_CONTROL7:
                 case MIDI_GENERAL_PURPOSE_CONTROL8:
-                    LOG("Unsupported control change: %x, ch: %u, value: %u\n", controller ,channel, value);
+                    DISPLAY(99, "Unsupported control change: %x, ch: %u, value: %u\n", controller ,channel, value);
                     break;
                 default:
-                    LOG("Unsupported control change: 0x%x\n", controller);
+                    DISPLAY(99, "Unsupported control change: 0x%x\n", controller);
                     break;
                 }
                 break;
@@ -2100,12 +2091,12 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 case MIDI_ACTIVE_SENSE:
                     break;
                 default:
-                    LOG("Unsupported real-time System message: 0x%x - %d\n", message, channel);
+                    DISPLAY(99, "Unsupported real-time System message: 0x%x - %d\n", message, channel);
                     break;
                 }
                 break;
             default:
-                LOG("Unsupported message: 0x%x\n", message);
+                DISPLAY(99, "Unsupported message: 0x%x\n", message);
                 break;
             }
             break;
