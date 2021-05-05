@@ -569,62 +569,46 @@ MIDI::add_patch(const char *file)
 const inst_t
 MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
 {
-    auto itb = drums.find(program_no << 7);
     uint16_t prev_program_no = program_no;
     uint16_t req_program_no = program_no;
-
-    if (itb == drums.end() && program_no > 0)
+    do
     {
-        if ((program_no & 0xF8) == program_no) program_no = 0;
-        else program_no &= 0xF8;
-        itb = drums.find(program_no << 7);
-        if (itb == drums.end())
-        {
-            program_no = 0;
-            itb = drums.find(program_no);
-        }
-    }
-
-    if (itb != drums.end())
-    {
-        do
+        auto itb = drums.find(program_no << 7);
+        if (itb != drums.end())
         {
             auto bank = itb->second;
             auto iti = bank.find(key_no);
             if (iti != bank.end())
             {
                 if (all || selection.empty() || std::find(selection.begin(), selection.end(), iti->second.first) != selection.end()) {
-                    auto bank = drums[prev_program_no];
-                    bank[key_no] = iti->second;
                     return iti->second;
                 } else {
                     return empty_map;
                 }
             }
-
-            if (!prev_program_no && !program_no)
-            {
-                bank[key_no] = empty_map;
-                break;
-            }
-            prev_program_no = program_no;
-
-            if ((program_no % 10) == 0) {
-                program_no = 0;
-            } else if ((program_no & 0xF8) == program_no) {
-                program_no -= (program_no % 10);
-            } else {
-                program_no &= 0xF8;
-            }
-
-            itb = drums.find(program_no << 7);
-
-            DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
-                    key_no,  prev_program_no, program_no);
         }
-        while (itb != drums.end());
+
+        if (!prev_program_no && !program_no) {
+            break;
+        }
+        prev_program_no = program_no;
+
+        if ((program_no % 10) == 0) {
+            program_no = 0;
+        } else if ((program_no & 0xF8) == program_no) {
+            program_no -= (program_no % 10);
+        } else {
+            program_no &= 0xF8;
+        }
+
+        DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
+                key_no,  prev_program_no, program_no);
     }
-    DISPLAY(4, "Drum %i not found in bank 0\n", key_no);
+    while (true);
+
+    auto itb = drums.find(req_program_no << 7);
+    auto& bank = itb->second;
+    bank.insert({key_no,empty_map});
 
     return empty_map;
 }
