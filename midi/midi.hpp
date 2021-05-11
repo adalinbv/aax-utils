@@ -453,8 +453,8 @@ private:
         { 2, 0 }, { 0x40, 0 }, { 0x20, 0 }, { 0, 0 }, { 0, 0 }, { 1, 0 }
     };
 
-    const std::string type_name[5] = {
-        "Text", "Copyright", "Track", "Instrument", "Lyrics"
+    const std::string type_name[7] = {
+        "Text", "Copyright", "Track", "Instrument", "Lyrics", "Marker", "Cue"
     };
     const std::string csv_name[9] = {
         "Sequence_number", "Text_t", "Copyright_t", "Title_t",

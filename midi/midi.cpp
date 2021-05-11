@@ -1619,14 +1619,14 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 for (int i=0; i<size; ++i) {
                    toUTF8(text, pull_byte());
                 }
-                MESSAGE("%s", text.c_str());
+                MESSAGE("%s: %s\n", type_name[meta].c_str(), text.c_str());
                 CSV("%s, %s\n", csv_name[meta].c_str(), text.c_str());
                 break;
             case MIDI_CUE_POINT:
                 for (int i=0; i<size; ++i) {
                    toUTF8(text, pull_byte());
                 }
-                MESSAGE("%s", text.c_str());
+                MESSAGE("%s: %s", type_name[meta].c_str(), text.c_str());
                 CSV("%s, %s\n", csv_name[meta].c_str(), text.c_str());
             case MIDI_DEVICE_NAME:
                 for (int i=0; i<size; ++i) {
