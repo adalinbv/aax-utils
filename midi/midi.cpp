@@ -616,12 +616,14 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
 const inst_t
 MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 {
-    auto itb = instruments.find(bank_no);
+    uint16_t prev_bank_no = bank_no;
     uint16_t req_bank_no = bank_no;
 
     do
     {
-        if (itb != instruments.end())
+        auto itb = instruments.find(bank_no);
+        bool bank_found = (itb != instruments.end());
+        if (bank_found)
         {
             auto bank = itb->second;
             auto iti = bank.find(program_no);
@@ -635,35 +637,33 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
             }
         }
 
-        if (bank_no & 0x7F)	// LSB (XG-MIDI)
-        {
+        if (!prev_bank_no && !bank_no) {
+            break;
+        }
+        prev_bank_no = bank_no;
+
+        if (bank_no & 0x7F) {		// LSB (XG-MIDI)
             bank_no &= ~0x7F;
-            itb = instruments.find(bank_no);
-        }
-        else if (bank_no & 0x3F80)	// MSB (GS-MIDI / GM-MIDI 2)
-        {
+        } else if (bank_no & 0x3F80) {	// MSB (GS-MIDI / GM-MIDI 2)
             bank_no &= ~0x3F80;
-            itb = instruments.find(bank_no);
-        }
-        else if (bank_no > 0)	// fall back to bank-0, (GM-MIDI 0)
-        {
+        } else if (bank_no > 0) {	// fall back to bank-0, (GM-MIDI 1)
             bank_no = 0;
-            itb = instruments.find(bank_no);
-        }
-        else
-        {
-           DISPLAY(4, "Instrument %i not found in bank %i-%i\n",
-                       program_no, bank_no >> 7, bank_no & 0x7F);
-           break;
         }
 
-        DISPLAY(4, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
-                 program_no, req_bank_no >> 7, req_bank_no & 0x7F,
-                 bank_no >> 7, bank_no & 0x7F);
-        req_bank_no = bank_no;
+        if (bank_found) {
+            DISPLAY(4, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
+                     program_no, req_bank_no >> 7, req_bank_no & 0x7F,
+                     bank_no >> 7, bank_no & 0x7F);
+        } else {
+            DISPLAY(4, "Instrument bank %i/%i not found, trying %i/%i\n", prev_bank_no >> 7, prev_bank_no & 0x7F, bank_no >> 7, bank_no & 0x7F);
+        }
     }
-    while (bank_no >= 0);
-    DISPLAY(4, "Instrument not found\n");
+    while (true);
+
+    auto itb = instruments.find(req_bank_no);
+    auto& bank = itb->second;
+    bank.insert({program_no,empty_map});
+
     return empty_map;
 }
 
@@ -2023,7 +2023,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 case MIDI_GENERAL_PURPOSE_CONTROL6:
                 case MIDI_GENERAL_PURPOSE_CONTROL7:
                 case MIDI_GENERAL_PURPOSE_CONTROL8:
-                    DISPLAY(99, "Unsupported control change: %x, ch: %u, value: %u\n", controller ,channel, value);
+                    DISPLAY(99, "Unsupported control change: 0x%x (%i), ch: %u, value: %u\n", controller, controller, channel, value);
                     break;
                 default:
                     DISPLAY(99, "Unsupported control change: 0x%x\n", controller);
