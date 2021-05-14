@@ -38,6 +38,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <stdexcept>
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include <map>
@@ -275,6 +276,13 @@ private:
     std::map<uint16_t,std::map<uint16_t,inst_t>> drums;
     std::map<uint16_t,std::map<uint16_t,inst_t>> instruments;
     std::map<std::string,_patch_t> patches;
+
+    std::vector<uint16_t> missing_drum_bank;
+    std::vector<uint16_t> missing_instrument_bank;
+
+    inline bool is_avail(std::vector<uint16_t>& vec, uint16_t item) {
+        return (std::find(vec.begin(), vec.end(), item) != vec.end());
+    }
 
     std::unordered_map<std::string,std::pair<size_t,std::shared_ptr<Buffer>>> buffers;
 

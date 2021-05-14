@@ -574,7 +574,8 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
     do
     {
         auto itb = drums.find(program_no << 7);
-        if (itb != drums.end())
+        bool bank_found = (itb != drums.end());
+        if (bank_found)
         {
             auto bank = itb->second;
             auto iti = bank.find(key_no);
@@ -601,8 +602,14 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
             program_no &= 0xF8;
         }
 
-        DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
-                key_no,  prev_program_no, program_no);
+        if (bank_found) {
+            DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
+                    key_no,  prev_program_no, program_no);
+        } else if (!is_avail(missing_drum_bank, prev_program_no)) {
+            DISPLAY(4, "Drum bank %i not found, trying %i\n",
+                        prev_program_no, program_no);
+            missing_drum_bank.push_back(prev_program_no);
+        }
     }
     while (true);
 
@@ -654,8 +661,11 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
             DISPLAY(4, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
                      program_no, req_bank_no >> 7, req_bank_no & 0x7F,
                      bank_no >> 7, bank_no & 0x7F);
-        } else {
-            DISPLAY(4, "Instrument bank %i/%i not found, trying %i/%i\n", prev_bank_no >> 7, prev_bank_no & 0x7F, bank_no >> 7, bank_no & 0x7F);
+        } else if (!is_avail(missing_instrument_bank, prev_bank_no)) {
+            DISPLAY(4, "Instrument bank %i/%i not found, trying %i/%i\n",
+                        prev_bank_no >> 7, prev_bank_no & 0x7F,
+                        bank_no >> 7, bank_no & 0x7F);
+            missing_instrument_bank.push_back(prev_bank_no);
         }
     }
     while (true);
