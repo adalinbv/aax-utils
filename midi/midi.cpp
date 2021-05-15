@@ -143,7 +143,7 @@ void
 MIDI::rewind()
 {
     channels.clear();
-    uSPP = 500000/PPQN;
+    uSPP = tempo/PPQN;
 
     for (const auto& it : reverb_channels)
     {

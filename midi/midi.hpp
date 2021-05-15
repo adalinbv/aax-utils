@@ -187,7 +187,7 @@ public:
     inline void set_format(uint16_t fmt) { format = fmt; }
     inline uint16_t get_format() { return format; }
 
-    inline void set_tempo(uint32_t tempo) { uSPP = tempo/PPQN; }
+    inline void set_tempo(uint32_t t) { tempo = t; uSPP = t/PPQN; }
 
     inline void set_uspp(uint32_t uspp) { uSPP = uspp; }
     inline int32_t get_uspp() { return uSPP; }
@@ -303,9 +303,10 @@ private:
     unsigned int refresh_rate = 0;
     unsigned int polyphony = UINT_MAX;
 
-    uint32_t uSPP = 500000/24;
-    uint16_t format = 0;
     uint16_t PPQN = 24;
+    uint32_t tempo = 500000;
+    uint32_t uSPP = tempo/PPQN;
+    uint16_t format = 0;
 
     enum aaxCapabilities instrument_mode = AAX_RENDER_NORMAL;
     uint8_t mode = MIDI_MODE0;
