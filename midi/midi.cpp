@@ -1945,8 +1945,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     channel.set_soft(value >= 0x40);
                     break;
                 case MIDI_LEGATO_SWITCH:
-                    // usually achieved by skipping the attack portion
-                    DISPLAY(99, "Unsupported control change: MIDI_LEGATO_SWITCH, ch: %u, value: %u\n", channel_no, value);
+                    channel.set_legato(value >= 0x40);
                     break;
                 case MIDI_DAMPER_PEDAL_SWITCH:
                     channel.set_hold(value >= 0x40);
