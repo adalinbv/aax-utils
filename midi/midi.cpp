@@ -1604,8 +1604,12 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     if (text.front() == '\\') {
                         MESSAGE("\n\n");
                         midi.set_lyrics(true);
+                        text.front() = ' ';
                     }
-                    if (text.front() == '/') MESSAGE("\n");
+                    else if (text.front() == '/') {
+                        MESSAGE("\n");
+                        text.front() = ' ';
+                    }
                     MESSAGE("%s", text.c_str());
                     if (size > 64) MESSAGE("\n");
                     if (!midi.get_initialize() && midi.get_verbose()) fflush(stdout);
