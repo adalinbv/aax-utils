@@ -1207,6 +1207,7 @@ MIDITrack::rewind()
 {
     byte_stream::rewind();
     timestamp_parts = pull_message()*24/600000;
+    wait_parts = 1;
 
     program_no = 0;
     bank_no = 0;
