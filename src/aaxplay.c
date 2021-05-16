@@ -346,11 +346,13 @@ int main(int argc, char **argv)
             res = aaxMixerSetState(record, AAX_INITIALIZED);
             testForState(res, "aaxMixerSetInitialize");
 
+#if (AAX_PATCH_LEVEL > 210112)
             if (aaxMixerGetSetup(record, AAX_SEEKABLE_SUPPORT))
             {
                 float time_offs = getTime(argc, argv);
                 aaxSensorSetOffsetSec(record, time_offs);
             }
+#endif
 
             res = aaxSensorSetState(record, AAX_CAPTURING);
             testForState(res, "aaxSensorCaptureStart");
