@@ -121,8 +121,8 @@ ELSE(MSVC)
 ENDIF(MSVC)
 
 # Required libraries
-##find_package(AAX COMPONENTS aax REQUIRED)
-find_package(AeonWave COMPONENTS aax REQUIRED)
+find_package(AAX COMPONENTS aax REQUIRED)
+##find_package(AeonWave COMPONENTS aax REQUIRED)
 if((GCC OR CLANG) AND RMALLOC)
   set(C_FLAGS "${C_FLAGS} -fsanitize=address")
   set(CXX_FLAGS "${CXX_FLAGS} -fsanitize=address")

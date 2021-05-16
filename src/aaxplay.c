@@ -346,7 +346,7 @@ int main(int argc, char **argv)
             res = aaxMixerSetState(record, AAX_INITIALIZED);
             testForState(res, "aaxMixerSetInitialize");
 
-#if (AAX_PATCH_LEVEL > 210112)
+#if (AAX_PATCH_LEVEL > 210516)
             if (aaxMixerGetSetup(record, AAX_SEEKABLE_SUPPORT))
             {
                 float time_offs = getTime(argc, argv);

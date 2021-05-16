@@ -1950,7 +1950,9 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     channel.set_soft(value >= 0x40);
                     break;
                 case MIDI_LEGATO_SWITCH:
+#if (AAX_PATCH_LEVEL > 210516)
                     channel.set_legato(value >= 0x40);
+#endif
                     break;
                 case MIDI_DAMPER_PEDAL_SWITCH:
                     channel.set_hold(value >= 0x40);
