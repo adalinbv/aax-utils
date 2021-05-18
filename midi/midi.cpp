@@ -1947,7 +1947,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                     registered_param(channel_no, controller, value);
                     break;
                 case MIDI_SOFT_PEDAL_SWITCH:
-                    channel.set_soft(value >= 0x40);
+                    channel.set_soft(value/127.0f);
                     break;
                 case MIDI_LEGATO_SWITCH:
 #if (AAX_PATCH_LEVEL > 210516)
