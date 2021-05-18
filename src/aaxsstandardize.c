@@ -371,7 +371,7 @@ struct dsp_t
     } slot[4];
 };
 
-float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float env_fact, char simplify, char emitter)
+float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
 {
     char *keep_volume = getenv("KEEP_VOLUME");
     unsigned int s, snum;
@@ -399,7 +399,7 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
     else
     {
         dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
-        if (!emitter && final)
+        if (!emitter && !layer && final)
         {
             if (dsp->src)
             {
@@ -792,13 +792,13 @@ char fill_layers(struct sound_t *sound, void *xid, char simplify)
                 {
                     layer->entry[p].type = FILTER;
                     fill_dsp(&layer->entry[p++].slot.dsp, xsid, FILTER, 1, 1.0f,
-                            0, 0);
+                            0, 0, 1);
                 }
                 else if (!strcasecmp(name, "effect"))
                 {
                     layer->entry[p].type = EFFECT;
                     fill_dsp(&layer->entry[p++].slot.dsp, xsid, EFFECT, 1, 1.0f,
-                             0, 0);
+                             0, 0, 1);
                 }
                 xmlFree(name);
             }
@@ -1061,7 +1061,7 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
             if (!(simplify & SIMPLIFY) || !emitter
                   || strcasecmp(type, "frequency"))
             {
-                float m = fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter);
+                float m = fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter, 0);
                 if (!max) max = m;
 
                 int n;
@@ -1092,7 +1092,7 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
                 || !strcasecmp(type, "ringmodulator")))
                 || (emitter && !strcasecmp(type, "timed-pitch")))
             {
-                float m = fill_dsp(&obj->dsp[p], xdid, EFFECT, final, env_fact, simplify, emitter);
+                float m = fill_dsp(&obj->dsp[p], xdid, EFFECT, final, env_fact, simplify, emitter, 0);
                 if (!max) max = m;
 
                 int n;
