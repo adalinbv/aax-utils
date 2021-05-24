@@ -379,6 +379,12 @@ public:
 
     inline void set_track_name(std::string& tname) { track_name = tname; }
 
+    inline Buffer& get_buffer(uint8_t key) {
+        auto it = name_map.find(key);
+        if (it == name_map.end()) return nullBuffer;
+        return it->second;
+    }
+
 private:
     std::pair<uint8_t,std::string> get_patch(std::string& name, uint8_t& key);
 
@@ -421,9 +427,31 @@ public:
 
     void rewind();
     bool process(uint64_t, uint32_t&, uint32_t&);
+    bool process_control(uint8_t);
+    bool process_sysex();
+    bool process_meta();
 
     MIDI& midi;
 private:
+    inline float key2pitch(MIDIChannel& channel, uint16_t key) {
+        auto& buffer = channel.get_buffer(key);
+        float frequency = buffer.get(AAX_UPDATE_RATE);
+        return 440.0f*powf(2.0f, (float(key)-69.0f)/12.0f)/frequency;
+    }
+    inline int16_t get_key(MIDIChannel& channel, int16_t key) {
+        if (!channel.is_drums()) {
+            return (key-0x20) + param[MIDI_CHANNEL_COARSE_TUNING].coarse;
+        }
+        return key;
+    }
+    inline float get_pitch(MIDIChannel& channel) {
+        float pitch = 1.0f;
+        if (!channel.is_drums()) {
+            pitch = channel.get_tuning();
+            pitch *= midi.get_tuning();
+        }
+        return pitch;
+    }
     inline float cents2pitch(float p, uint8_t channel) {
         float r = midi.channel(channel).get_semi_tones();
         return powf(2.0f, p*r/12.0f);
@@ -454,6 +482,8 @@ private:
     uint64_t timestamp_parts = 0;
     bool polyphony = true;
     bool omni = true;
+
+    bool portamento = true;
 
     bool registered = false;
     uint16_t msb_type = 0;
