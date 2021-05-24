@@ -483,8 +483,6 @@ private:
     bool polyphony = true;
     bool omni = true;
 
-    bool portamento = true;
-
     bool registered = false;
     uint16_t msb_type = 0;
     uint16_t lsb_type = 0;

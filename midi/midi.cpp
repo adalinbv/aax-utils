@@ -1600,20 +1600,16 @@ bool MIDITrack::process_control(uint8_t channel_no)
     }
     case MIDI_PORTAMENTO_CONTROL:
     {
-        if (portamento) {
-            int16_t key = get_key(channel, value);
-            float pitch = get_pitch(channel)*key2pitch(channel, key);
-            channel.set_pitch_start(pitch);
-        }
+        int16_t key = get_key(channel, value);
+        float pitch = get_pitch(channel)*key2pitch(channel, key);
+        channel.set_pitch_start(pitch);
         break;
     }
     case MIDI_PORTAMENTO_TIME:
     {
-        if (portamento) {
-            float v = value/127.0f;
-            float val = v*5.0f*(v*v*v*v - v*v + v);
-            channel.set_pitch_rate(val);
-        }
+        float v = value/127.0f;
+        float val = v*5.0f*(v*v*v*v - v*v + v);
+        channel.set_pitch_rate(val);
         break;
     }
     case MIDI_PORTAMENTO_TIME|MIDI_FINE:
@@ -1621,8 +1617,7 @@ bool MIDITrack::process_control(uint8_t channel_no)
         break;
     }
     case MIDI_PORTAMENTO_SWITCH:
-        portamento = (value >= 0x40);
-        if (!portamento) channel.set_pitch_rate(0.0f);
+        channel.set_pitch_slide_state(value >= 0x40);
         break;
     case MIDI_RELEASE_TIME:
         channel.set_release_time(value);
