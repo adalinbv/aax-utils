@@ -454,11 +454,11 @@ private:
     }
     inline float cents2pitch(float p, uint8_t channel) {
         float r = midi.channel(channel).get_semi_tones();
-        return powf(2.0f, p*r/1200.0f);
+        return powf(2.0f, p*r/12.0f);
     }
     inline float cents2modulation(float p, uint8_t channel) {
         float r = midi.channel(channel).get_modulation_depth();
-        return powf(2.0f, p*r/1200.0f);
+        return powf(2.0f, p*r/12.0f);
     }
     inline void toUTF8(std::string& text, uint8_t c) {
        if (c < 128) {
