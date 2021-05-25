@@ -1606,8 +1606,9 @@ bool MIDITrack::process_control(uint8_t channel_no)
         break;
     }
     case MIDI_PORTAMENTO_TIME:
+    {
         float v = value/127.0f;
-        float time = 0.0625f + 15.0f*v*(v*v*v*v - v*v + v);
+        float time = 0.0625f + 15.0f*v*(v*v*v - v*v + v);
         channel.set_pitch_transition_time(time);
         break;
     }
