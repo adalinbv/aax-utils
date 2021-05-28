@@ -678,11 +678,24 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 void
 MIDI::grep(std::string& filename, const char *grep)
 {
-    std::string g = grep;
+    std::string s(grep);
+    std::regex regex{R"(,+)"}; // split on a comma
+    std::sregex_token_iterator it{s.begin(), s.end(), regex, -1};
+    auto selection = std::vector<std::string>{it, {}};
+
+    bool found = false;
     for (auto it : loaded)
     {
-        if (it.find(g) != std::string::npos) {
-            printf("%s found: %s\n", filename.c_str(), it.c_str());
+        for (auto greps : selection)
+        {
+            if (it.find(greps) != std::string::npos)
+            {
+                if (!found) {
+                    printf("%s found:\n", filename.c_str());
+                    found =  true;
+                }
+                printf("    %s\n", it.c_str());
+            }
         }
     }
 }
