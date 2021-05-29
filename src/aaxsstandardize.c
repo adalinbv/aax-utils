@@ -173,6 +173,7 @@ struct info_t
     char* name;
 
     char *license;
+    char *description;
     struct copyright_t
     {
         unsigned from, until;
@@ -264,6 +265,11 @@ void fill_info(struct info_t *info, void *xid, const char *filename)
         xmlFree(xcid);
         xmlFree(xtid);
     }
+
+    xtid = xmlNodeGet(xid, "description");
+    if (xtid) {
+        info->description = xmlAttributeGetString(xtid, "text");
+    }
 }
 
 void print_info(struct info_t *info, FILE *output, char commons)
@@ -312,6 +318,10 @@ void print_info(struct info_t *info, FILE *output, char commons)
         fprintf(output, "  <copyright from=\"2017\" until=\"%s\" by=\"Adalin B.V.\"/>\n", year);
     }
 
+    if (info->description) {
+        fprintf(output, "  <description text=\"%s\"/>\n", info->description);
+    }
+
     if (info->note.polyphony)
     {
         fprintf(output, "  <note polyphony=\"%i\"", info->note.polyphony);
@@ -339,6 +349,7 @@ void free_info(struct info_t *info)
 
     if (info->path) free(info->path);
     if (!sound_name && info->name) xmlFree(info->name);
+    if (info->description) xmlFree(info->description);
     if (info->license) xmlFree(info->license);
     for (i=0; i<2; ++i) {
        if (info->copyright[i].by) xmlFree(info->copyright[i].by);
