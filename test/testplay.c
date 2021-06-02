@@ -51,9 +51,11 @@ int main(int argc, char **argv)
 {
     char *devname, *infile;
     aaxConfig config;
+    float velocity;
     char verbose = 0;
     char repeat = 0;
     char fm = 0;
+    char *env;
     int res;
 
     if (getCommandLineOption(argc, argv, "-v") ||
@@ -68,6 +70,13 @@ int main(int argc, char **argv)
 
     if (getCommandLineOption(argc, argv, "--fm")) {
         fm = 1;
+    }
+
+    env = getCommandLineOption(argc, argv, "--velocity");
+    if (env) {
+        velocity = atof(env);
+    } else {
+        velocity = 1.0f/1.27f;
     }
 
     devname = getDeviceName(argc, argv);
@@ -117,7 +126,15 @@ int main(int argc, char **argv)
             gain = getGain(argc, argv);
             gain2 = getGainRange(argc, argv);
 
-            pitch = getPitch(argc, argv);
+            pitch = getFrequency(argc, argv);
+            if (pitch)
+            {
+               float f = aaxBufferGetSetup(buffer, AAX_UPDATE_RATE);
+               if (f) pitch /= f;
+            }
+            if (pitch == 0.0f) {
+                pitch = getPitch(argc, argv);
+            }
             pitch2 = getPitchRange(argc, argv);
 
 
@@ -129,6 +146,13 @@ int main(int argc, char **argv)
 
                 res = aaxEmitterSetMode(emitter[q], AAX_POSITION, AAX_ABSOLUTE);
                 testForError(emitter[q], "Unable to set emitter mode");
+
+                if (velocity)
+                {
+                   res = aaxEmitterSetSetup(emitter[q], AAX_VELOCITY_FACTOR,
+                                          127.0f*_MINMAX(velocity, 0.0f, 1.0f));
+                   testForError(emitter[q], "Unable to set velocity");
+                }
 
                 /* gain */
                 filter = aaxEmitterGetFilter(emitter[q], AAX_VOLUME_FILTER);
