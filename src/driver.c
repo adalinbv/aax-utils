@@ -127,6 +127,16 @@ getNumEmitters(int argc, char **argv)
 }
 
 float
+getFrequency(int argc, char **argv)
+{
+    float num = 0.0f;
+    char *ret = getCommandLineOption(argc, argv, "-f");
+    if (!ret) ret = getCommandLineOption(argc, argv, "--frequency");
+    if (ret) num = (float)atof(ret);
+    return num;
+}
+
+float
 getPitch(int argc, char **argv)
 {
     float num = 1.0f;
