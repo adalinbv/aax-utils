@@ -1,6 +1,5 @@
 
 set(BASE_HEADERS
-  MurmurHash3.h
   geometry.h
   logging.h
   timer.h
@@ -8,7 +7,6 @@ set(BASE_HEADERS
 )
 
 set(BASE_OBJS
-  MurmurHash3.c
   types.c
   timer.c
 )

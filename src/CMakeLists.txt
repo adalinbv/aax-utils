@@ -1,6 +1,7 @@
 
 set(LIBBASE base)
 set(LIBMIDI midi)
+set(LIBTHIRDPARTY thirdparty)
 
 set( DRIVER_OBJS
      driver.c
@@ -12,7 +13,7 @@ ADD_LIBRARY(${LIBDRIVER} ${LIBTYPE} ${DRIVER_OBJS} ${AAX_LIBRARY})
 
 FUNCTION(CREATE_UTIL TEST_NAME)
     ADD_EXECUTABLE(${TEST_NAME} ${TEST_NAME}.c)
-    TARGET_LINK_LIBRARIES(${TEST_NAME} ${LIBBASE} ${LIBDRIVER} ${AAX_LIBRARY} ${XML_LIBRARY} ${KERNEL_LIBRARY} ${EXTRA_LIBS})
+    TARGET_LINK_LIBRARIES(${TEST_NAME} ${LIBTHIRDPARTY} ${LIBBASE} ${LIBDRIVER} ${AAX_LIBRARY} ${XML_LIBRARY} ${KERNEL_LIBRARY} ${EXTRA_LIBS})
     SET_TARGET_PROPERTIES(${TEST_NAME} PROPERTIES
             COMPILE_DEFINITIONS  "SRC_PATH=\"${PROJECT_SOURCE_DIR}/sounds\"")
 ENDFUNCTION()
@@ -53,14 +54,8 @@ install(TARGETS aaxplaymidi
         COMPONENT Applications
 )
 
-if(EBUR128_FOUND)
-  CREATE_UTIL(aaxsstandardize)
-  target_link_libraries(aaxsstandardize "${EBUR128_LIBRARY}")
-  install(TARGETS aaxsstandardize
-          RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-          COMPONENT Applications
-  )
-  install(FILES "${EBUR128_LIBRARY}"
-	  DESTINATION "${CMAKE_INSTALL_BINDIR}"
-          COMPONENT Applications)
-endif()
+CREATE_UTIL(aaxsstandardize)
+install(TARGETS aaxsstandardize
+        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
+        COMPONENT Applications
+)

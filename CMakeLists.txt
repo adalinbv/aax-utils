@@ -54,12 +54,12 @@ ELSE(WIN32)
 
   # DEBIAN
   set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1), libaax3-bin (>= 3.0.0), libaax3-data (>= 3.4.0), libebur128-1 (>= 1.2.2-2)")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1), libaax3-bin (>= 3.0.0), libaax3-data (>= 3.4.0)")
 
   # RPM
   set(CPACK_RPM_PACKAGE_LICENSE "BSD")
   set(CPACK_RPM_PACKAGE_GROUP "System/System/GUI/KDE")
-  set(CPACK_RPM_PACKAGE_REQUIRES "libaax3-bin >= 3.0.0, libaax3-data >= 3.4.0, libebur128-1 >= 1.2.4-1")
+  set(CPACK_RPM_PACKAGE_REQUIRES "libaax3-bin >= 3.0.0, libaax3-data >= 3.4.0")
 ENDIF(WIN32)
 
 # ZIP
@@ -132,7 +132,6 @@ if((GCC OR CLANG) AND RMALLOC)
 else((GCC OR CLANG) AND RMALLOC)
   find_package(XML REQUIRED)
 endif((GCC OR CLANG) AND RMALLOC)
-find_package(EBUR128 COMPONENTS ebur128)
 
 # Add definitions, compiler switches, etc.
 include_directories("${aax-utils_SOURCE_DIR}"
@@ -140,11 +139,6 @@ include_directories("${aax-utils_SOURCE_DIR}"
     ${AAX_include_DIR}
     "${aax-utils_BINARY_DIR}/include"
 )
-
-if (EBUR128_FOUND)
-  include_directories("${EBUR128_INCLUDE_DIR}")
-  set(HAVE_EBUR128 1)
-endif()
 
 CHECK_include_FILE(inttypes.h HAVE_INTTYPES_H)
 CHECK_include_FILE(stdint.h HAVE_STDINT_H)
@@ -209,6 +203,7 @@ link_directories(
 add_subdirectory(base)
 add_subdirectory(midi)
 add_subdirectory(src)
+add_subdirectory(3rdparty)
 add_subdirectory(test)
 add_subdirectory(test++)
 

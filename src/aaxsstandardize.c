@@ -1453,9 +1453,7 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
                 ebur128_sample_peak(st, 0, &peak);
                 ebur128_destroy(&st);
 
-                if (res == EBUR128_SUCCESS && loudness != -HUGE_VAL) {
-                    loudness = _db2lin(loudness);
-                } else {
+                if (res != EBUR128_SUCCESS || loudness == -HUGE_VAL) {
                     loudness = 0.0;
                 }
             }
@@ -1481,7 +1479,7 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
         aaxDriverClose(config);
         aaxDriverDestroy(config);
 
-        fval = 6.0f*_MAX(peak, 0.1f)*(_db2lin(-24.0f)/loudness);
+        fval = 6.0f*_MAX(peak, 0.1f) * _db2lin(-24.0f - loudness);
 
         printf("%-32s: peak: % -3.1f, R128: % -3.1f", infile, peak, loudness);
         printf(", new gain: %4.1f\n", (*gain > 0.0f) ? fval : -*gain);
