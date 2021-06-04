@@ -50,6 +50,10 @@ extern "C" {
 #include <base/types.h>
 #include <base/timer.h>
 
+#define TAB_KEY		0x09
+#define SPACE_KEY	0x20
+
+
 #define TRY(a) do { \
     if (!(a)) printf("Error at line %i: %s\n", __LINE__, aax.strerror()); \
 } while(0)
