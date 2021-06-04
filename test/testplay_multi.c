@@ -1,27 +1,27 @@
 /*
- * Copyright (C) 2008-2021 by Erik Hofman.
- * Copyright (C) 2009-2021 by Adalin B.V.
+ * Copyright (C) 2008-2018 by Erik Hofman.
+ * Copyright (C) 2009-2018 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are met:
- *
+ * 
  *    1. Redistributions of source code must retain the above copyright notice,
  *        this list of conditions and the following disclaimer.
- *
+ * 
  *    2. Redistributions in binary form must reproduce the above copyright
  *        notice, this list of conditions and the following disclaimer in the
  *        documentation and/or other materials provided with the distribution.
- *
+ * 
  * THIS SOFTWARE IS PROVIDED BY ADALIN B.V. ``AS IS'' AND ANY EXPRESS OR
  * IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN
  * NO EVENT SHALL ADALIN B.V. OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ * INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES 
  * (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
  * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
- * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
- * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUTOF THE USE
+ * ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR 
+ * TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUTOF THE USE 
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * The views and conclusions contained in the software and documentation are
@@ -49,7 +49,7 @@
 
 int main(int argc, char **argv)
 {
-    char *devname, *infile, *reffile;
+    char *devname, *infile;
     aaxConfig config;
     float velocity;
     char verbose = 0;
@@ -79,9 +79,6 @@ int main(int argc, char **argv)
         velocity = 1.0f/1.27f;
     }
 
-    reffile = getCommandLineOption(argc, argv, "--reference");
-    if (!reffile) reffile = getCommandLineOption(argc, argv, "-r");
-
     devname = getDeviceName(argc, argv);
     infile = getInputFile(argc, argv, FILE_PATH);
     config = aaxDriverOpenByName(devname, AAX_MODE_WRITE_STEREO);
@@ -89,7 +86,7 @@ int main(int argc, char **argv)
 
     if (config)
     {
-        aaxBuffer buffer, refbuf;
+        aaxBuffer buffer;
         char *ofile;
 
         res = aaxMixerSetSetup(config, AAX_REFRESH_RATE, 90.0f);
@@ -102,12 +99,6 @@ int main(int argc, char **argv)
         buffer = bufferFromFile(config, infile);
         testForError(buffer, "Unable to create a buffer");
 
-        if (reffile)
-        {
-            refbuf = bufferFromFile(config, reffile);
-            testForError(refbuf, "Unable to create the refbuf buffer");
-        }
-
         if (verbose)
         {
             printf("Sample frequency: %i Hz\n", aaxBufferGetSetup(buffer, AAX_FREQUENCY));
@@ -117,13 +108,11 @@ int main(int argc, char **argv)
         ofile = getOutputFile(argc, argv, NULL);
         if (!ofile && buffer)
         {
-            float prevgain, gain, gain2, gain_step, gain_time = SLIDE_TIME;
+            float gain, gain2, gain_step, gain_time = SLIDE_TIME;
             float pitch, pitch2, pitch_time = SLIDE_TIME;
-            int i, q, state, key;
-            int paused = AAX_FALSE;
-            int playref = AAX_FALSE;
-            aaxEmitter e, emitter, refem;
-            aaxFrame frame;
+            int i, q, state, nsrc;
+            aaxEmitter emitter[64];
+            aaxFrame frame[4];
             aaxFilter filter;
             aaxEffect effect;
             aaxBuffer xbuffer;
@@ -131,9 +120,10 @@ int main(int argc, char **argv)
             float dt = 0.0f;
 
             xbuffer = setFiltersEffects(argc, argv, config, config, NULL, NULL, NULL);
+            nsrc = _MINMAX(getNumEmitters(argc, argv), 1, 64);
             duration = getDuration(argc, argv);
 
-            prevgain = gain = getGain(argc, argv);
+            gain = getGain(argc, argv);
             gain2 = getGainRange(argc, argv);
 
             pitch = getFrequency(argc, argv);
@@ -149,27 +139,23 @@ int main(int argc, char **argv)
 
 
             /** emitter */
-            for (q=0; q<2; q++)
+            for (q=0; q<nsrc; q++)
             {
-                e = aaxEmitterCreate();
-                testForError(e, "Unable to create a new emitter");
+                emitter[q] = aaxEmitterCreate();
+                testForError(emitter[q], "Unable to create a new emitter");
 
-                if (!q) emitter = e;
-                else if (reffile) refem = e;
-                else break;
-
-                res = aaxEmitterSetMode(e, AAX_POSITION, AAX_ABSOLUTE);
-                testForError(e, "Unable to set emitter mode");
+                res = aaxEmitterSetMode(emitter[q], AAX_POSITION, AAX_ABSOLUTE);
+                testForError(emitter[q], "Unable to set emitter mode");
 
                 if (velocity)
                 {
-                   res = aaxEmitterSetSetup(e, AAX_VELOCITY_FACTOR,
+                   res = aaxEmitterSetSetup(emitter[q], AAX_VELOCITY_FACTOR,
                                           127.0f*_MINMAX(velocity, 0.0f, 1.0f));
-                   testForError(e, "Unable to set velocity");
+                   testForError(emitter[q], "Unable to set velocity");
                 }
 
                 /* gain */
-                filter = aaxEmitterGetFilter(e, AAX_VOLUME_FILTER);
+                filter = aaxEmitterGetFilter(emitter[q], AAX_VOLUME_FILTER);
                 testForError(filter, "Unable to create the volume filter");
 
                 res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
@@ -178,7 +164,7 @@ int main(int argc, char **argv)
                 res = aaxFilterSetParam(filter, AAX_MAX_GAIN, AAX_LINEAR, 16.f);
                 testForState(res, "aaxFilterSetParam");
 
-                res = aaxEmitterSetFilter(e, filter);
+                res = aaxEmitterSetFilter(emitter[q], filter);
                 testForState(res, "aaxEmitterSetGain");
                 aaxFilterDestroy(filter);
 
@@ -197,41 +183,40 @@ int main(int argc, char **argv)
                    testForState(res, "aaxEffectSetState");
                 }
 
-                res = aaxEmitterSetEffect(e, effect);
+                res = aaxEmitterSetEffect(emitter[q], effect);
                 testForState(res, "aaxEmitterSetPitch");
                 aaxEffectDestroy(effect);
 
                 /* buffer */
-                if (!q) {
-                    res = aaxEmitterAddBuffer(emitter, buffer);
-                } else if (reffile) {
-                    res = aaxEmitterAddBuffer(refem, refbuf);
-                }
+                res = aaxEmitterAddBuffer(emitter[q], buffer);
                 testForState(res, "aaxEmitterAddBuffer");
+
+//              res = aaxEmitterSetMode(emitter[q], AAX_LOOPING, AAX_TRUE);
+                testForState(res, "aaxEmitterSetMode");
             }
 
             /** audio-frame */
             res = aaxMixerSetState(config, AAX_INITIALIZED);
             testForState(res, "aaxMixerInit");
 
-            frame = aaxAudioFrameCreate(config);
-            testForError(frame, "Unable to create a new audio frame");
-
-            res = aaxMixerRegisterAudioFrame(config, frame);
-            testForState(res, "aaxMixerRegisterAudioFrame");
-
-            res = aaxAudioFrameSetState(frame, AAX_PLAYING);
-            testForState(res, "aaxAudioFrameStart");
-
-            res = aaxAudioFrameAddBuffer(frame, buffer);
-            // testForState(res, "aaxAudioFrameAddBuffer");
-
-            res = aaxAudioFrameRegisterEmitter(frame, emitter);
-            testForState(res, "aaxAudioFrameRegisterEmitter");
-
-            if (reffile)
+            for (q=0; q<4; ++q)
             {
-                res = aaxAudioFrameRegisterEmitter(frame, refem);
+                frame[q] = aaxAudioFrameCreate(config);
+                testForError(frame[q], "Unable to create a new audio frame");
+
+                res = aaxMixerRegisterAudioFrame(config, frame[q]);
+                testForState(res, "aaxMixerRegisterAudioFrame");
+
+                res = aaxAudioFrameSetState(frame[q], AAX_PLAYING);
+                testForState(res, "aaxAudioFrameStart");
+
+                res = aaxAudioFrameAddBuffer(frame[q], buffer);
+                // testForState(res, "aaxAudioFrameAddBuffer");
+            }
+
+            for (q=0; q<nsrc; q++)
+            {
+                res = aaxAudioFrameRegisterEmitter(frame[q % 4], emitter[q]);
                 testForState(res, "aaxAudioFrameRegisterEmitter");
             }
 
@@ -246,86 +231,42 @@ int main(int argc, char **argv)
             res = aaxMixerSetState(config, AAX_PLAYING);
             testForState(res, "aaxMixerStart");
 
-            /** schedule the emitter for playback */
-            res = aaxEmitterSetState(emitter, AAX_PLAYING);
-            testForState(res, "aaxEmitterStart");
+            for (q=0; q<nsrc; q++)
+            {
+                /** schedule the emitter for playback */
+                res = aaxEmitterSetState(emitter[q], AAX_PLAYING);
+                testForState(res, "aaxEmitterStart");
+            }
 
             printf("Playing sound for %3.1f seconds or until a key is pressed\n", duration);
             q = 0;
             set_mode(1);
             if (gain2 == 1.0f) {
                 gain_step = 0.0f;
-            } else {
+            } else { 
                 gain_step = (gain2-gain)/(gain_time/SLEEP_TIME);
             }
             do
             {
-                e = (!playref || !reffile) ? emitter : refem;
-
                 msecSleep(SLEEP_TIME*1000);
                 dt += SLEEP_TIME;
 
-                if (!paused && ++q > 10)
+                if (++q > 10)
                 {
                     unsigned long offs, offs_bytes;
                     float off_s;
                     q = 0;
 
-                    off_s = aaxEmitterGetOffsetSec(e);
-                    offs = aaxEmitterGetOffset(e, AAX_SAMPLES);
-                    offs_bytes = aaxEmitterGetOffset(e, AAX_BYTES);
+                    off_s = aaxEmitterGetOffsetSec(emitter[0]);
+                    offs = aaxEmitterGetOffset(emitter[0], AAX_SAMPLES);
+                    offs_bytes = aaxEmitterGetOffset(emitter[0], AAX_BYTES);
                     printf("playing time: %5.2f, buffer position: %5.2f "
                            "(%li samples/ %li bytes)\n", dt, off_s,
                            offs, offs_bytes);
                 }
+                state = aaxEmitterGetState(emitter[0]);
 
-                key = get_key();
-                if (key)
-                {
-                    if (key == SPACE_KEY)
-                    {
-                        if (paused)
-                        {
-                            aaxMixerSetState(config, AAX_PLAYING);
-                            printf("Restart playback.\n");
-                            paused = AAX_FALSE;
-                        }
-                        else
-                        {
-                            aaxMixerSetState(config, AAX_SUSPENDED);
-                            printf("Pause playback.\n");
-                            paused = AAX_TRUE;
-                        }
-                    }
-                    else if (key == TAB_KEY)
-                    {
-                        if (!playref)
-                        {
-                            aaxEmitterSetState(emitter, AAX_PROCESSED);
-
-                            if (reffile)
-                            {
-                                aaxEmitterSetState(refem, AAX_INITIALIZED);
-                                aaxEmitterSetState(refem, AAX_PLAYING);
-                                e = refem;
-                            }
-                        }
-                        else
-                        {
-                            aaxEmitterSetState(emitter, AAX_INITIALIZED);
-                            aaxEmitterSetState(emitter, AAX_PLAYING);
-                            e = emitter;
-
-                            if (reffile) {
-                                aaxEmitterSetState(refem, AAX_PROCESSED);
-                            }
-                        }
-                        playref = !playref;
-                    }
-                    else {
-                       break;
-                    }
-                }
+                if (get_key()) break;
 
                 /* gain */
                 if (gain_step > 0.0f) {
@@ -333,42 +274,36 @@ int main(int argc, char **argv)
                 } else if (gain_step < 0.0f) {
                     gain = _MAX(gain+gain_step, gain2);
                 }
-                if (gain != prevgain)
+                for (i=0; i<nsrc; i++)
                 {
-                    for (i=0; i<2; i++)
-                    {
-                        filter = aaxEmitterGetFilter(e, AAX_VOLUME_FILTER);
-                        testForError(filter, "Unable to create the volume filter");
+                    filter = aaxEmitterGetFilter(emitter[i], AAX_VOLUME_FILTER);
+                    testForError(filter, "Unable to create the volume filter");
 
-                        res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
-                        testForState(res, "aaxFilterSetParam");
+                    res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
+                    testForState(res, "aaxFilterSetParam");
 
-                        res = aaxEmitterSetFilter(e, filter);
-                        testForState(res, "aaxEmitterSetGain");
-                        aaxFilterDestroy(filter);
+                    res = aaxEmitterSetFilter(emitter[i], filter);
+                    testForState(res, "aaxEmitterSetGain");
+                    aaxFilterDestroy(filter);
 
-                        if (repeat && dt > 0.1f)
-                        {
-                            aaxEmitterSetState(e, AAX_INITIALIZED);
-                            aaxEmitterSetState(e, AAX_PLAYING);
-                        }
-                    }
-                    prevgain = gain;
+                   if (repeat && dt > 0.1f) {
+                      aaxEmitterSetState(emitter[i], AAX_INITIALIZED);
+                      aaxEmitterSetState(emitter[i], AAX_PLAYING);
+                   }
                 }
 
                 if (repeat && dt > 0.1f)
                 {
-                    dt = 0.0f;
-                    repeat--;
+                   dt = 0.0f;
+                   repeat--;
                 }
-
-                state = aaxEmitterGetState(e);
             }
             while ((dt < duration) && (state == AAX_PLAYING));
             set_mode(0);
 
-            e = (!playref || !reffile) ? emitter : refem;
-            res = aaxEmitterSetState(e, AAX_STOPPED);
+            for (q=0; q<nsrc; ++q) {
+                res = aaxEmitterSetState(emitter[q], AAX_STOPPED);
+            }
             testForState(res, "aaxEmitterStop");
 
             do
@@ -376,35 +311,36 @@ int main(int argc, char **argv)
                 unsigned long offs, offs_bytes;
                 float off_s;
 
-                off_s = aaxEmitterGetOffsetSec(e);
-                offs = aaxEmitterGetOffset(e, AAX_SAMPLES);
-                offs_bytes = aaxEmitterGetOffset(e, AAX_BYTES);
+                off_s = aaxEmitterGetOffsetSec(emitter[0]);
+                offs = aaxEmitterGetOffset(emitter[0], AAX_SAMPLES);
+                offs_bytes = aaxEmitterGetOffset(emitter[0], AAX_BYTES);
                 printf("playing time: %5.2f, buffer position: %5.2f "
                        "(%li samples/ %li bytes)\n", dt, off_s,
                        offs, offs_bytes);
 
                 msecSleep(50);
-                state = aaxEmitterGetState(e);
+                state = aaxEmitterGetState(emitter[0]);
                 dt += 0.05f;
             }
             while (state != AAX_PROCESSED);
 
-            res = aaxAudioFrameSetState(frame, AAX_STOPPED);
-
-            if (reffile)
-            {
-                res = aaxAudioFrameDeregisterEmitter(frame, refem);
-                res = aaxEmitterDestroy(refem);
-                res = aaxBufferDestroy(refbuf);
+            for (q=0; q<4; ++q) {
+                res = aaxAudioFrameSetState(frame[q], AAX_STOPPED);
             }
-
-            res = aaxAudioFrameDeregisterEmitter(frame, emitter);
-            res = aaxMixerDeregisterAudioFrame(config, frame);
+            for (q=0; q<nsrc; ++q) {
+                res = aaxAudioFrameDeregisterEmitter(frame[q % 4], emitter[q]);
+            }
+            for (q=0; q<4; ++q) {
+                res = aaxMixerDeregisterAudioFrame(config, frame[q]);
+            }
             res = aaxMixerSetState(config, AAX_STOPPED);
-            res = aaxAudioFrameDestroy(frame);
-            res = aaxEmitterDestroy(emitter);
+            for (q=0; q<4; ++q) {
+                res = aaxAudioFrameDestroy(frame[q]);
+            }
+            for (q=0; q<nsrc; ++q) {
+                res = aaxEmitterDestroy(emitter[q]);
+            }
             res = aaxBufferDestroy(buffer);
-
             if (xbuffer) {
                 res = aaxBufferDestroy(xbuffer);
             }
