@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>	// atof, getenv
 
 #include <aax/aax.h>
 
@@ -138,7 +139,7 @@ int main(int argc, char **argv)
             float prevgain, gain, gain2, gain_step, gain_time;
             float freq, pitch[2], pitch2, pitch_time;
             aaxEmitter e, emitter, refem;
-            int i, q, state, key;
+            int q, state, key;
             int paused = AAX_FALSE;
             int playref = AAX_FALSE;
             aaxFrame frame;
@@ -156,6 +157,7 @@ int main(int argc, char **argv)
             gain_time = getGainTime(argc, argv);
             if (gain_time == 0.0f) gain_time = SLIDE_TIME;
 
+            pitch_time = SLIDE_TIME;
             pitch[0] = pitch[1] = 1.0f;
             freq = getFrequency(argc, argv);
             if (freq == 0.0f)
@@ -163,6 +165,7 @@ int main(int argc, char **argv)
                 pitch[0] = getPitch(argc, argv);
                 pitch2 = getPitchRange(argc, argv);
                 pitch_time = getPitchTime(argc, argv);
+                if (pitch_time == 0.0f) pitch_time = SLIDE_TIME;
             }
             else
             {
@@ -170,7 +173,6 @@ int main(int argc, char **argv)
                 if (base_freq[1]) pitch[1] = freq/base_freq[1];
                 pitch2 = 0.0f;
             }
-            if (pitch_time == 0.0f) pitch_time = SLIDE_TIME;
 
             if (verbose)
             {
@@ -204,6 +206,7 @@ int main(int argc, char **argv)
 //             testForState(res, "Unable to set velocity");
             }
 
+            refem = emitter;
             if (reffile)
             {
                 refem = aaxEmitterCreate();
@@ -365,31 +368,28 @@ int main(int argc, char **argv)
                 }
                 if (gain != prevgain)
                 {
-                    for (i=0; i<2; i++)
+                    filter = aaxEmitterGetFilter(emitter, AAX_VOLUME_FILTER);
+                    testForError(filter, "Unable to create the volume filter");
+
+                    res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
+                    testForState(res, "aaxFilterSetParam");
+
+                    res = aaxEmitterSetFilter(emitter, filter);
+                    testForState(res, "aaxEmitterSetGain");
+                    if (reffile)
                     {
-                        filter = aaxEmitterGetFilter(e, AAX_VOLUME_FILTER);
-                        testForError(filter, "Unable to create the volume filter");
-
-                        res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
-                        testForState(res, "aaxFilterSetParam");
-
-                        res = aaxEmitterSetFilter(emitter, filter);
+                        res = aaxEmitterSetFilter(refem, filter);
                         testForState(res, "aaxEmitterSetGain");
-                        if (reffile)
-                        {
-                            res = aaxEmitterSetFilter(refem, filter);
-                            testForState(res, "aaxEmitterSetGain");
-                        }
-                        aaxFilterDestroy(filter);
+                    }
+                    aaxFilterDestroy(filter);
 
 #if 0
-                        if (repeat && dt > 0.1f)
-                        {
-                            aaxEmitterSetState(e, AAX_INITIALIZED);
-                            aaxEmitterSetState(e, AAX_PLAYING);
-                        }
-#endif
+                    if (repeat && dt > 0.1f)
+                    {
+                        aaxEmitterSetState(e, AAX_INITIALIZED);
+                        aaxEmitterSetState(e, AAX_PLAYING);
                     }
+#endif
                     prevgain = gain;
                 }
 
@@ -450,7 +450,7 @@ int main(int argc, char **argv)
                     }
                 }
 
-                if (playref) {
+                if (playref && reffile) {
                     state = aaxEmitterGetState(refem);
                 } else {
                     state = aaxEmitterGetState(emitter);
