@@ -48,6 +48,13 @@
 #define SLIDE_TIME			7.0f
 #define FILE_PATH			SRC_PATH"/tictac.wav"
 
+aaxVec3d EmitterPos = { 0.0,  0.0,  0.0  };
+aaxVec3f EmitterDir = { 0.0f, 0.0f, 1.0f };
+
+aaxVec3d SensorPos = { 0.0,  0.0,  0.0  };
+aaxVec3f SensorAt = {  0.0f, 0.0f, 1.0f };
+aaxVec3f SensorUp = {  0.0f, 1.0f, 0.0f };
+
 int main(int argc, char **argv)
 {
     char *devname, *infile, *reffile;
@@ -139,6 +146,7 @@ int main(int argc, char **argv)
             float prevgain, gain, gain2, gain_step, gain_time;
             float freq, pitch[2], pitch2, pitch_time;
             aaxEmitter e, emitter, refem;
+            aaxMtx4d mtx64;
             int q, state, key;
             int paused = AAX_FALSE;
             int playref = AAX_FALSE;
@@ -199,6 +207,12 @@ int main(int argc, char **argv)
             emitter = aaxEmitterCreate();
             testForError(emitter, "Unable to create a new emitter");
 
+            res = aaxMatrix64SetDirection(mtx64, EmitterPos, EmitterDir);
+            testForState(res, "aaxMatrix64SetDirection");
+
+            res = aaxEmitterSetMatrix64(emitter, mtx64);
+            testForState(res, "aaxEmitterSetMatrix64");
+
             if (velocity)
             {
                res = aaxEmitterSetSetup(emitter, AAX_VELOCITY_FACTOR,
@@ -206,11 +220,20 @@ int main(int argc, char **argv)
 //             testForState(res, "Unable to set velocity");
             }
 
+            res = aaxEmitterSetMode(emitter, AAX_POSITION, AAX_ABSOLUTE);
+            testForState(res, "Unable to set emitter mode");
+
             refem = emitter;
             if (reffile)
             {
                 refem = aaxEmitterCreate();
                 testForError(refem, "Unable to create a new emitter");
+
+                res = aaxEmitterSetMatrix64(refem, mtx64);
+                testForState(res, "aaxEmitterSetMatrix64");
+
+                res = aaxEmitterSetMode(refem, AAX_POSITION, AAX_ABSOLUTE);
+                testForState(res, "Unable to set emitter mode");
 
                 if (velocity)
                 {
@@ -304,6 +327,16 @@ int main(int argc, char **argv)
                 res = aaxAudioFrameRegisterEmitter(frame, refem);
                 testForState(res, "aaxAudioFrameRegisterEmitter");
             }
+
+            /** sensor settings */
+            res = aaxMatrix64SetOrientation(mtx64, SensorPos,
+                                               SensorAt, SensorUp);
+            testForState(res, "aaxMatrix64SetOrientation");
+
+            res = aaxMatrix64Inverse(mtx64);
+            testForState(res, "aaaxMatrix64Inverse");
+            res = aaxSensorSetMatrix64(config, mtx64);
+            testForState(res, "aaxSensorSetMatrix64");
 
             /** mixer */
             res = aaxMixerAddBuffer(config, buffer);
