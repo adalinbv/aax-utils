@@ -647,17 +647,36 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
         }
         prev_bank_no = bank_no;
 
-        if (bank_no & 0x7F) {		// LSB (XG-MIDI)
-            bank_no &= ~0x7F;
-        } else if (bank_no & 0x3F80) {	// MSB (GS-MIDI / GM-MIDI 2)
-            bank_no &= ~0x3F80;
-        } else if (bank_no > 0) {	// fall back to bank-0, (GM-MIDI 1)
-            bank_no = 0;
+        switch (midi.get_mode())
+        {
+        case MIDI_EXTENDED_GENERAL_MIDI:
+            if (bank_no & 0x7F) {          // switch to MSB only
+                bank_no &= ~0x7F;
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
+                bank_no = 0;
+            }
+        case MIDI_GENERAL_STANDARD:
+            // Some sequencers mistakenly set the LSB for GS-MIDI
+            if (bank_no & 0x7F) {
+                 bank_no = (bank_no & 0x7F) << 7;
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
+                bank_no = 0;
+            }
+            break;
+        default: // General MIDI or unspecified
+            if (bank_no & 0x7F) {          // LSB (XG-MIDI)
+                bank_no &= ~0x7F;
+            } else if (bank_no & 0x3F80) { // MSB (GS-MIDI / GM-MIDI 2)
+                bank_no &= ~0x3F80;
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
+                bank_no = 0;
+            }
+            break;
         }
 
         if (bank_found) {
             DISPLAY(4, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
-                     program_no, req_bank_no >> 7, req_bank_no & 0x7F,
+                     program_no, prev_bank_no >> 7, prev_bank_no & 0x7F,
                      bank_no >> 7, bank_no & 0x7F);
         } else if (!is_avail(missing_instrument_bank, prev_bank_no)) {
             DISPLAY(4, "Instrument bank %i/%i not found, trying %i/%i\n",
@@ -1779,7 +1798,7 @@ bool MIDITrack::process_sysex()
         byte = pull_byte();
         CSV(", %d", byte);
         if (byte == 0x00) {
-            midi.set_mode(MIDI_XG_MIDI);
+            midi.set_mode(MIDI_EXTENDED_GENERAL_MIDI);
         }
         break;
     case MIDI_SYSTEM_EXCLUSIVE_NON_REALTIME:
