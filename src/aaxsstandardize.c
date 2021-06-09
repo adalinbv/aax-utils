@@ -61,12 +61,9 @@
 # define TEMP_DIR		"/tmp"
 # define PATH_SEPARATOR		'/'
 #endif
-#define LEVEL_16DB		0.15848931670f
-#define LEVEL_20DB		0.1f
 
 #define SIMPLIFY		0x01
 #define NO_LAYER_SUPPORT	0x02
-
 
 static char debug = 0;
 static float freq = 220.0f;
@@ -76,6 +73,13 @@ static char *sound_name = NULL;
 static int sound_bank = 0;
 static int sound_program = 0;
 static float sound_frequency = 0.0f;
+
+aaxVec3d EmitterPos = { 0.0,  0.0,  0.0  };
+aaxVec3f EmitterDir = { 0.0f, 0.0f, 1.0f };
+
+aaxVec3d SensorPos = { 0.0,  0.0,  0.0  };
+aaxVec3f SensorAt = {  0.0f, 0.0f, 1.0f };
+aaxVec3f SensorUp = {  0.0f, 1.0f, 0.0f };
 
 static float _lin2log(float v) { return log10f(v); }
 //  static float _log2lin(float v) { return powf(10.f,v); }
@@ -1178,6 +1182,42 @@ struct aax_t
     char add_fm;
 };
 
+int get_info(struct aax_t *aax, const char *filename)
+{
+    int rv = AAX_TRUE;
+    void *xid;
+
+    memset(aax, 0, sizeof(struct aax_t));
+    xid = xmlOpen(filename);
+    if (xid)
+    {
+        void *xaid = xmlNodeGet(xid, "/aeonwave");
+        if (xaid)
+        {
+            void *xtid = xmlNodeGet(xaid, "instrument");
+            if (!xtid) xtid = xmlNodeGet(xaid, "info");
+            if (xtid)
+            {
+                fill_info(&aax->info, xtid, filename);
+                xmlFree(xtid);
+            }
+            xmlFree(xaid);
+        }
+        else
+        {
+            printf("%s does not seem to be AAXS compatible.\n", filename);
+            rv = AAX_FALSE;
+        }
+        xmlClose(xid);
+    }
+    else
+    {
+        printf("%s not found.\n", filename);
+        rv = AAX_FALSE;
+    }
+    return rv;
+}
+
 int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float db, float env_fact, char final)
 {
     int rv = AAX_TRUE;
@@ -1320,7 +1360,7 @@ void free_aax(struct aax_t *aax)
     free_object(&aax->audioframe);
 }
 
-float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char commons, float *db, float *gain)
+float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char commons, float *db, float *gain, float freq)
 {
     char tmpfile[128], aaxsfile[128];
     char *ptr;
@@ -1330,6 +1370,7 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
     aaxConfig config;
     aaxEmitter emitter;
     aaxFrame frame;
+    aaxMtx4d mtx64;
     void **data;
     int state;
     int res;
@@ -1355,8 +1396,20 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
     res = aaxMixerSetState(config, AAX_INITIALIZED);
     testForState(res, "aaxMixerInit");
 
+    /** sensor settings */
+    res = aaxMatrix64SetOrientation(mtx64, SensorPos, SensorAt, SensorUp);
+    testForState(res, "aaxMatrix64SetOrientation");
+
+    res = aaxMatrix64Inverse(mtx64);
+    testForState(res, "aaaxMatrix64Inverse");
+    res = aaxSensorSetMatrix64(config, mtx64);
+    testForState(res, "aaxSensorSetMatrix64");
+
     if (fill_aax(aax, infile, simplify, 1.0f, 1.0f, -AAX_FPINFINITE, 0))
     {
+        float pitch = 1.0f;
+        aaxEffect effect;
+
         print_aax(aax, aaxsfile, commons, 1);
         *gain = aax->sound.gain;
         *db = aax->sound.db;
@@ -1366,12 +1419,34 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
         buffer = aaxBufferReadFromStream(config, aaxsfile);
         testForError(buffer, "Unable to create a buffer from an aaxs file.");
 
+        float base_freq = aaxBufferGetSetup(buffer, AAX_UPDATE_RATE);
+        if (freq > 0.0f) pitch = freq / base_freq;
+        else freq = base_freq;
+
         /* emitter */
         emitter = aaxEmitterCreate();
         testForError(emitter, "Unable to create a new emitter");
 
         res = aaxEmitterAddBuffer(emitter, buffer);
         testForState(res, "aaxEmitterAddBuffer");
+
+        res = aaxMatrix64SetDirection(mtx64, EmitterPos, EmitterDir);
+        testForState(res, "aaxMatrix64SetDirection");
+
+        res = aaxEmitterSetMatrix64(emitter, mtx64);
+        testForState(res, "aaxEmitterSetMatrix64");
+
+        /* pitch */
+        effect = aaxEffectCreate(config, AAX_PITCH_EFFECT);
+        testForError(effect, "Unable to create the pitch effect");
+
+        res = aaxEffectSetParam(effect, AAX_PITCH, AAX_LINEAR, pitch);
+        testForState(res, "aaxEffectSetParam");
+
+        res = aaxEmitterSetEffect(emitter, effect);
+        testForState(res, "aaxEmitterSetPitch");
+
+        aaxEffectDestroy(effect);
 
         /* frame */
         frame = aaxAudioFrameCreate(config);
@@ -1479,9 +1554,10 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
         aaxDriverClose(config);
         aaxDriverDestroy(config);
 
-        fval = 6.0f*_MAX(peak, 0.1f) * _db2lin(-24.0f - loudness);
+//      fval = 6.0f*_MAX(peak, 0.1f) * _db2lin(-24.0f - loudness);
+        fval = _db2lin(-16.0f - loudness);
 
-        printf("%-32s: peak: % -3.1f, R128: % -3.1f", infile, peak, loudness);
+        printf("%-42s: %4.0f Hz, R128: % -3.1f", infile, freq, loudness);
         printf(", new gain: %4.1f\n", (*gain > 0.0f) ? fval : -*gain);
 
         remove(aaxsfile);
@@ -1568,6 +1644,7 @@ int main(int argc, char **argv)
         float fval, db, gain, env_fact;
         struct aax_t aax;
 
+#if 0
         setenv("AAX_RENDER_MODE", "synthesizer", 1);
         fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain);
         unsetenv("AAX_RENDER_MODE");
@@ -1579,8 +1656,24 @@ int main(int argc, char **argv)
             env_fact_fm = gain/fval;
         }
         env_fact_fm *= getGain(argc, argv);
+#endif
 
-        fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain);
+
+        get_info(&aax, infile);
+        if (aax.info.note.min && aax.info.note.max)
+        {
+            float freq1 = note2freq(aax.info.note.min);
+            float freq2 = note2freq(aax.info.note.max);
+            fval = calculate_loudness(infile, &aax, simplify, commons,
+                                      &db, &gain, freq1);
+            fval += calculate_loudness(infile, &aax, simplify, commons,
+                                       &db, &gain, freq2);
+            fval *= 0.5f;
+        }
+        else {
+            fval = calculate_loudness(infile, &aax, simplify, commons,
+                                      &db, &gain, 0.0f);
+        }
 
         env_fact = 1.0f;
         if (gain > 0.0f && fabsf(gain-fval) > 0.1f)
