@@ -1173,7 +1173,7 @@ MIDIStream::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
     case MIDI_UNREGISTERED_PARAM_COARSE:
         break;
     default:
-        DISPLAY(4, "Unsupported registered parameter: %x\n", controller);
+        LOG(99, "Unsupported registered parameter: %x\n", controller);
         rv = false;
         break;
     }
@@ -1219,7 +1219,7 @@ MIDIStream::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
         case MIDI_TUNING_BANK_SELECT:
             break;
         default:
-            DISPLAY(4, "Unsupported registered parameter: 0x%x\n", type);
+            LOG(99, "Unsupported registered parameter: 0x%x\n", type);
             break;
         }
     }
