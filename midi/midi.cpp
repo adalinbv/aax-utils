@@ -47,7 +47,7 @@
 #include <base/timer.h>
 #include "midi.hpp"
 
-#define ENABLE_CSV	0
+#define ENABLE_CSV	1
 #if ENABLE_CSV
 # define CSV_TEXT(...) do { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
@@ -720,11 +720,11 @@ MIDI::grep(std::string& filename, const char *grep)
     }
 }
 
-MIDIChannel&
-MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
+MIDITrack&
+MIDI::new_channel(uint8_t track_no, uint16_t bank_no, uint8_t program_no)
 {
-    bool drums = is_drums(channel_no);
-    auto it = channels.find(channel_no);
+    bool drums = is_drums(track_no);
+    auto it = channels.find(track_no);
     if (!drums && it != channels.end())
     {
         if (it->second) AeonWave::remove(*it->second);
@@ -747,13 +747,13 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
         buffer.set(AAX_CAPABILITIES, int(instrument_mode));
     }
 
-    it = channels.find(channel_no);
+    it = channels.find(track_no);
     if (it == channels.end())
     {
         try {
             auto ret = channels.insert(
-                { channel_no, std::shared_ptr<MIDIChannel>(
-                                    new MIDIChannel(*this, buffer, channel_no,
+                { track_no, std::shared_ptr<MIDITrack>(
+                                    new MIDITrack(*this, buffer, track_no,
                                               bank_no, program_no, drums))
                 } );
             it = ret.first;
@@ -763,7 +763,7 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
         }
     }
 
-    MIDIChannel& rv = *it->second;
+    MIDITrack& rv = *it->second;
     rv.set_program_no(program_no);
     rv.set_bank_no(bank_no);
 
@@ -775,14 +775,14 @@ MIDI::new_channel(uint8_t channel_no, uint16_t bank_no, uint8_t program_no)
     return rv;
 }
 
-MIDIChannel&
-MIDI::channel(uint16_t channel_no)
+MIDITrack&
+MIDI::channel(uint16_t track_no)
 {
-    auto it = channels.find(channel_no);
+    auto it = channels.find(track_no);
     if (it != channels.end()) {
         return *it->second;
     }
-    return new_channel(channel_no, 0, 0);
+    return new_channel(track_no, 0, 0);
 }
 
 /**
@@ -814,13 +814,13 @@ MIDI::channel(uint16_t channel_no)
  * Scratch Push(41) | Scratch Pull (42)
  */
 bool
-MIDI::process(uint8_t channel_no, uint8_t message, uint8_t key, uint8_t velocity, bool omni, float pitch)
+MIDI::process(uint8_t track_no, uint8_t message, uint8_t key, uint8_t velocity, bool omni, float pitch)
 {
     // Omni mode: Device responds to MIDI data regardless of channel
     if (message == MIDI_NOTE_ON && velocity) {
-        if (is_track_active(channel_no)) {
+        if (is_track_active(track_no)) {
             try {
-                channel(channel_no).play(key, velocity, pitch);
+                channel(track_no).play(key, velocity, pitch);
             } catch (const std::runtime_error &e) {
                 throw(e);
             }
@@ -831,14 +831,14 @@ MIDI::process(uint8_t channel_no, uint8_t message, uint8_t key, uint8_t velocity
         if (message == MIDI_NOTE_ON) {
             velocity = 64;
         }
-        channel(channel_no).stop(key, velocity);
+        channel(track_no).stop(key, velocity);
     }
     return true;
 }
 
 
 std::pair<uint8_t,std::string>
-MIDIChannel::get_patch(std::string& name, uint8_t& key_no)
+MIDITrack::get_patch(std::string& name, uint8_t& key_no)
 {
     auto patches = midi.get_patches();
     auto it = patches.find(name);
@@ -855,7 +855,7 @@ MIDIChannel::get_patch(std::string& name, uint8_t& key_no)
 }
 
 void
-MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
+MIDITrack::play(uint8_t key_no, uint8_t velocity, float pitch)
 {
     assert (velocity);
 
@@ -1091,7 +1091,7 @@ MIDIChannel::play(uint8_t key_no, uint8_t velocity, float pitch)
 
 
 uint32_t
-MIDITrack::pull_message()
+MIDIStream::pull_message()
 {
     uint32_t rv = 0;
 
@@ -1111,7 +1111,7 @@ MIDITrack::pull_message()
 
 // https://www.midi.org/specifications-old/item/table-3-control-change-messages-data-bytes-2
 bool
-MIDITrack::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
+MIDIStream::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
 {
     uint16_t type = value;
     bool data = false;
@@ -1236,7 +1236,7 @@ MIDITrack::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
 }
 
 void
-MIDITrack::rewind()
+MIDIStream::rewind()
 {
     byte_stream::rewind();
     timestamp_parts = pull_message()*24/600000;
@@ -1250,14 +1250,14 @@ MIDITrack::rewind()
 }
 
 bool
-MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& next)
+MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& next)
 {
     bool rv = !eof();
 
     if (eof())
     {
-        if (midi.get_format() && !channel_no) return rv;
-        return !midi.finished(channel_no);
+        if (midi.get_format() && !track_no) return rv;
+        return !midi.finished(track_no);
     }
 
     if (elapsed_parts < wait_parts)
@@ -1269,7 +1269,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
 
     while (!eof() && (timestamp_parts <= time_offs_parts))
     {
-        CSV("%d, %ld, ", channel_no+1, timestamp_parts);
+        CSV("%d, %ld, ", track_no+1, timestamp_parts);
 
         // Handle running status; if the next byte is a data byte
         // reuse the last command seen in the track
@@ -1299,8 +1299,8 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
             break;
         default:
         {
-            uint8_t message_channel_no = message & 0xf;
-            auto& channel = midi.channel(message_channel_no);
+            uint8_t channel_no = message & 0xf;
+            auto& channel = midi.channel(channel_no);
             switch(message & 0xf0)
             {
             case MIDI_NOTE_ON:
@@ -1309,19 +1309,19 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 uint8_t velocity = pull_byte();
                 float pitch = get_pitch(channel);
                 try {
-                    midi.process(message_channel_no, message & 0xf0, key, velocity, omni, pitch);
+                    midi.process(channel_no, message & 0xf0, key, velocity, omni, pitch);
                 } catch (const std::runtime_error &e) {
                     throw(e);
                 }
-                CSV("Note_on_c, %d, %d, %d\n", message_channel_no, key, velocity);
+                CSV("Note_on_c, %d, %d, %d\n", channel_no, key, velocity);
                 break;
             }
             case MIDI_NOTE_OFF:
             {
                 int16_t key = get_key(channel, pull_byte());
                 uint8_t velocity = pull_byte();
-                midi.process(message_channel_no, message & 0xf0, key, velocity, omni);
-                CSV("Note_off_c, %d, %d, %d\n", message_channel_no, key, velocity);
+                midi.process(channel_no, message & 0xf0, key, velocity, omni);
+                CSV("Note_off_c, %d, %d, %d\n", channel_no, key, velocity);
                 break;
             }
             case MIDI_POLYPHONIC_AFTERTOUCH:
@@ -1332,13 +1332,13 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 {
                     float s = channel.get_aftertouch_sensitivity();
                     if (channel.get_pressure_pitch_bend()) {
-                        channel.set_pitch(key, cents2pitch(s*pressure/127.0f, message_channel_no));
+                        channel.set_pitch(key, cents2pitch(s*pressure/127.0f, channel_no));
                     }
                     if (channel.get_pressure_volume_bend()) {
                         channel.set_pressure(key, 1.0f-0.33f*pressure/127.0f);
                     }
                 }
-                CSV("Poly_aftertouch_c, %d, %d, %d\n", message_channel_no, key, pressure);
+                CSV("Poly_aftertouch_c, %d, %d, %d\n", channel_no, key, pressure);
                 break;
             }
             case MIDI_CHANNEL_AFTERTOUCH:
@@ -1348,13 +1348,13 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 {
                     float s = channel.get_aftertouch_sensitivity();
                     if (channel.get_pressure_pitch_bend()) {
-                        channel.set_pitch(cents2pitch(s*pressure/127.0f, message_channel_no));
+                        channel.set_pitch(cents2pitch(s*pressure/127.0f, channel_no));
                     }
                     if (channel.get_pressure_volume_bend()) {
                         channel.set_pressure(1.0f-0.33f*pressure/127.0f);
                     }
                 }
-                CSV("Channel_aftertouch_c, %d, %d\n", message_channel_no, pressure);
+                CSV("Channel_aftertouch_c, %d, %d\n", channel_no, pressure);
                 break;
             }
             case MIDI_PITCH_BEND:
@@ -1363,29 +1363,29 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 float pitch_bend = (float)pitch-8192.0f;
                 if (pitch_bend < 0) pitch_bend /= 8192.0f;
                 else pitch_bend /= 8191.0f;
-                pitch_bend = cents2pitch(pitch_bend, message_channel_no);
+                pitch_bend = cents2pitch(pitch_bend, channel_no);
                 channel.set_pitch(pitch_bend);
-                CSV("Pitch_bend_c, %d, %d\n", message_channel_no, pitch);
+                CSV("Pitch_bend_c, %d, %d\n", channel_no, pitch);
                 break;
             }
             case MIDI_CONTROL_CHANGE:
             {
-                process_control(message_channel_no);
+                process_control(channel_no);
                 break;
             }
             case MIDI_PROGRAM_CHANGE:
             {
                 uint8_t program_no = pull_byte();
-                CSV("Program_c, %d, %d\n", message_channel_no, program_no);
+                CSV("Program_c, %d, %d\n", channel_no, program_no);
                 try {
-                    midi.new_channel(message_channel_no, bank_no, program_no);
+                    midi.new_channel(channel_no, bank_no, program_no);
                 } catch(const std::invalid_argument& e) {
                     std::cerr << "Error: " << e.what() << std::endl;
                 }
                 break;
             }
             case MIDI_SYSTEM:
-                switch(message_channel_no)
+                switch(channel_no)
                 {
                 case MIDI_TIMING_CODE:
                     pull_byte();
@@ -1417,7 +1417,7 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
                 case MIDI_ACTIVE_SENSE:
                     break;
                 default:
-                    LOG(99, "LOG: Unsupported real-time System message: 0x%x - %d\n", message, message_channel_no);
+                    LOG(99, "LOG: Unsupported real-time System message: 0x%x - %d\n", message, channel_no);
                     break;
                 }
                 break;
@@ -1440,15 +1440,15 @@ MIDITrack::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t& 
     return rv;
 }
 
-bool MIDITrack::process_control(uint8_t channel_no)
+bool MIDIStream::process_control(uint8_t track_no)
 {
-    auto& channel = midi.channel(channel_no);
+    auto& channel = midi.channel(track_no);
     bool rv = true;
 
     // http://midi.teragonaudio.com/tech/midispec/ctllist.htm
     uint8_t controller = pull_byte();
     uint8_t value = pull_byte();
-    CSV("Control_c, %d, %d, %d\n", channel_no, controller, value);
+    CSV("Control_c, %d, %d, %d\n", track_no, controller, value);
     switch(controller)
     {
     case MIDI_ALL_CONTROLLERS_OFF:
@@ -1465,26 +1465,26 @@ bool MIDITrack::process_control(uint8_t channel_no)
         // channel.set_pan(0.0f);
         // intentional falltrough
     case MIDI_MONO_ALL_NOTES_OFF:
-        midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
+        midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
         if (value == 1) {
             mode = MIDI_MONOPHONIC;
             channel.set_monophonic(true);
         }
         break;
     case MIDI_POLY_ALL_NOTES_OFF:
-        midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
+        midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
         channel.set_monophonic(false);;
         mode = MIDI_POLYPHONIC;
         break;
     case MIDI_ALL_SOUND_OFF:
-        midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
+        midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
         break;
     case MIDI_OMNI_OFF:
-        midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
+        midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
         omni = false;
         break;
     case MIDI_OMNI_ON:
-        midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
+        midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
         omni = true;
         break;
     case MIDI_BANK_SELECT:
@@ -1509,7 +1509,7 @@ bool MIDITrack::process_control(uint8_t channel_no)
         {
             float s = channel.get_aftertouch_sensitivity();
             if (channel.get_pressure_pitch_bend()) {
-                channel.set_pitch(cents2pitch(s*value/127.0f, channel_no));
+                channel.set_pitch(cents2pitch(s*value/127.0f, track_no));
             }
             if (channel.get_pressure_volume_bend()) {
                 channel.set_pressure(1.0f-0.33f*value/127.0f);
@@ -1523,7 +1523,7 @@ bool MIDITrack::process_control(uint8_t channel_no)
         // useful, because then you can use Pan, Volume, and Balance
         // controllers to internally mix all of the Parts to the
         // device's stereo outputs
-        LOG(99, "LOG: Unsupported control change: MIDI_BALANCE, ch: %u, value: %u\n", channel_no, value);
+        LOG(99, "LOG: Unsupported control change: MIDI_BALANCE, ch: %u, value: %u\n", track_no, value);
         break;
     case MIDI_PAN:
         if (!midi.get_mono()) {
@@ -1540,14 +1540,14 @@ bool MIDITrack::process_control(uint8_t channel_no)
     case MIDI_MODULATION_DEPTH:
     {
         float depth = (float)(value << 7)/16383.0f;
-        depth = cents2modulation(depth, channel_no) - 1.0f;
+        depth = cents2modulation(depth, track_no) - 1.0f;
         channel.set_modulation(depth);
         break;
     }
     case MIDI_CELESTE_EFFECT_DEPTH:
     {
         float level = (float)value/127.0f;
-        level = cents2pitch(level, channel_no);
+        level = cents2pitch(level, track_no);
         channel.set_detune(level);
         break;
     }
@@ -1564,18 +1564,18 @@ bool MIDITrack::process_control(uint8_t channel_no)
     case MIDI_UNREGISTERED_PARAM_COARSE:
     case MIDI_UNREGISTERED_PARAM_FINE:
         registered = false;
-        registered_param(channel_no, controller, value);
+        registered_param(track_no, controller, value);
         break;
     case MIDI_REGISTERED_PARAM_COARSE:
     case MIDI_REGISTERED_PARAM_FINE:
         registered = true;
-        registered_param(channel_no, controller, value);
+        registered_param(track_no, controller, value);
         break;
     case MIDI_DATA_ENTRY:
     case MIDI_DATA_ENTRY|MIDI_FINE:
     case MIDI_DATA_INCREMENT:
     case MIDI_DATA_DECREMENT:
-        registered_param(channel_no, controller, value);
+        registered_param(track_no, controller, value);
         break;
     case MIDI_SOFT_PEDAL_SWITCH:
         channel.set_soft(value/127.0f);
@@ -1592,7 +1592,7 @@ bool MIDITrack::process_control(uint8_t channel_no)
         channel.set_sustain(value >= 0x40);
         break;
     case MIDI_REVERB_SEND_LEVEL:
-        midi.set_reverb_level(channel_no, value);
+        midi.set_reverb_level(track_no, value);
         break;
     case MIDI_CHORUS_SEND_LEVEL:
     {
@@ -1690,7 +1690,7 @@ bool MIDITrack::process_control(uint8_t channel_no)
     case MIDI_GENERAL_PURPOSE_CONTROL6:
     case MIDI_GENERAL_PURPOSE_CONTROL7:
     case MIDI_GENERAL_PURPOSE_CONTROL8:
-        LOG(99, "LOG: Unsupported control change: 0x%x (%i), ch: %u, value: %u\n", controller, controller, channel_no, value);
+        LOG(99, "LOG: Unsupported control change: 0x%x (%i), ch: %u, value: %u\n", controller, controller, track_no, value);
         break;
     default:
         LOG(99, "LOG: Unsupported control change: 0x%x (%i)\n", controller, controller);
@@ -1700,7 +1700,7 @@ bool MIDITrack::process_control(uint8_t channel_no)
     return rv;
 }
 
-bool MIDITrack::process_sysex()
+bool MIDIStream::process_sysex()
 {
     bool rv = true;
     uint64_t size = pull_message();
@@ -1821,14 +1821,14 @@ bool MIDITrack::process_sysex()
                 switch(byte)
                 {
                 case 0x01:
-                    midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
+                    midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
                     midi.set_mode(MIDI_GENERAL_MIDI1);
                     break;
                 case 0x02:
                     // midi.set_mode(MIDI_MODE0);
                     break;
                 case 0x03:
-                    midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
+                    midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
                     midi.set_mode(MIDI_GENERAL_MIDI2);
                     break;
                 default:
@@ -1987,7 +1987,7 @@ bool MIDITrack::process_sysex()
     return rv;
 }
 
-bool MIDITrack::process_meta()
+bool MIDIStream::process_meta()
 {
     bool rv = true;
     std::string text;
@@ -2007,13 +2007,13 @@ bool MIDITrack::process_meta()
            toUTF8(text, pull_byte());
         }
         MESSAGE("%s % 3i : %s\n", type_name[meta].c_str(),
-                                  channel_no, text.c_str());
+                                  track_no, text.c_str());
         CSV("%s, \"", csv_name[meta].c_str());
         CSV_TEXT("%s", text.c_str());
         CSV("\"\n");
-        midi.channel(channel_no).set_track_name(text);
+        midi.channel(track_no).set_track_name(text);
         if (std::find(selections.begin(), selections.end(), text) != selections.end()) {
-            midi.set_track_active(channel_no);
+            midi.set_track_active(track_no);
         }
         break;
     }
@@ -2087,12 +2087,12 @@ bool MIDITrack::process_meta()
         break;
     case MIDI_CHANNEL_PREFIX:
         c = pull_byte();
-        channel_no = (channel_no & 0xFF00) | c;
+        track_no = (track_no & 0xFF00) | c;
         CSV("%s, %d\n", "Channel_prefix", c);
         break;
     case MIDI_PORT_PREFERENCE:
         c = pull_byte();
-        channel_no = (channel_no & 0xFF) | c << 16;
+        track_no = (track_no & 0xFF) | c << 16;
         CSV("%s, %d\n", "MIDI_port", c);
         break;
     case MIDI_END_OF_TRACK:
@@ -2256,8 +2256,8 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                             if (length >= sizeof(uint32_t) &&
                                 length <= stream.remaining())
                             {
-                                track.push_back(std::shared_ptr<MIDITrack>(
-                                                   new MIDITrack(*this, stream,
+                                track.push_back(std::shared_ptr<MIDIStream>(
+                                                   new MIDIStream(*this, stream,
                                                          length, track_no++)));
                                 stream.forward(length);
                             }

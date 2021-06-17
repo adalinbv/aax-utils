@@ -84,13 +84,14 @@ struct wide_t
 
 using inst_t = std::pair<std::string,struct wide_t>;
 
-class MIDIChannel;
+class MIDITrack;
+using MIDIChannel = MIDITrack; // backwards compatinility
 
 class MIDI : public AeonWave
 {
 private:
     using _patch_t = std::map<uint8_t,std::pair<uint8_t,std::string>>;
-    using _channel_map_t = std::map<uint16_t,std::shared_ptr<MIDIChannel>>;
+    using _channel_map_t = std::map<uint16_t,std::shared_ptr<MIDITrack>>;
 
 public:
     MIDI(const char* n, const char *tnames = nullptr,
@@ -107,9 +108,9 @@ public:
 
     bool process(uint8_t channel, uint8_t message, uint8_t key, uint8_t velocity, bool omni, float pitch=1.0f);
 
-    MIDIChannel& new_channel(uint8_t channel, uint16_t bank, uint8_t program);
+    MIDITrack& new_channel(uint8_t channel, uint16_t bank, uint8_t program);
 
-    MIDIChannel& channel(uint16_t channel_no);
+    MIDITrack& channel(uint16_t channel_no);
 
     inline _channel_map_t& channel() {
         return channels;
@@ -324,15 +325,15 @@ private:
 };
 
 
-class MIDIChannel : public Instrument
+class MIDITrack : public Instrument
 {
 private:
-    MIDIChannel(const MIDIChannel&) = delete;
+    MIDITrack(const MIDITrack&) = delete;
 
-    MIDIChannel& operator=(const MIDIChannel&) = delete;
+    MIDITrack& operator=(const MIDITrack&) = delete;
 
 public:
-    MIDIChannel(MIDI& ptr, Buffer &buffer, uint8_t channel,
+    MIDITrack(MIDI& ptr, Buffer &buffer, uint8_t channel,
                 uint16_t bank, uint8_t program, bool is_drums)
        : Instrument(ptr, channel == MIDI_DRUMS_CHANNEL), midi(ptr),
          channel_no(channel), bank_no(bank), program_no(program),
@@ -344,11 +345,11 @@ public:
         Mixer::set(AAX_PLAYING);
     }
 
-    MIDIChannel(MIDIChannel&&) = default;
+    MIDITrack(MIDITrack&&) = default;
 
-    virtual ~MIDIChannel() = default;
+    virtual ~MIDITrack() = default;
 
-    MIDIChannel& operator=(MIDIChannel&&) = default;
+    MIDITrack& operator=(MIDITrack&&) = default;
 
     void play(uint8_t key_no, uint8_t velocity, float pitch);
 
@@ -410,20 +411,20 @@ private:
 };
 
 
-class MIDITrack : public byte_stream
+class MIDIStream : public byte_stream
 {
 public:
-    MIDITrack() = default;
+    MIDIStream() = default;
 
-    MIDITrack(MIDI& ptr, byte_stream& stream, size_t len,  uint16_t track)
-        : byte_stream(stream, len), midi(ptr), channel_no(track)
+    MIDIStream(MIDI& ptr, byte_stream& stream, size_t len,  uint16_t track)
+        : byte_stream(stream, len), midi(ptr), track_no(track)
     {
         timestamp_parts = pull_message()*24/600000;
     }
 
-    MIDITrack(const MIDITrack&) = default;
+    MIDIStream(const MIDIStream&) = default;
 
-    virtual ~MIDITrack() = default;
+    virtual ~MIDIStream() = default;
 
     void rewind();
     bool process(uint64_t, uint32_t&, uint32_t&);
@@ -433,18 +434,18 @@ public:
 
     MIDI& midi;
 private:
-    inline float key2pitch(MIDIChannel& channel, uint16_t key) {
+    inline float key2pitch(MIDITrack& channel, uint16_t key) {
         auto& buffer = channel.get_buffer(key);
         float frequency = buffer.get(AAX_UPDATE_RATE);
         return 440.0f*powf(2.0f, (float(key)-69.0f)/12.0f)/frequency;
     }
-    inline int16_t get_key(MIDIChannel& channel, int16_t key) {
+    inline int16_t get_key(MIDITrack& channel, int16_t key) {
         if (!channel.is_drums()) {
             return (key-0x20) + param[MIDI_CHANNEL_COARSE_TUNING].coarse;
         }
         return key;
     }
-    inline float get_pitch(MIDIChannel& channel) {
+    inline float get_pitch(MIDITrack& channel) {
         float pitch = 1.0f;
         if (!channel.is_drums()) {
             pitch = channel.get_tuning();
@@ -472,10 +473,9 @@ private:
     bool registered_param(uint8_t, uint8_t, uint8_t);
 
     uint8_t mode = 0;
-    uint8_t channel_no = 0;
+    uint8_t track_no = 0;
     uint8_t program_no = 0;
     uint16_t bank_no = 0;
-    int16_t track_no = -1;
 
     uint8_t previous = 0;
     uint32_t wait_parts = 1;
@@ -532,7 +532,7 @@ private:
     std::string gmmidi;
     std::string gmdrums;
     std::vector<uint8_t> midi_data;
-    std::vector<std::shared_ptr<MIDITrack>> track;
+    std::vector<std::shared_ptr<MIDIStream>> track;
 
     uint16_t no_tracks = 0;
     float duration_sec = 0.0f;
