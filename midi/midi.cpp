@@ -1729,10 +1729,12 @@ bool MIDIStream::process_sysex()
     const char *s = nullptr;
 
 #if 0
- uint8_t *p = (uint8_t*)*this;
+ uint8_t i=0, *p = (uint8_t*)*this;
  p += offset();
- printf("System_exclusive, %u, %d, ", size, byte);
- for (int i=0; i<20; ++i) printf("%d, ", p[i]);
+ printf("System_exclusive, %lu, %d, ", size, byte);
+ do  {
+     printf("%d, ", p[i]);
+ } while (p[i++] != MIDI_SYSTEM_EXCLUSIVE_END);
  printf("\n");
 #endif
     CSV("System_exclusive, %lu, %d", size, byte);
@@ -1785,9 +1787,9 @@ bool MIDIStream::process_sysex()
                 if (byte == 0x02)
                 {
                     byte = pull_byte();
+                    CSV(",%d", byte);
                     if (byte == 0x10) midi.channel(9).set_drums(true);
                     else if (byte == 0xf) midi.channel(11).set_drums(true);
-                    CSV(",%d", byte);
                 }
                 break;
             default:
@@ -1868,24 +1870,38 @@ bool MIDIStream::process_sysex()
         break;
     case MIDI_SYSTEM_EXCLUSIVE_REALTIME:
         byte = pull_byte();
+        CSV(", %d", byte);
         switch(byte)
         {
         case MIDI_DEVICE_CONTROL:
             byte = pull_byte();
+            CSV(", %d", byte);
             switch(byte)
             {
             case MIDI_DEVICE_VOLUME:
                 byte = pull_byte();
+                CSV(", %d", byte);
                 midi.set_gain((float)byte/127.0f);
                 break;
             case MIDI_DEVICE_BALANCE:
                 byte = pull_byte();
+                CSV(", %d", byte);
                 midi.set_balance(((float)byte-64.0f)/64.0f);
                 break;
             case MIDI_DEVICE_FINE_TUNING:
             {
-                uint16_t tuning = pull_byte() || pull_byte() << 7;
-                float pitch = (float)tuning-8192.0f;
+                uint16_t tuning;
+                float pitch;
+
+                byte = pull_byte();
+                CSV(", %d", byte);
+                tuning = byte;
+
+                byte = pull_byte();
+                CSV(", %d", byte);
+                tuning |= byte << 7;
+
+                pitch = (float)tuning-8192.0f;
                 if (pitch < 0) pitch /= 8192.0f;
                 else pitch /= 8191.0f;
                 midi.set_tuning(pitch);
@@ -1894,8 +1910,13 @@ bool MIDIStream::process_sysex()
             case MIDI_DEVICE_COARSE_TUNING:
             {
                 float pitch;
+
                 byte = pull_byte();     // lsb, always zero
+                CSV(", %d", byte);
+
                 byte = pull_byte();     // msb
+                CSV(", %d", byte);
+
                 pitch = (float)byte-64.0f;
                 if (pitch < 0) pitch /= 64.0f;
                 else pitch /= 63.0f;
@@ -1904,12 +1925,32 @@ bool MIDIStream::process_sysex()
             }
             case MIDI_GLOBAL_PARAMETER_CONTROL:
             {
-                uint8_t path_len = pull_byte();
-                uint8_t id_width = pull_byte();
-                uint8_t val_width = pull_byte();
-                uint16_t slot = pull_byte() || pull_byte() << 7;
-                uint8_t param =  pull_byte();
-                uint8_t value = pull_byte();
+                uint8_t path_len, id_width, val_width;
+                uint8_t param, value;
+                uint16_t slot;
+
+                path_len = pull_byte();
+                CSV(", %d", path_len);
+
+                id_width = pull_byte();
+                CSV(", %d", id_width);
+
+                val_width = pull_byte();
+                CSV(", %d", val_width);
+
+                slot = pull_byte();
+                CSV(", %d", slot);
+
+                byte = pull_byte();
+                slot |= byte << 7;
+                CSV(", %d", byte);
+
+                param =  pull_byte();
+                CSV(", %d", param);
+
+                value = pull_byte();
+                CSV(", %d", value);
+
                 switch(slot)
                 {
                 case MIDI_CHORUS_PARAMETER:
@@ -1985,6 +2026,7 @@ bool MIDIStream::process_sysex()
             default:
                 LOG(99, "LOG: Unsupported sysex parameter: %x\n", byte);
                 byte = pull_byte();
+                CSV(", %d", byte);
                 break;
             }
             break;
