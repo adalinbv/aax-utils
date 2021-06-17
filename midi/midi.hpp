@@ -109,7 +109,7 @@ public:
 
     MIDIChannel& new_channel(uint8_t channel, uint16_t bank, uint8_t program);
 
-    MIDIChannel& channel(uint8_t channel_no);
+    MIDIChannel& channel(uint16_t channel_no);
 
     inline _channel_map_t& channel() {
         return channels;
@@ -355,8 +355,8 @@ public:
     inline void set_drums(bool d = true) { drum_channel = d; }
     inline bool is_drums() { return drum_channel; }
 
-    inline uint8_t get_channel_no() { return channel_no; }
-    inline void set_channel_no(uint8_t channel) { channel_no = channel; }
+    inline uint16_t get_channel_no() { return channel_no; }
+    inline void set_channel_no(uint16_t channel) { channel_no = channel; }
 
     inline uint8_t get_program_no() { return program_no; }
     inline void set_program_no(uint8_t program) { program_no = program; }
@@ -401,7 +401,7 @@ private:
     float semi_tones = 2.0f;
 
     uint16_t bank_no = 0;
-    uint8_t channel_no = 0;
+    uint16_t channel_no = 0;
     uint8_t program_no = 0;
 
     bool drum_channel = false;
