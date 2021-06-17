@@ -1691,7 +1691,7 @@ bool MIDIStream::process_control(uint8_t track_no)
         LOG(99, "LOG: Breath Controller Fine control change not supported.\n");
         break;
     case MIDI_BALANCE|MIDI_FINE:
-        LOG(99, "LOG: balance Fine control change not supported.\n");
+        LOG(99, "LOG: Balance Fine control change not supported.\n");
         break;
     case MIDI_SOUND_VARIATION:
         // Any parameter associated with the circuitry that produces
