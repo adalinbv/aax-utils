@@ -2092,7 +2092,7 @@ bool MIDIStream::process_meta()
         break;
     case MIDI_PORT_PREFERENCE:
         c = pull_byte();
-        channel_no = (channel_no & 0xFF) | port_no << 16;
+        channel_no = (channel_no & 0xFF) | c << 16;
         CSV("%s, %d\n", "MIDI_port", c);
         break;
     case MIDI_END_OF_TRACK:
