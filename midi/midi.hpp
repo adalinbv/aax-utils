@@ -474,6 +474,7 @@ private:
 
     uint8_t mode = 0;
     uint8_t track_no = 0;
+    uint16_t channel_no = 0;
     uint8_t program_no = 0;
     uint16_t bank_no = 0;
 

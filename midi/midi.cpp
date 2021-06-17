@@ -47,7 +47,7 @@
 #include <base/timer.h>
 #include "midi.hpp"
 
-#define ENABLE_CSV	1
+#define ENABLE_CSV	0
 #if ENABLE_CSV
 # define CSV_TEXT(...) do { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
@@ -1257,7 +1257,7 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
     if (eof())
     {
         if (midi.get_format() && !track_no) return rv;
-        return !midi.finished(track_no);
+        return !midi.finished(channel_no);
     }
 
     if (elapsed_parts < wait_parts)
@@ -1821,14 +1821,14 @@ bool MIDIStream::process_sysex()
                 switch(byte)
                 {
                 case 0x01:
-                    midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
+                    midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
                     midi.set_mode(MIDI_GENERAL_MIDI1);
                     break;
                 case 0x02:
                     // midi.set_mode(MIDI_MODE0);
                     break;
                 case 0x03:
-                    midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
+                    midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
                     midi.set_mode(MIDI_GENERAL_MIDI2);
                     break;
                 default:
@@ -2007,11 +2007,11 @@ bool MIDIStream::process_meta()
            toUTF8(text, pull_byte());
         }
         MESSAGE("%s % 3i : %s\n", type_name[meta].c_str(),
-                                  track_no, text.c_str());
+                                  channel_no, text.c_str());
         CSV("%s, \"", csv_name[meta].c_str());
         CSV_TEXT("%s", text.c_str());
         CSV("\"\n");
-        midi.channel(track_no).set_track_name(text);
+        midi.channel(channel_no).set_track_name(text);
         if (std::find(selections.begin(), selections.end(), text) != selections.end()) {
             midi.set_track_active(track_no);
         }
@@ -2087,12 +2087,12 @@ bool MIDIStream::process_meta()
         break;
     case MIDI_CHANNEL_PREFIX:
         c = pull_byte();
-        track_no = (track_no & 0xFF00) | c;
+        channel_no = (channel_no & 0xFF00) | c;
         CSV("%s, %d\n", "Channel_prefix", c);
         break;
     case MIDI_PORT_PREFERENCE:
         c = pull_byte();
-        track_no = (track_no & 0xFF) | c << 16;
+        channel_no = (channel_no & 0xFF) | port_no << 16;
         CSV("%s, %d\n", "MIDI_port", c);
         break;
     case MIDI_END_OF_TRACK:
