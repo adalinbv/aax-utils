@@ -1668,20 +1668,40 @@ bool MIDIStream::process_control(uint8_t track_no)
     case MIDI_PHASER_EFFECT_DEPTH:
         channel.set_phaser_depth((float)value/64.0f);
         break;
+    case MIDI_MIDI_MODULATION_VELOCITY:
+        LOG(99, "LOG: Modulation Velocity control change not supported.\n");
+        break;
+    case MIDI_SOFT_RELEASE:
+        LOG(99, "LOG: Soft Release control change not supported.\n");
+        break;
     case MIDI_HOLD2:
         // lengthens the release time of the playing notes
         // Unlike the other Hold Pedal controller, this pedal
         // doesn't permanently sustain the note's sound until
         // the musician releases the pedal.
+        LOG(99, "LOG: Hold 2 control change not supported.\n");
+        break;
     case MIDI_PAN|MIDI_FINE:
+        LOG(99, "LOG: Pan Fine control change not supported.\n");
+        break;
     case MIDI_EXPRESSION|MIDI_FINE:
+        LOG(99, "LOG: Expression Fine control change not supported.\n");
+        break;
     case MIDI_BREATH_CONTROLLER|MIDI_FINE:
+        LOG(99, "LOG: Breath Controller Fine control change not supported.\n");
+        break;
     case MIDI_BALANCE|MIDI_FINE:
+        LOG(99, "LOG: balance Fine control change not supported.\n");
+        break;
     case MIDI_SOUND_VARIATION:
         // Any parameter associated with the circuitry that produces
         // sound.
-    case MIDI_SOUND_CONTROL10:
+        LOG(99, "LOG: Sound Variation control change not supported.\n");
+        break;
     case MIDI_HIGHRES_VELOCITY_PREFIX:
+        LOG(99, "LOG: Highres Velocity control change not supported.\n");
+        break;
+    case MIDI_SOUND_CONTROL10:
     case MIDI_GENERAL_PURPOSE_CONTROL1:
     case MIDI_GENERAL_PURPOSE_CONTROL2:
     case MIDI_GENERAL_PURPOSE_CONTROL3:
@@ -1690,10 +1710,10 @@ bool MIDIStream::process_control(uint8_t track_no)
     case MIDI_GENERAL_PURPOSE_CONTROL6:
     case MIDI_GENERAL_PURPOSE_CONTROL7:
     case MIDI_GENERAL_PURPOSE_CONTROL8:
-        LOG(99, "LOG: Unsupported control change: 0x%x (%i), ch: %u, value: %u\n", controller, controller, track_no, value);
+        LOG(99, "LOG: Unsupported general purpose control change: 0x%x (%i), ch: %u, value: %u\n", controller, controller, track_no, value);
         break;
     default:
-        LOG(99, "LOG: Unsupported control change: 0x%x (%i)\n", controller, controller);
+        LOG(99, "LOG: Unsupported unkown control change: 0x%x (%i)\n", controller, controller);
         break;
     }
 
