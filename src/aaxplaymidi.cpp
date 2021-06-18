@@ -113,107 +113,118 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
           const char *grep, bool mono, char verbose, bool batched, bool fm)
 {
     if (grep) devname = (char*)"None"; // fastest for searching
-    aax::MIDIFile midi(devname, infile, track, mode, config);
-    aax::Sensor file;
-    uint64_t time_parts = 0;
-    uint32_t wait_parts;
-    char obuf[256];
 
-    if (outfile)
-    {
-        snprintf(obuf, 256, "AeonWave on Audio Files: %s", outfile);
-
-        file = aax::Sensor(obuf, AAX_MODE_WRITE_STEREO);
-        midi.add(file);
-        file.set(AAX_INITIALIZED);
-        file.set(AAX_PLAYING);
+    if (!infile) {
+        std::cerr << "Error while processing the MIDI file: No input file was declared." << std::endl;
+        return;
     }
 
-    midi.set_mono(mono);
-    midi.set_verbose(verbose);
-    if (fm)
-    {
-        char *env = getenv("AAX_SHARED_DATA_DIR");
-        midi.set(AAX_CAPABILITIES, AAX_RENDER_SYNTHESIZER);
-        if (env) midi.set(AAX_SHARED_DATA_DIR, env);
-    }
-    midi.initialize(grep);
-    if (!grep)
-    {
-        midi.start();
+    try {
+        aax::MIDIFile midi(devname, infile, track, mode, config);
+        aax::Sensor file;
+        uint64_t time_parts = 0;
+        uint32_t wait_parts;
+        char obuf[256];
 
-        if (batched) {
-            midi.sensor(AAX_CAPTURING);
+        if (outfile)
+        {
+            snprintf(obuf, 256, "AeonWave on Audio Files: %s", outfile);
+
+            file = aax::Sensor(obuf, AAX_MODE_WRITE_STEREO);
+            midi.add(file);
+            file.set(AAX_INITIALIZED);
+            file.set(AAX_PLAYING);
         }
 
-        wait_parts = 1000;
-        set_mode(1);
-
-        int key, paused = AAX_FALSE;
-        auto now = std::chrono::high_resolution_clock::now();
-        do
+        midi.set_mono(mono);
+        midi.set_verbose(verbose);
+        if (fm)
         {
-            if (!paused)
+            char *env = getenv("AAX_SHARED_DATA_DIR");
+            midi.set(AAX_CAPABILITIES, AAX_RENDER_SYNTHESIZER);
+            if (env) midi.set(AAX_SHARED_DATA_DIR, env);
+        }
+        midi.initialize(grep);
+        if (!grep)
+        {
+            midi.start();
+
+            if (batched) {
+                midi.sensor(AAX_CAPTURING);
+            }
+
+            wait_parts = 1000;
+            set_mode(1);
+
+            int key, paused = AAX_FALSE;
+            auto now = std::chrono::high_resolution_clock::now();
+            do
             {
-                if (!midi.process(time_parts, wait_parts)) break;
-
-                if (wait_parts > 0 && midi.get_pos_sec() >= time_offs)
+                if (!paused)
                 {
-                    double sleep_us, wait_us;
+                    if (!midi.process(time_parts, wait_parts)) break;
 
-                    auto next = std::chrono::high_resolution_clock::now();
-                    std::chrono::duration<double, std::micro> dt_us = next - now;
-
-                    wait_us = wait_parts*midi.get_uspp();
-                    sleep_us = wait_us - dt_us.count();
-
-                    if (sleep_us > 0)
+                    if (wait_parts > 0 && midi.get_pos_sec() >= time_offs)
                     {
-                        if (batched)
+                        double sleep_us, wait_us;
+
+                        auto next = std::chrono::high_resolution_clock::now();
+                        std::chrono::duration<double, std::micro> dt_us = next - now;
+
+                        wait_us = wait_parts*midi.get_uspp();
+                        sleep_us = wait_us - dt_us.count();
+
+                        if (sleep_us > 0)
                         {
-                            midi.sensor(AAX_UPDATE);
-                            midi.wait(sleep_us*1e-6f);
-                            midi.get_buffer();
+                            if (batched)
+                            {
+                                midi.sensor(AAX_UPDATE);
+                                midi.wait(sleep_us*1e-6f);
+                                midi.get_buffer();
+                            }
+                            else {
+                                sleep_for(sleep_us*1e-6f);
+                            }
                         }
-                        else {
-                            sleep_for(sleep_us*1e-6f);
-                        }
-                    }
 
-                    now = std::chrono::high_resolution_clock::now();
-                }
-                time_parts += wait_parts;
-            }
-            else {
-                sleep_for(0.1f);
-            }
-
-            key = get_key();
-            if (key)
-            {
-                if (key == ' ')
-                {
-                    if (paused)
-                    {
-                        midi.set(AAX_PLAYING);
-                        printf("\nRestart playback.\n");
-                        paused = AAX_FALSE;
+                        now = std::chrono::high_resolution_clock::now();
                     }
-                    else
-                    {
-                        midi.set(AAX_SUSPENDED);
-                        printf("\nPause playback.\n");
-                        paused = AAX_TRUE;
-                    }
+                    time_parts += wait_parts;
                 }
                 else {
-                    break;
+                    sleep_for(0.1f);
+                }
+
+                key = get_key();
+                if (key)
+                {
+                    if (key == ' ')
+                    {
+                        if (paused)
+                        {
+                            midi.set(AAX_PLAYING);
+                            printf("\nRestart playback.\n");
+                            paused = AAX_FALSE;
+                        }
+                        else
+                        {
+                            midi.set(AAX_SUSPENDED);
+                            printf("\nPause playback.\n");
+                            paused = AAX_TRUE;
+                        }
+                    }
+                    else {
+                        break;
+                    }
                 }
             }
+            while(true);
+            set_mode(0);
+            midi.stop();
         }
-        while(true);
-        set_mode(0);
-        midi.stop();
+    } catch (const std::exception& e) {
+        std::cerr << "Error while processing the MIDI file: "
+                  << e.what() << std::endl;
     }
 }
 
