@@ -1256,7 +1256,6 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
 
     if (eof())
     {
-        CSV("0, 0, End_of_file\n");
         if (midi.get_format() && !track_no) return rv;
         return !midi.finished(channel_no);
     }
@@ -2320,7 +2319,7 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                             if (length >= sizeof(uint32_t) &&
                                 length <= stream.remaining())
                             {
-                                track.push_back(std::shared_ptr<MIDIStream>(
+                                streams.push_back(std::shared_ptr<MIDIStream>(
                                                    new MIDIStream(*this, stream,
                                                          length, track_no++)));
                                 stream.forward(length);
@@ -2482,7 +2481,7 @@ MIDIFile::rewind()
 {
     midi.rewind();
     midi.set_lyrics(false);
-    for (auto it : track) {
+    for (auto it : streams) {
         it->rewind();
     }
 }
@@ -2500,7 +2499,7 @@ MIDIFile::process(uint64_t time_parts, uint32_t& next)
         wait_parts = next;
 
         try {
-            bool res = track[t]->process(time_parts, elapsed_parts, wait_parts);
+            bool res = streams[t]->process(time_parts, elapsed_parts, wait_parts);
             if (t || !midi.get_format()) rv |= res;
         } catch (const std::runtime_error &e) {
             throw(e);
@@ -2535,6 +2534,8 @@ MIDIFile::process(uint64_t time_parts, uint32_t& next)
         if (!rv) MESSAGE("\n\n");
         fflush(stdout);
     }
+
+    if (!rv) CSV("0, 0, End_of_file\n");
 
     return rv;
 }

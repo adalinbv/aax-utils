@@ -533,7 +533,7 @@ private:
     std::string gmmidi;
     std::string gmdrums;
     std::vector<uint8_t> midi_data;
-    std::vector<std::shared_ptr<MIDIStream>> track;
+    std::vector<std::shared_ptr<MIDIStream>> streams;
 
     uint16_t no_tracks = 0;
     float duration_sec = 0.0f;
