@@ -78,11 +78,9 @@ MIDI::MIDI(const char* n, const char *selections, enum aaxRenderMode m)
     else
     {
         if (n) {
-//          throw(std::runtime_error("Unable to open device "+std::string(n)));
-            std::cerr << "Unable to open device " << std::string(n) << std::endl;
+            throw(std::runtime_error("Unable to open device '"+std::string(n)+"'"));
         } else {
-//          throw(std::runtime_error("Unable to open the default device"));
-            std::cerr << "Unable to open the default device" << std::endl;
+            throw(std::runtime_error("Unable to open the default device"));
         }
         return;
     }
