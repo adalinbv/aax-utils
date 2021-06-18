@@ -47,7 +47,7 @@
 #include <base/timer.h>
 #include "midi.hpp"
 
-#define ENABLE_CSV	0
+#define ENABLE_CSV	1
 #if ENABLE_CSV
 # define CSV_TEXT(...) do { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
@@ -1256,6 +1256,7 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
 
     if (eof())
     {
+        CSV("0, 0, End_of_file\n");
         if (midi.get_format() && !track_no) return rv;
         return !midi.finished(channel_no);
     }
@@ -2280,6 +2281,7 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                 {
                     uint32_t size, header = stream.pull_long();
                     uint16_t format, track_no = 0;
+                    uint16_t PPQN = 0;
 
                     if (header == 0x4d546864) // "MThd"
                     {
@@ -2294,7 +2296,7 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
 
                         midi.set_format(format);
 
-                        uint16_t PPQN = stream.pull_word();
+                        PPQN = stream.pull_word();
                         if (PPQN & 0x8000) // SMPTE
                         {
                             uint8_t fps = (PPQN >> 8) & 0xff;
@@ -2323,7 +2325,6 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                                                          length, track_no++)));
                                 stream.forward(length);
                             }
-                            PRINT_CSV("%d, 0, Start_track\n", track_no);
                         }
                         else {
                             break;
@@ -2331,6 +2332,10 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                     }
                     no_tracks = track_no;
 
+                    PRINT_CSV("0, 0, Header, 0, %d, %d\n", no_tracks, PPQN);
+                    for (track_no=0; track_no<no_tracks; ++track_no) {
+                        PRINT_CSV("%d, 0, Start_track\n", track_no+1);
+                    }
                 } catch (const std::overflow_error& e) {
                     std::cerr << "Error while processing the MIDI file: "
                               << e.what() << std::endl;
