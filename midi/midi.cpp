@@ -47,7 +47,7 @@
 #include <base/timer.h>
 #include "midi.hpp"
 
-#define ENABLE_CSV	1
+#define ENABLE_CSV	0
 #if ENABLE_CSV
 # define CSV_TEXT(...) do { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
@@ -1127,8 +1127,10 @@ MIDIStream::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
  push_byte();
 #endif
 
-    if (type > MAX_REGISTERED_PARAM) {
-        type = MAX_REGISTERED_PARAM;
+    if (controller != prev_controller)
+    {
+        prev_controller = controller;
+        rpn_enabled = true;
     }
 
     switch(controller)
@@ -1140,40 +1142,46 @@ MIDIStream::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
         lsb_type = type;
         break;
     case MIDI_DATA_ENTRY:
-        if (registered)
+        if (rpn_enabled && registered)
         {
             param[msb_type].coarse = value;
             data = true;
         }
         break;
     case MIDI_DATA_ENTRY|MIDI_FINE:
-        if (registered)
+        if (rpn_enabled && registered)
         {
             param[lsb_type].fine = value;
             data = true;
         }
         break;
     case MIDI_DATA_INCREMENT:
-        type = msb_type << 8 | lsb_type;
-        if (++param[type].fine == 128) {
-            param[type].coarse++;
-            param[type].fine = 0;
+        if (rpn_enabled)
+        {
+            type = msb_type << 8 | lsb_type;
+            if (++param[type].fine == 128) {
+                param[type].coarse++;
+                param[type].fine = 0;
+            }
         }
         break;
     case MIDI_DATA_DECREMENT:
-        type = msb_type << 8 | lsb_type;
-        if (param[type].fine == 0) {
-            param[type].coarse--;
-            param[type].fine = 127;
-        } else {
-            param[type].fine--;
+        if (rpn_enabled)
+        {
+            type = msb_type << 8 | lsb_type;
+            if (param[type].fine == 0) {
+                param[type].coarse--;
+                param[type].fine = 127;
+            } else {
+                param[type].fine--;
+            }
         }
         break;
     case MIDI_UNREGISTERED_PARAM_FINE:
     case MIDI_UNREGISTERED_PARAM_COARSE:
         break;
     default:
-        LOG(99, "LOG: Unsupported registered parameter: %x\n", controller);
+        LOG(99, "LOG: Unsupported registered parameter controller: %x\n", controller);
         rv = false;
         break;
     }
@@ -1199,9 +1207,6 @@ MIDIStream::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
             midi.channel(channel).set_modulation_depth(val);
             break;
         }
-        case MIDI_PARAMETER_RESET:
-            midi.channel(channel).set_semi_tones(2.0f);
-            break;
         case MIDI_CHANNEL_FINE_TUNING:
         {
             uint16_t tuning = param[MIDI_CHANNEL_FINE_TUNING].coarse << 7
@@ -1215,11 +1220,21 @@ MIDIStream::registered_param(uint8_t channel, uint8_t controller, uint8_t value)
         case MIDI_CHANNEL_COARSE_TUNING:
             // This is handled by MIDI_NOTE_ON and MIDI_NOTE_OFF
             break;
+        case MIDI_MPE_CONFIGURATION_MESSAGE:
         case MIDI_TUNING_PROGRAM_CHANGE:
         case MIDI_TUNING_BANK_SELECT:
             break;
+        case MIDI_PARAMETER_RESET:
+            midi.channel(channel).set_semi_tones(2.0f);
+            break;
+        case MIDI_NULL_FUNCTION_NUMBER:
+            // disable the data entry, data increment, and data decrement
+            // controllers until a new RPN or NRPN is selected.
+            rpn_enabled = false;
+            break;
         default:
-            LOG(99, "LOG: Unsupported registered parameter: 0x%x\n", type);
+            LOG(99, "LOG: Unsupported registered parameter type: 0x%x/0x%x\n",
+                     msb_type, lsb_type);
             break;
         }
     }
