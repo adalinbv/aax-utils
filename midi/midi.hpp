@@ -490,11 +490,11 @@ private:
     uint8_t prev_controller = 0;
     uint16_t msb_type = 0;
     uint16_t lsb_type = 0;
-    std::vector<struct param_t> param = {
-        { 2, 0 }, { 0x40, 0 }, { 0x20, 0 },
-        { 0, 0 }, { 0, 0 }, { 1, 0 }, { 0, 0 }
+    std::map<uint16_t,struct param_t> param = {
+        {0, { 2, 0 }}, {1, { 0x40, 0 }}, {2, { 0x20, 0 }}, {3, { 0, 0 }},
+        {4, { 0, 0 }}, {5, { 1, 0 }}, {6, { 0, 0 }}
     };
-    std::vector<struct param_t> param_3d;
+    std::map<uint16_t,struct param_t> param_3d;
 
     const std::string type_name[7] = {
         "Text", "Copyright", "Track", "Instrument", "Lyrics", "Marker", "Cue"
