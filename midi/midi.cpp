@@ -47,7 +47,7 @@
 #include <base/timer.h>
 #include "midi.hpp"
 
-#define ENABLE_CSV	1
+#define ENABLE_CSV	0
 #if ENABLE_CSV
 # define CSV_TEXT(...) do { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
