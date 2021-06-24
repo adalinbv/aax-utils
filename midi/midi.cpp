@@ -47,7 +47,7 @@
 #include <base/timer.h>
 #include "midi.hpp"
 
-#define ENABLE_CSV	0
+#define ENABLE_CSV	1
 #if ENABLE_CSV
 # define CSV_TEXT(...) do { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
@@ -1087,7 +1087,7 @@ MIDITrack::play(uint8_t key_no, uint8_t velocity, float pitch)
     }
 }
 
-
+// Variable-length quantity
 uint32_t
 MIDIStream::pull_message()
 {
@@ -1447,7 +1447,10 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
         if (!eof())
         {
             wait_parts = pull_message();
-            timestamp_parts += wait_parts;
+
+            // protect against absurdly long delta-times
+            double eps = wait_parts*midi.get_uspp()*1e-6f;
+            if (eps < 15.0) timestamp_parts += wait_parts;
         }
     }
     next = wait_parts;
@@ -2401,7 +2404,7 @@ MIDIFile::initialize(const char *grep)
 
     uint64_t time_parts = 0;
     uint32_t wait_parts = 1000000;
-    t= clock();
+    t = clock();
     try {
         while (process(time_parts, wait_parts))
         {
