@@ -172,8 +172,9 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
                         std::chrono::duration<double, std::micro> dt_us = next - now;
 
                         wait_us = wait_parts*midi.get_uspp();
-                        sleep_us = wait_us - dt_us.count();
+                        if (wait_us > 15.0*1e6) break; 
 
+                        sleep_us = wait_us - dt_us.count();
                         if (sleep_us > 0)
                         {
                             if (batched)
