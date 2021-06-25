@@ -1447,10 +1447,7 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
         if (!eof())
         {
             wait_parts = pull_message();
-
-            // protect against absurdly long delta-times
-            double eps = wait_parts*midi.get_uspp()*1e-6f;
-            if (eps < 15.0) timestamp_parts += wait_parts;
+            timestamp_parts += wait_parts;
         }
     }
     next = wait_parts;
