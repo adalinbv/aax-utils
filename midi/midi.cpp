@@ -1449,7 +1449,7 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
             wait_parts = pull_message();
             timestamp_parts += wait_parts;
         }
-    }
+    } // while (!eof() && (timestamp_parts <= time_offs_parts))
     next = wait_parts;
 
     return rv;
@@ -2534,6 +2534,11 @@ MIDIFile::process(uint64_t time_parts, uint32_t& next)
 
     if (next == UINT_MAX) {
         next = 100;
+    }
+    else
+    {
+        double wait_us = next*midi.get_uspp();
+        if (wait_us > 1e6) next = 1;
     }
 
     if (midi.get_verbose() && !midi.get_lyrics())
