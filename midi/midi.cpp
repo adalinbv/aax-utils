@@ -47,12 +47,13 @@
 #include <base/timer.h>
 #include "midi.hpp"
 
-# define CSV_TEXT(...) if(midi.get_verbose() >= 1) { \
+# define CSV_TEXT(...) if(midi.get_verbose() == 0) { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
   for (int i=0; i<strlen(s); ++i) { \
-    if ((s[i]<' ') || ((s[i]>'~') && (s[i]<=160))) printf("\\%03o", s[i]); \
+    if (s[i] == '\"') printf("\"\""); \
+    else if ((s[i]<' ') || ((s[i]>'~') && (s[i]<=160))) printf("\\%03o", s[i]); \
     else printf("%c", s[i]); } \
-  printf("\n"); \
+  printf("\"\n"); \
 } while(0);
 # define PRINT_CSV(...)	if(midi.get_csv()) printf(__VA_ARGS__);
 # define CSV(...)	if(midi.get_initialize()) PRINT_CSV(__VA_ARGS__)
@@ -2235,8 +2236,13 @@ bool MIDIStream::process_meta()
         break;
     default:        // unsupported
         for (int i=0; i<size; ++i) {
-           pull_byte();
+           text += pull_byte();
         }
+        CSV("%s, %d, %lu", "Unknown_meta_event", meta, size);
+        for (int i=0; i<size; ++i) {
+            CSV(", %d", text[i]);
+        }
+        CSV("\n");
         ERROR("Error: Unsupported system message: " << meta
                   << " (0x" << std::hex << meta << ")");
         LOG(99, "LOG: Unsupported system message: 0x%x\n", meta);
