@@ -2243,9 +2243,7 @@ bool MIDIStream::process_meta()
             CSV(", %d", text[i]);
         }
         CSV("\n");
-        ERROR("Error: Unsupported system message: " << meta
-                  << " (0x" << std::hex << meta << ")");
-        LOG(99, "LOG: Unsupported system message: 0x%x\n", meta);
+        LOG(99, "LOG: Unknown.meta.event: %i (0x%x)\n", meta, meta);
         break;
     }
 
