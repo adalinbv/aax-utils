@@ -47,25 +47,21 @@
 #include <base/timer.h>
 #include "midi.hpp"
 
-#define ENABLE_CSV	0
-#if ENABLE_CSV
-# define CSV_TEXT(...) do { \
+# define CSV_TEXT(...) if(midi.get_verbose() >= 1) { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
-  for (int i=0; i<strlen(s); ++i) \
+  for (int i=0; i<strlen(s); ++i) { \
     if ((s[i]<' ') || ((s[i]>'~') && (s[i]<=160))) printf("\\%03o", s[i]); \
-    else printf("%c", s[i]); \
+    else printf("%c", s[i]); } \
+  printf("\n"); \
 } while(0);
-# define PRINT_CSV(...)	printf(__VA_ARGS__);
+# define PRINT_CSV(...)	if(midi.get_csv()) printf(__VA_ARGS__);
 # define CSV(...)	if(midi.get_initialize()) PRINT_CSV(__VA_ARGS__)
-#else
-# define CSV_TEXT(...)
-# define PRINT_CSV(...)
-# define CSV(...)
-#endif
 
 #define DISPLAY(l,...)	if(midi.get_initialize() && l <= midi.get_verbose()) printf(__VA_ARGS__)
 #define MESSAGE(...)	if(!midi.get_initialize() && midi.get_verbose() >= 1) printf(__VA_ARGS__)
 #define LOG(l,...)	if(midi.get_initialize() && l == midi.get_verbose()) printf(__VA_ARGS__)
+#define ERROR(...)	if(!midi.get_csv()) { std::cerr << __VA_ARGS__ << std::endl; }
+#define FLUSH()		if (!midi.get_initialize() && midi.get_verbose() > 0) fflush(stdout)
 
 using namespace aax;
 
@@ -475,12 +471,12 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
                 xmlFree(xaid);
             }
             else {
-                std::cerr << "aeonwave/midi not found in: " << filename << std::endl;
+                ERROR("aeonwave/midi not found in: " << filename);
             }
             xmlClose(xid);
         }
         else {
-            std::cerr << "Unable to open: " << filename << std::endl;
+            ERROR("Unable to open: " << filename);
         }
 
         if (id == 0)
@@ -696,6 +692,8 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 void
 MIDI::grep(std::string& filename, const char *grep)
 {
+    if (midi.get_csv()) return;
+
     std::string s(grep);
     std::regex regex{R"(,+)"}; // split on a comma
     std::sregex_token_iterator it{s.begin(), s.end(), regex, -1};
@@ -1395,7 +1393,7 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
                 try {
                     midi.new_channel(channel_no, bank_no, program_no);
                 } catch(const std::invalid_argument& e) {
-                    std::cerr << "Error: " << e.what() << std::endl;
+                    ERROR("Error: " << e.what());
                 }
                 break;
             }
@@ -2131,9 +2129,8 @@ bool MIDIStream::process_meta()
             MESSAGE("\n");
                 text.front() = ' ';
             }
-            MESSAGE("%s", text.c_str());
+            MESSAGE("%s", text.c_str()); FLUSH();
             if (size > 64) MESSAGE("\n");
-            if (!midi.get_initialize() && midi.get_verbose()) fflush(stdout);
         }
         CSV("%s, \"", csv_name[meta].c_str());
         CSV_TEXT("%s", text.c_str());
@@ -2144,9 +2141,8 @@ bool MIDIStream::process_meta()
         for (int i=0; i<size; ++i) {
            toUTF8(text, pull_byte());
         }
-        MESSAGE("%s", text.c_str());
+        MESSAGE("%s", text.c_str()); FLUSH();
         CSV("%s, %s", csv_name[meta].c_str(), text.c_str());
-        if (!midi.get_initialize() && midi.get_verbose()) fflush(stdout);
         break;
     case MIDI_MARKER:
         for (int i=0; i<size; ++i) {
@@ -2241,8 +2237,8 @@ bool MIDIStream::process_meta()
         for (int i=0; i<size; ++i) {
            pull_byte();
         }
-        std::cerr << "Error: Unsupported system message: " << meta
-                  << " (0x" << std::hex << meta << ")" << std::endl;
+        ERROR("Error: Unsupported system message: " << meta
+                  << " (0x" << std::hex << meta << ")");
         LOG(99, "LOG: Unsupported system message: 0x%x\n", meta);
         break;
     }
@@ -2264,7 +2260,7 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
 {
     struct stat info;
     if (stat(filename, &info) != 0 || (info.st_mode & S_IFDIR)) {
-        std::cerr << "Error opening: " << filename << std::endl;
+        ERROR("Error opening: " << filename);
         return;
     }
 
@@ -2357,20 +2353,20 @@ MIDIFile::MIDIFile(const char *devname, const char *filename,
                         PRINT_CSV("%d, 0, Start_track\n", track_no+1);
                     }
                 } catch (const std::overflow_error& e) {
-                    std::cerr << "Error while processing the MIDI file: "
-                              << e.what() << std::endl;
+                    ERROR("Error while processing the MIDI file: "
+                              << e.what());
                 }
             }
             else {
-                std::cerr << "Error: Unable to open: " << filename << std::endl;
+                ERROR("Error: Unable to open: " << filename);
             }
         }
         else if (!midi_data.size()) {
-            std::cerr << "Error: Out of memory." << std::endl;
+            ERROR("Error: Out of memory.");
         }
     }
     else {
-        std::cerr << "Error: Unable to open: " << filename << std::endl;
+        ERROR("Error: Unable to open: " << filename);
     }
 }
 
@@ -2534,11 +2530,6 @@ MIDIFile::process(uint64_t time_parts, uint32_t& next)
 
     if (next == UINT_MAX) {
         next = 100;
-    }
-    else
-    {
-        double wait_us = next*midi.get_uspp();
-        if (wait_us > 1e6) next = 1;
     }
 
     if (midi.get_verbose() && !midi.get_lyrics())

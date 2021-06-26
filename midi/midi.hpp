@@ -180,7 +180,10 @@ public:
     inline bool get_mono() { return mono; }
 
     inline void set_verbose(char v) { verbose = v; }
-    inline char get_verbose() { return verbose; }
+    inline char get_verbose() { return csv ? 0 : verbose; }
+
+    inline void set_csv(char v) { csv = v; }
+    inline char get_csv() { return csv; }
 
     inline void set_lyrics(bool v) { lyrics = v; }
     inline bool get_lyrics() { return lyrics; }
@@ -316,6 +319,7 @@ private:
     bool lyrics = false;
     bool grep_mode = false;
     bool mono = false;
+    bool csv = false;
 
     uint8_t reverb_type = 4;
     Param reverb_decay_depth = 0.15f;

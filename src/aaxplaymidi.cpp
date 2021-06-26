@@ -110,7 +110,8 @@ static void sleep_for(float dt)
 
 void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
           const char *track, const char *config, float time_offs,
-          const char *grep, bool mono, char verbose, bool batched, bool fm)
+          const char *grep, bool mono, char verbose, bool batched, bool fm,
+          bool csv)
 {
     if (grep) devname = (char*)"None"; // fastest for searching
 
@@ -136,6 +137,7 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
             file.set(AAX_PLAYING);
         }
 
+        midi.set_csv(csv);
         midi.set_mono(mono);
         midi.set_verbose(verbose);
         if (fm)
@@ -172,9 +174,14 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
                         std::chrono::duration<double, std::micro> dt_us = next - now;
 
                         wait_us = wait_parts*midi.get_uspp();
-                        if (wait_us > 15.0*1e6) break; 
-
                         sleep_us = wait_us - dt_us.count();
+
+                        if (wait_us > 1e6)
+                        {
+                            if (wait_us > 15e6) break;
+                            sleep_us = 1.0;
+                        }
+
                         if (sleep_us > 0)
                         {
                             if (batched)
@@ -224,8 +231,10 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
             midi.stop();
         }
     } catch (const std::exception& e) {
-        std::cerr << "Error while processing the MIDI file: "
-                  << e.what() << std::endl;
+        if (!csv) {
+            std::cerr << "Error while processing the MIDI file: "
+                      << e.what() << std::endl;
+        }
     }
 }
 
@@ -248,6 +257,7 @@ int main(int argc, char **argv)
     char *infile = getInputFileExt(argc, argv, ".mid", IFILE_PATH);
     bool batched = false;
     char mono = false;
+    bool csv = false;
     char verbose = 0;
     bool fm = false;
     char *arg;
@@ -290,16 +300,21 @@ int main(int argc, char **argv)
         }
 
         if (getCommandLineOption(argc, argv, "--fm")) {
-            fm = 1;
+            fm = true;
         }
 
+        if (getCommandLineOption(argc, argv, "--csv")) {
+            csv = true;
+        }
 
-        std::thread midiThread(play, devname, render_mode, infile, outfile, track, config, time_offs, grep, mono, verbose, batched, fm);
+        std::thread midiThread(play, devname, render_mode, infile, outfile, track, config, time_offs, grep, mono, verbose, batched, fm, csv);
         midiThread.join();
 
     } catch (const std::exception& e) {
-        std::cerr << "Error while processing the MIDI file: "
-                  << e.what() << std::endl;
+        if (!csv) {
+            std::cerr << "Error while processing the MIDI file: "
+                      << e.what() << std::endl;
+        }
     }
 
     return 0;
