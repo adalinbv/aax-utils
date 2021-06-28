@@ -180,7 +180,7 @@ void play(char *devname, enum aaxRenderMode mode, char *infile, char *outfile,
                         if (wait_us > 1e6)
                         {
                             if (wait_us > 15e6) break;
-                            sleep_us = 1.0;
+//                          sleep_us = 1.0;
                         }
 
                         if (sleep_us > 0)
