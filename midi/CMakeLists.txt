@@ -1,6 +1,7 @@
 
 set( MIDI_OBJS
      midi.cpp
+     file.cpp
    )
 
 set(LIBTYPE STATIC)

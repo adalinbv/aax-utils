@@ -47,6 +47,7 @@
 #include <aax/instrument.hpp>
 
 #include <midi/midi.hpp>
+#include <midi/file.hpp>
 
 #include "driver.h"
 

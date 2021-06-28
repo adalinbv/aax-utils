@@ -214,11 +214,9 @@ ENDIF(NOT SINGLE_PACKAGE)
 add_custom_target(midi_package
   WORKING_DIRECTORY ${aax-utils_SOURCE_DIR}
   COMMAND ${CMAKE_COMMAND} -E tar "cf" "${aax-utils_BINARY_DIR}/midi_source.zip" --format=zip
-  midi/midi.hpp
-  midi/midi.cpp
+  midi/*.[ch]pp
   src/aaxplaymidi.cpp
-  base/timer.h
-  base/timer.c
+  base/timer.[ch]
 )
 
 message("Build type: ${CMAKE_BUILD_TYPE}")
