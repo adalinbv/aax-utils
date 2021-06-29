@@ -39,6 +39,8 @@
 namespace aax
 {
 
+class MIDIDriver;
+
 class MIDIInstrument : public Instrument
 {
 private:

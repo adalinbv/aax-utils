@@ -2,6 +2,7 @@
 set( MIDI_OBJS
      instrument.cpp
      driver.cpp
+     stream.cpp
      file.cpp
    )
 

@@ -38,101 +38,13 @@
 
 #include <aax/byte_stream.hpp>
 
+#include <midi/shared.hpp>
 #include <midi/driver.hpp>
-#include <midi/instrument.hpp>
 
 namespace aax
 {
 
-struct param_t
-{
-   uint8_t coarse;
-   uint8_t fine;
-};
-
-class MIDIStream : public byte_stream
-{
-public:
-    MIDIStream() = default;
-
-    MIDIStream(MIDIDriver& ptr, byte_stream& stream, size_t len,  uint16_t track)
-        : byte_stream(stream, len), midi(ptr), track_no(track)
-    {
-        timestamp_parts = pull_message()*24/600000;
-    }
-
-    MIDIStream(const MIDIStream&) = default;
-
-    virtual ~MIDIStream() = default;
-
-    void rewind();
-    bool process(uint64_t, uint32_t&, uint32_t&);
-    bool process_control(uint8_t);
-    bool process_sysex();
-    bool process_meta();
-
-    MIDIDriver& midi;
-private:
-    inline float key2pitch(MIDIInstrument& channel, uint16_t key) {
-        auto& buffer = channel.get_buffer(key);
-        float frequency = buffer.get(AAX_UPDATE_RATE);
-        return 440.0f*powf(2.0f, (float(key)-69.0f)/12.0f)/frequency;
-    }
-    inline int16_t get_key(MIDIInstrument& channel, int16_t key) {
-        if (!channel.is_drums()) {
-            return (key-0x20) + param[MIDI_CHANNEL_COARSE_TUNING].coarse;
-        }
-        return key;
-    }
-    float get_pitch(MIDIInstrument& channel);
-    float cents2pitch(float p, uint8_t channel);
-    float cents2modulation(float p, uint8_t channel);
-
-    inline void toUTF8(std::string& text, uint8_t c) {
-       if (c < 128) {
-          if (c == '\r') text += '\n';
-          else text += c;
-       }
-       else { text += 0xc2+(c > 0xbf); text += (c & 0x3f)+0x80; }
-    }
-
-    uint32_t pull_message();
-    bool registered_param(uint8_t, uint8_t, uint8_t);
-    bool registered_param_3d(uint8_t, uint8_t, uint8_t);
-
-    uint8_t mode = 0;
-    uint8_t track_no = 0;
-    uint16_t channel_no = 0;
-    uint8_t program_no = 0;
-    uint16_t bank_no = 0;
-
-    uint8_t previous = 0;
-    uint32_t wait_parts = 1;
-    uint64_t timestamp_parts = 0;
-    bool polyphony = true;
-    bool omni = true;
-
-    bool rpn_enabled = true;
-    bool registered = false;
-    uint8_t prev_controller = 0;
-    uint16_t msb_type = 0;
-    uint16_t lsb_type = 0;
-    std::map<uint16_t,struct param_t> param = {
-        {0, { 2, 0 }}, {1, { 0x40, 0 }}, {2, { 0x20, 0 }}, {3, { 0, 0 }},
-        {4, { 0, 0 }}, {5, { 1, 0 }}, {6, { 0, 0 }}
-    };
-    std::map<uint16_t,struct param_t> param_3d;
-
-    const std::string type_name[7] = {
-        "Text", "Copyright", "Track", "Instrument", "Lyrics", "Marker", "Cue"
-    };
-    const std::string csv_name[9] = {
-        "Sequence_number", "Text_t", "Copyright_t", "Title_t",
-        "Instrument_name_t", "Lyrics_t", "Marker_t", "Cue_point_t",
-        "Device_name_t"
-    };
-};
-
+class MIDIStream;
 
 class MIDIFile : public MIDIDriver
 {

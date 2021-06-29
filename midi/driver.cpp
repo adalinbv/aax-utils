@@ -36,8 +36,9 @@
 #include <xml.h>
 
 #include <midi/shared.hpp>
-#include <midi/driver.hpp>
 #include <midi/file.hpp>
+#include <midi/driver.hpp>
+#include <midi/instrument.hpp>
 
 using namespace aax;
 

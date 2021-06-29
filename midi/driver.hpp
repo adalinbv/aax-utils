@@ -37,8 +37,6 @@
 
 #include <map>
 
-#include <aax/aeonwave.hpp>
-
 #include <midi/shared.hpp>
 
 namespace aax
@@ -56,6 +54,8 @@ struct wide_t
 };
 
 using inst_t = std::pair<std::string,struct wide_t>;
+
+class MIDIInstrument;
 
 
 class MIDIDriver : public AeonWave

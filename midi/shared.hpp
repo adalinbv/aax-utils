@@ -74,10 +74,6 @@ enum {
     MIDI_MODE_MAX
 };
 
-class MIDIDriver;
-class MIDIInstrument;
-using MIDIChannel = MIDIInstrument; // backwards compatinility
-
 } // namespace aax
 
 #endif // __AAX_MIDISHARED
