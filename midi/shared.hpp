@@ -75,8 +75,8 @@ enum {
 };
 
 class MIDI;
-class MIDITrack;
-using MIDIChannel = MIDITrack; // backwards compatinility
+class MIDIInstrument;
+using MIDIChannel = MIDIInstrument; // backwards compatinility
 
 } // namespace aax
 

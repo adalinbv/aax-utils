@@ -692,7 +692,7 @@ MIDI::grep(std::string& filename, const char *grep)
     }
 }
 
-MIDITrack&
+MIDIInstrument&
 MIDI::new_channel(uint8_t track_no, uint16_t bank_no, uint8_t program_no)
 {
     bool drums = is_drums(track_no);
@@ -724,8 +724,8 @@ MIDI::new_channel(uint8_t track_no, uint16_t bank_no, uint8_t program_no)
     {
         try {
             auto ret = channels.insert(
-                { track_no, std::shared_ptr<MIDITrack>(
-                                    new MIDITrack(*this, buffer, track_no,
+                { track_no, std::shared_ptr<MIDIInstrument>(
+                                    new MIDIInstrument(*this, buffer, track_no,
                                               bank_no, program_no, drums))
                 } );
             it = ret.first;
@@ -735,7 +735,7 @@ MIDI::new_channel(uint8_t track_no, uint16_t bank_no, uint8_t program_no)
         }
     }
 
-    MIDITrack& rv = *it->second;
+    MIDIInstrument& rv = *it->second;
     rv.set_program_no(program_no);
     rv.set_bank_no(bank_no);
 
@@ -747,7 +747,7 @@ MIDI::new_channel(uint8_t track_no, uint16_t bank_no, uint8_t program_no)
     return rv;
 }
 
-MIDITrack&
+MIDIInstrument&
 MIDI::channel(uint16_t track_no)
 {
     auto it = channels.find(track_no);

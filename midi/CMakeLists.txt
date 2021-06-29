@@ -1,5 +1,6 @@
 
 set( MIDI_OBJS
+     instrument.cpp
      midi.cpp
      file.cpp
    )

@@ -62,7 +62,7 @@ class MIDI : public AeonWave
 {
 private:
     using _patch_t = std::map<uint8_t,std::pair<uint8_t,std::string>>;
-    using _channel_map_t = std::map<uint16_t,std::shared_ptr<MIDITrack>>;
+    using _channel_map_t = std::map<uint16_t,std::shared_ptr<MIDIInstrument>>;
 
 public:
     MIDI(const char* n, const char *tnames = nullptr,
@@ -79,9 +79,9 @@ public:
 
     bool process(uint8_t channel, uint8_t message, uint8_t key, uint8_t velocity, bool omni, float pitch=1.0f);
 
-    MIDITrack& new_channel(uint8_t channel, uint16_t bank, uint8_t program);
+    MIDIInstrument& new_channel(uint8_t channel, uint16_t bank, uint8_t program);
 
-    MIDITrack& channel(uint16_t channel_no);
+    MIDIInstrument& channel(uint16_t channel_no);
 
     inline _channel_map_t& channel() {
         return channels;
