@@ -29,8 +29,8 @@
  * policies, either expressed or implied, of Adalin B.V.
  */
 
-#ifndef __AAX_MIDI
-#define __AAX_MIDI
+#ifndef __AAX_MIDIDriverDRIVER
+#define __AAX_MIDIDriverDRIVER
 
 #include <sys/stat.h>
 #include <climits>
@@ -58,19 +58,19 @@ struct wide_t
 using inst_t = std::pair<std::string,struct wide_t>;
 
 
-class MIDI : public AeonWave
+class MIDIDriver : public AeonWave
 {
 private:
     using _patch_t = std::map<uint8_t,std::pair<uint8_t,std::string>>;
     using _channel_map_t = std::map<uint16_t,std::shared_ptr<MIDIInstrument>>;
 
 public:
-    MIDI(const char* n, const char *tnames = nullptr,
+    MIDIDriver(const char* n, const char *tnames = nullptr,
          enum aaxRenderMode m=AAX_MODE_WRITE_STEREO);
-    MIDI(const char* n, enum aaxRenderMode m=AAX_MODE_WRITE_STEREO) :
-        MIDI(n, nullptr, m) {}
+    MIDIDriver(const char* n, enum aaxRenderMode m=AAX_MODE_WRITE_STEREO) :
+        MIDIDriver(n, nullptr, m) {}
 
-    virtual ~MIDI() {
+    virtual ~MIDIDriver() {
         AeonWave::remove(reverb);
         for (auto it : buffers) {
             aaxBufferDestroy(*it.second.second); it.second.first = 0;
@@ -216,7 +216,7 @@ public:
         return (stat(path.c_str(), &buffer) == 0);
     }
 
-    MIDI &midi = *this;
+    MIDIDriver &midi = *this;
     int capabilities = midi.get(AAX_CAPABILITIES);
     int cores = (capabilities & AAX_CPU_CORES)+1;
     int midi_mode = (capabilities & AAX_RENDER_MASK);

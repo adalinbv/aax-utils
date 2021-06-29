@@ -1239,7 +1239,7 @@ bool MIDIStream::process_meta()
 MIDIFile::MIDIFile(const char *devname, const char *filename,
                    const char *selection, enum aaxRenderMode mode,
                    const char *config)
-    : MIDI(devname, selection, mode), file(filename)
+    : MIDIDriver(devname, selection, mode), file(filename)
 {
     struct stat info;
     if (stat(filename, &info) != 0 || (info.st_mode & S_IFDIR)) {

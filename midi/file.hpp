@@ -38,7 +38,7 @@
 
 #include <aax/byte_stream.hpp>
 
-#include <midi/midi.hpp>
+#include <midi/driver.hpp>
 #include <midi/instrument.hpp>
 
 namespace aax
@@ -55,7 +55,7 @@ class MIDIStream : public byte_stream
 public:
     MIDIStream() = default;
 
-    MIDIStream(MIDI& ptr, byte_stream& stream, size_t len,  uint16_t track)
+    MIDIStream(MIDIDriver& ptr, byte_stream& stream, size_t len,  uint16_t track)
         : byte_stream(stream, len), midi(ptr), track_no(track)
     {
         timestamp_parts = pull_message()*24/600000;
@@ -71,7 +71,7 @@ public:
     bool process_sysex();
     bool process_meta();
 
-    MIDI& midi;
+    MIDIDriver& midi;
 private:
     inline float key2pitch(MIDIInstrument& channel, uint16_t key) {
         auto& buffer = channel.get_buffer(key);
@@ -134,7 +134,7 @@ private:
 };
 
 
-class MIDIFile : public MIDI
+class MIDIFile : public MIDIDriver
 {
 public:
     MIDIFile(const char *filename) : MIDIFile(nullptr, filename) {}

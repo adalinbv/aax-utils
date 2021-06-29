@@ -47,7 +47,7 @@ private:
     MIDIInstrument& operator=(const MIDIInstrument&) = delete;
 
 public:
-    MIDIInstrument(MIDI& ptr, Buffer &buffer, uint8_t channel,
+    MIDIInstrument(MIDIDriver& ptr, Buffer &buffer, uint8_t channel,
                 uint16_t bank, uint8_t program, bool is_drums);
 
     MIDIInstrument(MIDIInstrument&&) = default;
@@ -97,7 +97,7 @@ private:
     std::map<uint8_t,Buffer&> name_map;
     std::string track_name;
 
-    MIDI &midi;
+    MIDIDriver &midi;
 
     Buffer nullBuffer;
 

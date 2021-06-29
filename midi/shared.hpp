@@ -74,7 +74,7 @@ enum {
     MIDI_MODE_MAX
 };
 
-class MIDI;
+class MIDIDriver;
 class MIDIInstrument;
 using MIDIChannel = MIDIInstrument; // backwards compatinility
 

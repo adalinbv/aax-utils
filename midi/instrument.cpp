@@ -32,11 +32,11 @@
 #include <cassert>
 
 #include <midi/file.hpp>
-#include <midi/midi.hpp>
+#include <midi/driver.hpp>
 
 using namespace aax;
 
-MIDIInstrument::MIDIInstrument(MIDI& ptr, Buffer &buffer, uint8_t channel,
+MIDIInstrument::MIDIInstrument(MIDIDriver& ptr, Buffer &buffer, uint8_t channel,
             uint16_t bank, uint8_t program, bool is_drums)
    : Instrument(ptr, channel == MIDI_DRUMS_CHANNEL), midi(ptr),
      channel_no(channel), bank_no(bank), program_no(program),

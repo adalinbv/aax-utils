@@ -1,7 +1,7 @@
 
 set( MIDI_OBJS
      instrument.cpp
-     midi.cpp
+     driver.cpp
      file.cpp
    )
 

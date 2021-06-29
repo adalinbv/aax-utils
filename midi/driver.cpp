@@ -36,12 +36,12 @@
 #include <xml.h>
 
 #include <midi/shared.hpp>
+#include <midi/driver.hpp>
 #include <midi/file.hpp>
-#include <midi/midi.hpp>
 
 using namespace aax;
 
-MIDI::MIDI(const char* n, const char *selections, enum aaxRenderMode m)
+MIDIDriver::MIDIDriver(const char* n, const char *selections, enum aaxRenderMode m)
         : AeonWave(n, m)
 {
     if (*this) {
@@ -76,7 +76,7 @@ MIDI::MIDI(const char* n, const char *selections, enum aaxRenderMode m)
 }
 
 void
-MIDI::set_path()
+MIDIDriver::set_path()
 {
     path = AeonWave::info(AAX_SHARED_DATA_DIR);
 
@@ -92,7 +92,7 @@ MIDI::set_path()
 }
 
 void
-MIDI::start()
+MIDIDriver::start()
 {
     reverb_state = AAX_REVERB_2ND_ORDER;
     set_reverb("reverb/concerthall-large");
@@ -104,14 +104,14 @@ MIDI::start()
 }
 
 void
-MIDI::stop()
+MIDIDriver::stop()
 {
     reverb.set(AAX_PLAYING);
     midi.set(AAX_PLAYING);
 }
 
 void
-MIDI::rewind()
+MIDIDriver::rewind()
 {
     channels.clear();
     uSPP = tempo/PPQN;
@@ -124,7 +124,7 @@ MIDI::rewind()
     reverb_channels.clear();
 }
 
-void MIDI::finish(uint8_t n)
+void MIDIDriver::finish(uint8_t n)
 {
     auto it = channels.find(n);
     if (it == channels.end()) return;
@@ -135,7 +135,7 @@ void MIDI::finish(uint8_t n)
 }
 
 bool
-MIDI::finished(uint8_t n)
+MIDIDriver::finished(uint8_t n)
 {
     auto it = channels.find(n);
     if (it == channels.end()) return true;
@@ -143,7 +143,7 @@ MIDI::finished(uint8_t n)
 }
 
 void
-MIDI::set_gain(float g)
+MIDIDriver::set_gain(float g)
 {
     aax::dsp dsp = AeonWave::get(AAX_VOLUME_FILTER);
     dsp.set(AAX_GAIN, g);
@@ -152,7 +152,7 @@ MIDI::set_gain(float g)
 }
 
 bool
-MIDI::is_drums(uint8_t n)
+MIDIDriver::is_drums(uint8_t n)
 {
     auto it = channels.find(n);
     if (it == channels.end()) return false;
@@ -160,7 +160,7 @@ MIDI::is_drums(uint8_t n)
 }
 
 void
-MIDI::set_balance(float b)
+MIDIDriver::set_balance(float b)
 {
     Matrix64 m;
     m.rotate(1.57*b, 0.0, 1.0, 0.0);
@@ -169,7 +169,7 @@ MIDI::set_balance(float b)
 }
 
 void
-MIDI::set_chorus(const char *t)
+MIDIDriver::set_chorus(const char *t)
 {
     Buffer& buf = AeonWave::buffer(t);
     for(auto& it : channels) {
@@ -178,7 +178,7 @@ MIDI::set_chorus(const char *t)
 }
 
 void
-MIDI::set_chorus_level(float lvl)
+MIDIDriver::set_chorus_level(float lvl)
 {
     for(auto& it : channels) {
         it.second->set_chorus_level(lvl);
@@ -186,7 +186,7 @@ MIDI::set_chorus_level(float lvl)
 }
 
 void
-MIDI::set_chorus_depth(float ms)
+MIDIDriver::set_chorus_depth(float ms)
 {
     float us = 1e-3f*ms;
     for(auto& it : channels) {
@@ -195,7 +195,7 @@ MIDI::set_chorus_depth(float ms)
 }
 
 void
-MIDI::set_chorus_rate(float rate)
+MIDIDriver::set_chorus_rate(float rate)
 {
     for(auto& it : channels) {
         it.second->set_chorus_rate(rate);
@@ -203,7 +203,7 @@ MIDI::set_chorus_rate(float rate)
 }
 
 void
-MIDI::set_reverb(const char *t)
+MIDIDriver::set_reverb(const char *t)
 {
     Buffer& buf = AeonWave::buffer(t);
     reverb.add(buf);
@@ -213,7 +213,7 @@ MIDI::set_reverb(const char *t)
 }
 
 void
-MIDI::set_reverb_type(uint8_t value)
+MIDIDriver::set_reverb_type(uint8_t value)
 {
     reverb_type = value;
     switch (value)
@@ -248,7 +248,7 @@ MIDI::set_reverb_type(uint8_t value)
 }
 
 void
-MIDI::set_reverb_level(uint8_t channel, uint8_t value)
+MIDIDriver::set_reverb_level(uint8_t channel, uint8_t value)
 {
     if (value)
     {
@@ -283,7 +283,7 @@ MIDI::set_reverb_level(uint8_t channel, uint8_t value)
  * file names from the XML files for a quick access during playback.
  */
 void
-MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
+MIDIDriver::read_instruments(std::string gmmidi, std::string gmdrums)
 {
     const char *filename, *type = "instrument";
     auto imap = instruments;
@@ -487,7 +487,7 @@ MIDI::read_instruments(std::string gmmidi, std::string gmdrums)
 }
 
 void
-MIDI::add_patch(const char *file)
+MIDIDriver::add_patch(const char *file)
 {
     const char *path = midi.info(AAX_SHARED_DATA_DIR);
 
@@ -536,7 +536,7 @@ MIDI::add_patch(const char *file)
  * and the key_no in the program number of the map.
  */
 const inst_t
-MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
+MIDIDriver::get_drum(uint16_t program_no, uint8_t key_no, bool all)
 {
     uint16_t prev_program_no = program_no;
     uint16_t req_program_no = program_no;
@@ -590,7 +590,7 @@ MIDI::get_drum(uint16_t program_no, uint8_t key_no, bool all)
 }
 
 const inst_t
-MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
+MIDIDriver::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 {
     uint16_t prev_bank_no = bank_no;
     uint16_t req_bank_no = bank_no;
@@ -623,23 +623,23 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
         case MIDI_EXTENDED_GENERAL_MIDI:
             if (bank_no & 0x7F) {          // switch to MSB only
                 bank_no &= ~0x7F;
-            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDIDriver 1)
                 bank_no = 0;
             }
         case MIDI_GENERAL_STANDARD:
-            // Some sequencers mistakenly set the LSB for GS-MIDI
+            // Some sequencers mistakenly set the LSB for GS-MIDIDriver
             if (bank_no & 0x7F) {
                  bank_no = (bank_no & 0x7F) << 7;
-            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDIDriver 1)
                 bank_no = 0;
             }
             break;
-        default: // General MIDI or unspecified
-            if (bank_no & 0x7F) {          // LSB (XG-MIDI)
+        default: // General MIDIDriver or unspecified
+            if (bank_no & 0x7F) {          // LSB (XG-MIDIDriver)
                 bank_no &= ~0x7F;
-            } else if (bank_no & 0x3F80) { // MSB (GS-MIDI / GM-MIDI 2)
+            } else if (bank_no & 0x3F80) { // MSB (GS-MIDIDriver / GM-MIDIDriver 2)
                 bank_no &= ~0x3F80;
-            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDIDriver 1)
                 bank_no = 0;
             }
             break;
@@ -666,7 +666,7 @@ MIDI::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 }
 
 void
-MIDI::grep(std::string& filename, const char *grep)
+MIDIDriver::grep(std::string& filename, const char *grep)
 {
     if (midi.get_csv()) return;
 
@@ -693,7 +693,7 @@ MIDI::grep(std::string& filename, const char *grep)
 }
 
 MIDIInstrument&
-MIDI::new_channel(uint8_t track_no, uint16_t bank_no, uint8_t program_no)
+MIDIDriver::new_channel(uint8_t track_no, uint16_t bank_no, uint8_t program_no)
 {
     bool drums = is_drums(track_no);
     auto it = channels.find(track_no);
@@ -748,7 +748,7 @@ MIDI::new_channel(uint8_t track_no, uint16_t bank_no, uint8_t program_no)
 }
 
 MIDIInstrument&
-MIDI::channel(uint16_t track_no)
+MIDIDriver::channel(uint16_t track_no)
 {
     auto it = channels.find(track_no);
     if (it != channels.end()) {
@@ -786,9 +786,9 @@ MIDI::channel(uint16_t track_no)
  * Scratch Push(41) | Scratch Pull (42)
  */
 bool
-MIDI::process(uint8_t track_no, uint8_t message, uint8_t key, uint8_t velocity, bool omni, float pitch)
+MIDIDriver::process(uint8_t track_no, uint8_t message, uint8_t key, uint8_t velocity, bool omni, float pitch)
 {
-    // Omni mode: Device responds to MIDI data regardless of channel
+    // Omni mode: Device responds to MIDIDriver data regardless of channel
     if (message == MIDI_NOTE_ON && velocity) {
         if (is_track_active(track_no)) {
             try {

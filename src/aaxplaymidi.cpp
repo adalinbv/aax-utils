@@ -46,7 +46,7 @@
 #include <aax/aeonwave.hpp>
 #include <aax/instrument.hpp>
 
-#include <midi/midi.hpp>
+#include <midi/driver.hpp>
 #include <midi/file.hpp>
 
 #include "driver.h"
