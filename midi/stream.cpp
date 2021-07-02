@@ -830,15 +830,15 @@ bool MIDIStream::process_sysex()
             CSV(", %d", byte);
             switch(byte)
             {
-            case 0x4c:	// Parameter Change
+            case YAMAHA_PARAMETER_CHANGE:
             {
                 // https://usa.yamaha.com/support/faq/keyboards/2203.html
-                uint32_t addr = pull_byte();
-                addr = (addr << 7) | pull_byte();
-                addr = (addr << 7) | pull_byte();
+                uint32_t addr = pull_byte();		// val[3]
+                addr = (addr << 7) | pull_byte();	// val[4]
+                addr = (addr << 7) | pull_byte();	// val[5]
                 switch (addr)
                 {
-                case 0x7e:// XG System On
+                case YAMAHA_XG_SYSTEM_ON:
                     byte = pull_byte();
                     CSV(", %d", byte);
                     if (byte == 0x00) {
