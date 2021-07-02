@@ -303,6 +303,8 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
         switch(message)
         {
         case MIDI_SYSTEM_EXCLUSIVE_END:
+            CSV("%d", message);
+            break;
         case MIDI_SYSTEM_EXCLUSIVE:
             process_sysex();
             break;
@@ -1056,14 +1058,16 @@ bool MIDIStream::process_sysex()
     }
 
     size -= (offset() - offs);
-#if ENABLE_CSV
-    if (size) {
-        while (size--) CSV(", %d", pull_byte());
-        CSV("\n");
+    if (size)
+    {
+        if (midi.get_csv())
+        {
+            while (size--) CSV(", %d", pull_byte());
+            CSV("\n");
+        }
+        else forward(size);
     }
-#else
-    if (size) forward(size);
-#endif
+
     return rv;
 }
 
