@@ -818,32 +818,46 @@ bool MIDIStream::process_sysex()
         }
         break;
     case MIDI_SYSTEM_EXCLUSIVE_YAMAHA:
+    {
+        uint8_t devno;
         byte = pull_byte();
         CSV(", %d", byte);
-        if (byte != 0x10) break;
-
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte != 0x4c) break;
-
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte != 0x00) break;
-
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte != 0x00) break;
-
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte != 0x7e) break;
-
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte == 0x00) {
-            midi.set_mode(MIDI_EXTENDED_GENERAL_MIDI);
+        devno = byte & 0xF;
+        switch (byte & 0xF0)
+        {
+        case 0x10:
+            byte = pull_byte();
+            CSV(", %d", byte);
+            switch(byte)
+            {
+            case 0x4c:	// Parameter Change
+            {
+                // https://usa.yamaha.com/support/faq/keyboards/2203.html
+                uint32_t addr = pull_byte();
+                addr = (addr << 7) | pull_byte();
+                addr = (addr << 7) | pull_byte();
+                switch (addr)
+                {
+                case 0x7e:// XG System On
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    if (byte == 0x00) {
+                        midi.set_mode(MIDI_EXTENDED_GENERAL_MIDI);
+                    }
+                default:
+                    break;
+                }
+                break;
+            }
+            case 27:	// MIDI Master Tuning
+            default:
+                break;
+            }
+        default:
+            break;
         }
         break;
+    }
     case MIDI_SYSTEM_EXCLUSIVE_NON_REALTIME:
         // GM1 rewind: F0 7E 7F 09 01 F7
         // GM2 rewind: F0 7E 7F 09 03 F7
