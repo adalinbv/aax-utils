@@ -84,50 +84,62 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     case XGMIDI_REVERB_HALL1:
                         midi.set_reverb("reverb/concerthall");
                         INFO("Switching to Concert Hall Reveberation");
+                        rv = true;
                         break;
                     case XGMIDI_REVERB_HALL2:
                         midi.set_reverb("reverb/concerthall-large");
                         INFO("Switching to Lrge Concert Hall reveberation");
+                        rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM1:
                         midi.set_reverb("reverb/room-small");
                         INFO("Switching to Small Room reveberation");
+                        rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM2:
                         midi.set_reverb("reverb/room-medium");
                         INFO("Switching to Medium Room reveberation");
+                        rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM3:
                         midi.set_reverb("reverb/room-large");
                         INFO("Switching to Large Room reveberation");
+                        rv = true;
                         break;
                     case XGMIDI_REVERB_STAGE1:
                        midi.set_reverb("reverb/concerthall");
                        INFO("Switching to Stage reveberation");
+                        rv = true;
                        break;
                     case XGMIDI_REVERB_STAGE2:
                        midi.set_reverb("reverb/concerthall-large");
                        INFO("Switching to Large Stage reveberation");
+                        rv = true;
                        break;
                     case XGMIDI_REVERB_PLATE:
                         midi.set_reverb("reverb/plate");
                         INFO("Switching to Plate reveberation");
+                        rv = true;
                         break;
                     case XGMIDI_REVERB_WHITE_ROOM:
                        midi.set_reverb("reverb/bathroom");
                        INFO("Switching to White Room reveberation");
+                        rv = true;
                        break;
                     case XGMIDI_REVERB_TUNNEL:
                        midi.set_reverb("reverb/room-empty");
                        INFO("Switching to Tunnel reveberation");
+                        rv = true;
                        break;
                     case XGMIDI_REVERB_CANYON:
                        midi.set_reverb("reverb/arena");
                        INFO("Switching to Canyon reveberation");
+                        rv = true;
                        break;
                     case XGMIDI_REVERB_BASEMENT:
                        midi.set_reverb("reverb/room-small");
                        INFO("Switching to Basement reveberation");
+                        rv = true;
                        break;
                     default:
                         break;
@@ -142,54 +154,67 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     case XGMIDI_CHORUS1:
                         midi.set_chorus("chorus/chorus1");
                         INFO("Switching to type 1 chorus");
+                        rv = true;
                         break;
                     case XGMIDI_CHORUS2:
                         midi.set_chorus("chorus/chorus2");
                         INFO("Switching to type 2 chorus");
+                        rv = true;
                         break;
                     case XGMIDI_CHORUS3:
                         midi.set_chorus("chorus/chorus3");
                         INFO("Switching to type 3chorus");
+                        rv = true;
                         break;
                     case XGMIDI_CHORUS4:
                         midi.set_chorus("chorus/chorus4");
                         INFO("Switching to type 4 chorus");
+                        rv = true;
                         break;
                     case XGMIDI_CELESTE1:
                         midi.set_chorus("chorus/chorus1");
                         INFO("Switching to type 1 celeste");
+                        rv = true;
                         break;
                     case XGMIDI_CELESTE2:
                         midi.set_chorus("chorus/chorus2");
                         INFO("Switching to type 2 celeste");
+                        rv = true;
                         break;
                     case XGMIDI_CELESTE3:
                         midi.set_chorus("chorus/chorus3");
                         INFO("Switching to type 3 celeste");
+                        rv = true;
                         break;
                     case XGMIDI_CELESTE4:
                         midi.set_chorus("chorus/chorus4");
                         INFO("Switching to type 4 celeste");
+                        rv = true;
                         break;
                     case XGMIDI_FLANGING1:
                         midi.set_chorus("chorus/flanger");
                         INFO("Switching to type 1 flanging");
+                        rv = true;
                         break;
                     case XGMIDI_FLANGING2:
                         midi.set_chorus("chorus/flanger2");
                         INFO("Switching to type 2 flanging");
+                        rv = true;
                         break;
                     case XGMIDI_FLANGING3:
                         midi.set_chorus("chorus/flanger3");
                         INFO("Switching to type 3 flanging");
+                        rv = true;
                         break;
                     case XGMIDI_SYMPHONIC:
                         midi.set_chorus("chorus/symphony");
                         INFO("Switching to symphony");
+                        rv = true;
                         break;
                     case XGMIDI_PHASING:  
                         midi.set_chorus("chorus/phaser");
                         INFO("Switching to phasing");
+                        rv = true;
                         break;
                     default:
                         break;
