@@ -60,7 +60,6 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             uint8_t addr_low = pull_byte();
             uint16_t addr = addr_mid << 8 | addr_low;
             CSV(", %d, %d, %d", addr_high, addr_mid, addr_low);
-printf("EFFECT: %d, %d, %x\n", addr_high, addr_mid, addr_low);
             switch (addr_high)
             {
             case XGMIDI_SYSTEM:
@@ -80,6 +79,59 @@ printf("EFFECT: %d, %d, %x\n", addr_high, addr_mid, addr_low);
                 case XGMIDI_REVERB_TYPE:
                 {
                     uint16_t type = pull_byte() << 8 | pull_byte();
+                    switch (type)
+                    {
+                    case XGMIDI_REVERB_HALL1:
+                        midi.set_reverb("reverb/concerthall");
+                        MESSAGE("Switching to Concert Hall Reveberation");
+                        break;
+                    case XGMIDI_REVERB_HALL2:
+                        midi.set_reverb("reverb/concerthall-large");
+                        MESSAGE("Switching to Lrge Concert Hall reveberation");
+                        break;
+                    case XGMIDI_REVERB_ROOM1:
+                        midi.set_reverb("reverb/room-small");
+                        MESSAGE("Switching to Small Room reveberation");
+                        break;
+                    case XGMIDI_REVERB_ROOM2:
+                        midi.set_reverb("reverb/room-medium");
+                        MESSAGE("Switching to Medium Room reveberation");
+                        break;
+                    case XGMIDI_REVERB_ROOM3:
+                        midi.set_reverb("reverb/room-large");
+                        MESSAGE("Switching to Large Room reveberation");
+                        break;
+                    case XGMIDI_REVERB_STAGE1:
+                       midi.set_reverb("reverb/concerthall");
+                       MESSAGE("Switching to Stage reveberation");
+                       break;
+                    case XGMIDI_REVERB_STAGE2:
+                       midi.set_reverb("reverb/concerthall-large");
+                       MESSAGE("Switching to Large Stage reveberation");
+                       break;
+                    case XGMIDI_REVERB_PLATE:
+                        midi.set_reverb("reverb/plate");
+                        MESSAGE("Switching to Plate reveberation");
+                        break;
+                    case XGMIDI_REVERB_WHITE_ROOM:
+                       midi.set_reverb("reverb/bathroom");
+                       MESSAGE("Switching to White Room reveberation");
+                       break;
+                    case XGMIDI_REVERB_TUNNEL:
+                       midi.set_reverb("reverb/room-empty");
+                       MESSAGE("Switching to Tunnel reveberation");
+                       break;
+                    case XGMIDI_REVERB_CANYON:
+                       midi.set_reverb("reverb/arena");
+                       MESSAGE("Switching to Canyon reveberation");
+                       break;
+                    case XGMIDI_REVERB_BASEMENT:
+                       midi.set_reverb("reverb/room-small");
+                       MESSAGE("Switching to Basement reveberation");
+                       break;
+                    default:
+                        break;
+                    }
                     break;
                 }
                 case XGMIDI_CHORUS_TYPE:
