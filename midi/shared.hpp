@@ -51,6 +51,9 @@
   if(midi.get_initialize() && l <= midi.get_verbose()) printf(__VA_ARGS__)
 #define MESSAGE(...) \
   if(!midi.get_initialize() && midi.get_verbose() >= 1) printf(__VA_ARGS__)
+#define INFO(s) \
+  if(!midi.get_initialize() && midi.get_verbose() >= 1 && !midi.get_lyrics()) \
+      printf("%-79s\n", (s))
 #define LOG(l,...) \
   if(midi.get_initialize() && l == midi.get_verbose()) printf(__VA_ARGS__)
 #define ERROR(...) \

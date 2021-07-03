@@ -221,27 +221,27 @@ MIDIDriver::set_reverb_type(uint8_t value)
     {
     case 0:
         midi.set_reverb("reverb/room-small");
-        MESSAGE("Switching to Small Room reveberation");
+        INFO("Switching to Small Room reveberation");
         break;
     case 1:
         midi.set_reverb("reverb/room-medium");
-        MESSAGE("Switching to Medium Room reveberation");
+        INFO("Switching to Medium Room reveberation");
         break;
     case 2:
         midi.set_reverb("reverb/room-large");
-        MESSAGE("Switching to Large Room reveberation");
+        INFO("Switching to Large Room reveberation");
         break;
     case 3:
         midi.set_reverb("reverb/concerthall");
-        MESSAGE("Switching to Concert Hall Reveberation");
+        INFO("Switching to Concert Hall Reveberation");
         break;
     case 4:
         midi.set_reverb("reverb/concerthall-large");
-        MESSAGE("Switching to Lrge Concert Hall reveberation");
+        INFO("Switching to Lrge Concert Hall reveberation");
         break;
     case 8:
         midi.set_reverb("reverb/plate");
-        MESSAGE("Switching to Plate reveberation");
+        INFO("Switching to Plate reveberation");
         break;
     default:
         break;

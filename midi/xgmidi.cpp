@@ -83,51 +83,51 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     {
                     case XGMIDI_REVERB_HALL1:
                         midi.set_reverb("reverb/concerthall");
-                        MESSAGE("Switching to Concert Hall Reveberation");
+                        INFO("Switching to Concert Hall Reveberation");
                         break;
                     case XGMIDI_REVERB_HALL2:
                         midi.set_reverb("reverb/concerthall-large");
-                        MESSAGE("Switching to Lrge Concert Hall reveberation");
+                        INFO("Switching to Lrge Concert Hall reveberation");
                         break;
                     case XGMIDI_REVERB_ROOM1:
                         midi.set_reverb("reverb/room-small");
-                        MESSAGE("Switching to Small Room reveberation");
+                        INFO("Switching to Small Room reveberation");
                         break;
                     case XGMIDI_REVERB_ROOM2:
                         midi.set_reverb("reverb/room-medium");
-                        MESSAGE("Switching to Medium Room reveberation");
+                        INFO("Switching to Medium Room reveberation");
                         break;
                     case XGMIDI_REVERB_ROOM3:
                         midi.set_reverb("reverb/room-large");
-                        MESSAGE("Switching to Large Room reveberation");
+                        INFO("Switching to Large Room reveberation");
                         break;
                     case XGMIDI_REVERB_STAGE1:
                        midi.set_reverb("reverb/concerthall");
-                       MESSAGE("Switching to Stage reveberation");
+                       INFO("Switching to Stage reveberation");
                        break;
                     case XGMIDI_REVERB_STAGE2:
                        midi.set_reverb("reverb/concerthall-large");
-                       MESSAGE("Switching to Large Stage reveberation");
+                       INFO("Switching to Large Stage reveberation");
                        break;
                     case XGMIDI_REVERB_PLATE:
                         midi.set_reverb("reverb/plate");
-                        MESSAGE("Switching to Plate reveberation");
+                        INFO("Switching to Plate reveberation");
                         break;
                     case XGMIDI_REVERB_WHITE_ROOM:
                        midi.set_reverb("reverb/bathroom");
-                       MESSAGE("Switching to White Room reveberation");
+                       INFO("Switching to White Room reveberation");
                        break;
                     case XGMIDI_REVERB_TUNNEL:
                        midi.set_reverb("reverb/room-empty");
-                       MESSAGE("Switching to Tunnel reveberation");
+                       INFO("Switching to Tunnel reveberation");
                        break;
                     case XGMIDI_REVERB_CANYON:
                        midi.set_reverb("reverb/arena");
-                       MESSAGE("Switching to Canyon reveberation");
+                       INFO("Switching to Canyon reveberation");
                        break;
                     case XGMIDI_REVERB_BASEMENT:
                        midi.set_reverb("reverb/room-small");
-                       MESSAGE("Switching to Basement reveberation");
+                       INFO("Switching to Basement reveberation");
                        break;
                     default:
                         break;
@@ -137,6 +137,63 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 case XGMIDI_CHORUS_TYPE:
                 {
                     uint16_t type = pull_byte() << 8 | pull_byte();
+                    switch (type)
+                    {
+                    case XGMIDI_CHORUS1:
+                        midi.set_chorus("chorus/chorus1");
+                        INFO("Switching to type 1 chorus");
+                        break;
+                    case XGMIDI_CHORUS2:
+                        midi.set_chorus("chorus/chorus2");
+                        INFO("Switching to type 2 chorus");
+                        break;
+                    case XGMIDI_CHORUS3:
+                        midi.set_chorus("chorus/chorus3");
+                        INFO("Switching to type 3chorus");
+                        break;
+                    case XGMIDI_CHORUS4:
+                        midi.set_chorus("chorus/chorus4");
+                        INFO("Switching to type 4 chorus");
+                        break;
+                    case XGMIDI_CELESTE1:
+                        midi.set_chorus("chorus/chorus1");
+                        INFO("Switching to type 1 celeste");
+                        break;
+                    case XGMIDI_CELESTE2:
+                        midi.set_chorus("chorus/chorus2");
+                        INFO("Switching to type 2 celeste");
+                        break;
+                    case XGMIDI_CELESTE3:
+                        midi.set_chorus("chorus/chorus3");
+                        INFO("Switching to type 3 celeste");
+                        break;
+                    case XGMIDI_CELESTE4:
+                        midi.set_chorus("chorus/chorus4");
+                        INFO("Switching to type 4 celeste");
+                        break;
+                    case XGMIDI_FLANGING1:
+                        midi.set_chorus("chorus/flanger");
+                        INFO("Switching to type 1 flanging");
+                        break;
+                    case XGMIDI_FLANGING2:
+                        midi.set_chorus("chorus/flanger2");
+                        INFO("Switching to type 2 flanging");
+                        break;
+                    case XGMIDI_FLANGING3:
+                        midi.set_chorus("chorus/flanger3");
+                        INFO("Switching to type 3 flanging");
+                        break;
+                    case XGMIDI_SYMPHONIC:
+                        midi.set_chorus("chorus/symphony");
+                        INFO("Switching to symphony");
+                        break;
+                    case XGMIDI_PHASING:  
+                        midi.set_chorus("chorus/phaser");
+                        INFO("Switching to phasing");
+                        break;
+                    default:
+                        break;
+                    }
                     break;
                 }
                 case XGMIDI_VARIATION_TYPE:
