@@ -32,7 +32,7 @@
 #include <midi/stream.hpp>
 #include <midi/driver.hpp>
 
-/** XGMIDI defaults (reverb & chorus):
+/** XGMIDI defaults (reverb, chorus, distortion and EQ):
  *
  * param:       1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16
  *              --------------------------------------------------------------
@@ -60,6 +60,15 @@
  * FLANGER1     14  14  104 2   0   28  64  46  64  96  40  64  10  4   0   0
  * FLANGER2     32  17  26  2   0   28  64  46  60  96  40  64  10  4   0   0
  * FLANGER3     4   109 109 2   0   28  64  46  64  127 40  64  10  4   0   0
+ * PHASER1      8   111 74  104 0   28  64  46  64  64  6   1   64  0   0   0
+ * PHASER2      8   111 74  104 0   28  64  46  64  64  5   1   4   0   0   0
+ *
+ * DISTORTION   40  20  72  53  48  0   43  74  10  127 120 0   0   0   0   0
+ * OVERDRIVE    29  24  68  45  55  0   41  72  10  127 104 0   0   0   0   0
+ *
+ * 3-BAND EQ	70  34  60  10  70  28  46  0   0   127 0   0   0   0   0   0
+ * 2-BAND EQ    28  70  46  70  0   0   0   0   0   127 34  64  10  0   0   0
+ *
  */
 
 namespace aax
