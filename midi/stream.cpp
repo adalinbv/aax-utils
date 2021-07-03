@@ -818,46 +818,8 @@ bool MIDIStream::process_sysex()
         }
         break;
     case MIDI_SYSTEM_EXCLUSIVE_YAMAHA:
-    {
-        uint8_t devno;
-        byte = pull_byte();
-        CSV(", %d", byte);
-        devno = byte & 0xF;
-        switch (byte & 0xF0)
-        {
-        case 0x10:
-            byte = pull_byte();
-            CSV(", %d", byte);
-            switch(byte)
-            {
-            case YAMAHA_PARAMETER_CHANGE:
-            {
-                // https://usa.yamaha.com/support/faq/keyboards/2203.html
-                uint32_t addr = pull_byte();		// val[3]
-                addr = (addr << 7) | pull_byte();	// val[4]
-                addr = (addr << 7) | pull_byte();	// val[5]
-                switch (addr)
-                {
-                case YAMAHA_XG_SYSTEM_ON:
-                    byte = pull_byte();
-                    CSV(", %d", byte);
-                    if (byte == 0x00) {
-                        midi.set_mode(MIDI_EXTENDED_GENERAL_MIDI);
-                    }
-                default:
-                    break;
-                }
-                break;
-            }
-            case 27:	// MIDI Master Tuning
-            default:
-                break;
-            }
-        default:
-            break;
-        }
+        process_XG_sysex(size-2);
         break;
-    }
     case MIDI_SYSTEM_EXCLUSIVE_NON_REALTIME:
         // GM1 rewind: F0 7E 7F 09 01 F7
         // GM2 rewind: F0 7E 7F 09 03 F7

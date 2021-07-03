@@ -72,8 +72,9 @@ public:
     void rewind();
     bool process(uint64_t, uint32_t&, uint32_t&);
     bool process_control(uint8_t);
-    bool process_sysex();
     bool process_meta();
+    bool process_sysex();
+    bool process_XG_sysex(uint64_t);
 
     MIDIDriver& midi;
 private:

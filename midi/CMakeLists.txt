@@ -4,6 +4,7 @@ set( MIDI_OBJS
      driver.cpp
      stream.cpp
      file.cpp
+     xgmidi.cpp
    )
 
 set(LIBTYPE STATIC)
