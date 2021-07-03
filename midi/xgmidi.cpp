@@ -46,22 +46,24 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
     devno = type & 0xF;
     switch (type & 0xF0)
     {
-    case 0x00:
-    case 0x10:
+    case XGMIDI_BULK_DUMP:
+        break;
+    case XGMIDI_PARAMETER_CHANGE:
         byte = pull_byte();
         CSV(", %d", byte);
         switch(byte)
         {
-        case XGMIDI_PARAMETER_CHANGE:
+        case XGMIDI_MODEL_ID:
         {
-            uint8_t type = pull_byte();
-            CSV(", %d", type);
-            switch (type)
+            uint8_t addr_high = pull_byte();
+            uint8_t addr_mid = pull_byte();
+            uint8_t addr_low = pull_byte();
+            uint16_t addr = addr_mid << 8 | addr_low;
+            CSV(", %d, %d, %d", addr_high, addr_mid, addr_low);
+printf("EFFECT: %d, %d, %x\n", addr_high, addr_mid, addr_low);
+            switch (addr_high)
             {
             case XGMIDI_SYSTEM:
-            {
-                uint32_t addr = (pull_byte() << 8) | pull_byte();
-                CSV(", %d, %d", addr >> 8, addr & 0xf);
                 if (addr == XGMIDI_SYSTEM_ON)
                 {
                     byte = pull_byte();
@@ -72,33 +74,43 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     rv = true;
                 }
                 break;
-            }
             case XGMIDI_EFFECT1:
-            {
-                uint8_t addr_high = pull_byte();
-                uint8_t addr_mid = pull_byte();
-                uint8_t addr_low = pull_byte();
-                uint32_t addr = addr_high << 8 | addr_mid;
-
                 switch (addr)
                 {
-                case XGMIDI_REVERB_HALL1:
+                case XGMIDI_REVERB_TYPE:
+                {
+                    uint16_t type = pull_byte() << 8 | pull_byte();
                     break;
+                }
+                case XGMIDI_CHORUS_TYPE:
+                {
+                    uint16_t type = pull_byte() << 8 | pull_byte();
+                    break;
+                }
+                case XGMIDI_VARIATION_TYPE:
+                {
+                    uint16_t type = pull_byte() << 8 | pull_byte();
+                    break;
+                }
                 default:
                     break;
                 }
                 break;
-            }
             case XGMIDI_EFFECT2:
+            case XGMIDI_MULTI_EQ:
             default:
-                LOG(99, "LOG: Unsupported XG sysex parameter type: 0x%x (%d)\n", type, type);
+                LOG(99, "LOG: Unsupported XG sysex parameter type: 0x%x (%d)\n",
+                              type, type);
                 break;
             }
             break;
         }
         case XGMIDI_MASTER_TUNING:
         {
-            uint32_t addr = (pull_byte() << 16) | (pull_byte() << 8) | pull_byte();
+            uint8_t addr_high = pull_byte();
+            uint8_t addr_mid = pull_byte();
+            uint8_t addr_low = pull_byte();
+            uint32_t addr = addr_high << 16 | addr_mid << 8 | addr_low;
             if (addr == 0x300000)
             {
                 uint8_t mm = pull_byte();
@@ -109,6 +121,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 if (pitch < 0) pitch /= 8192.0f;
                 else pitch /= 8191.0f;
                 midi.set_tuning(pitch);
+                rv = true;
             }
         }
         default:
