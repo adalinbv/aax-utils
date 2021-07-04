@@ -1066,8 +1066,7 @@ bool MIDIStream::process_meta()
         for (int i=0; i<size; ++i) {
            toUTF8(text, pull_byte());
         }
-        MESSAGE("%s % 3i : %s\n", type_name[meta].c_str(),
-                                  channel_no, text.c_str());
+        MESSAGE("%-9s : %s\n", type_name[meta].c_str(), text.c_str());
         CSV("%s, \"", csv_name[meta].c_str());
         CSV_TEXT("%s", text.c_str());
         CSV("\"\n");

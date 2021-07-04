@@ -383,7 +383,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             case XGMIDI_DISPLAY_DATA:
             {
                 std::string text;
-                for (int i=offset()-offs; i<size-1; ++i) {
+                for (int i=offset()-offs; i<size; ++i) {
                     toUTF8(text, pull_byte());
                 }
                 MESSAGE("Display: %s\n", text.c_str());
