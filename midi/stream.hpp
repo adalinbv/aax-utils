@@ -119,8 +119,9 @@ private:
     };
     std::map<uint16_t,struct param_t> param_3d;
 
-    const std::string type_name[7] = {
-        "Text", "Copyright", "Track", "Instrument", "Lyrics", "Marker", "Cue"
+    const std::string type_name[9] = {
+        "Sequencey", "Text", "Copyright", "Title", "Instrument", "Lyrics",
+        "Marker", "Cue", "Device"
     };
     const std::string csv_name[9] = {
         "Sequence_number", "Text_t", "Copyright_t", "Title_t",

@@ -1082,7 +1082,7 @@ bool MIDIStream::process_meta()
         for (int i=0; i<size; ++i) {
            toUTF8(text, pull_byte());
         }
-        MESSAGE("%-10s: %s", type_name[meta].c_str(), text.c_str());
+        MESSAGE("%-10s: %s\n", type_name[meta].c_str(), text.c_str());
         CSV("%s, \"", csv_name[meta].c_str());
         CSV_TEXT("%s", text.c_str());
         CSV("\"\n");
@@ -1121,27 +1121,36 @@ bool MIDIStream::process_meta()
            toUTF8(text, pull_byte());
         }
         MESSAGE("%s", text.c_str()); FLUSH();
-        CSV("%s, %s", csv_name[meta].c_str(), text.c_str());
+        CSV("%s, \"", csv_name[meta].c_str());
+        CSV_TEXT("%s", text.c_str());
+        CSV("\"\n");
         break;
     case MIDI_MARKER:
         for (int i=0; i<size; ++i) {
            toUTF8(text, pull_byte());
         }
         MESSAGE("%s: %s\n", type_name[meta].c_str(), text.c_str());
-        CSV("%s, %s\n", csv_name[meta].c_str(), text.c_str());
+        CSV("%s, \"", csv_name[meta].c_str());
+        CSV_TEXT("%s", text.c_str());
+        CSV("\"\n");
         break;
     case MIDI_CUE_POINT:
         for (int i=0; i<size; ++i) {
            toUTF8(text, pull_byte());
         }
         MESSAGE("%s: %s", type_name[meta].c_str(), text.c_str());
-        CSV("%s, %s\n", csv_name[meta].c_str(), text.c_str());
+        CSV("%s, \"", csv_name[meta].c_str());
+        CSV_TEXT("%s", text.c_str());
+        CSV("\"\n");
+        break;
     case MIDI_DEVICE_NAME:
         for (int i=0; i<size; ++i) {
            toUTF8(text, pull_byte());
         }
         MESSAGE("%s", text.c_str());
-        CSV("%s, %s\n", csv_name[meta].c_str(), text.c_str());
+        CSV("%s, \"", csv_name[meta].c_str());
+        CSV_TEXT("%s", text.c_str());
+        CSV("\"\n");
         break;
     case MIDI_CHANNEL_PREFIX:
         c = pull_byte();

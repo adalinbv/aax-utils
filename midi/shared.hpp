@@ -34,7 +34,7 @@
 
 #include <aax/aeonwave.hpp>
 
-# define CSV_TEXT(...) if(midi.get_verbose() == 1) { \
+# define CSV_TEXT(...) if(midi.get_csv()) { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \
   for (int i=0; i<strlen(s); ++i) { \
     if (s[i] == '\"') printf("\"\""); \
