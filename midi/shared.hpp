@@ -78,19 +78,27 @@ enum {
 };
 
 /* XGMIDI */
+/* categroy */
 #define XGMIDI_BULK_DUMP					0x00
 #define XGMIDI_PARAMETER_CHANGE					0x10
 #define XGMIDI_DUMP_REQUEST					0x20
 #define XGMIDI_PARAMETER_REQUEST				0x30
 
+/* parameter category */
 #define XGMIDI_MASTER_TUNING					0x27	// 39
 #define XGMIDI_BLOCK1						0x29	// 41
 #define XGMIDI_BLOCK2						0x3f	// 53
 #define XGMIDI_MODEL_ID						0x4c	// 76
 
+/* parameter effect type */
 #define XGMIDI_SYSTEM						0x00
 #define XGMIDI_EFFECT1						0x02
 #define XGMIDI_EFFECT2						0x03
+#define XGMIDI_DISPLAY_DATA					0x06
+#define XGMIDI_MULTI_PART					0x08
+#define XGMIDI_A_D_PART						0x10
+#define XGMIDI_A_D_SETUP					0x11
+#define XGMIDI_DRUM_SETUP					0x30
 #define XGMIDI_MULTI_EQ						0x40
 
 /* XG Effect Map */
@@ -224,7 +232,7 @@ enum {
 #define XGMIDI_SYMPHONIC					0x4400
 #define XGMIDI_PHASING						0x4800
 
-/* variation */
+/* variation type */
 #define XGMIDI_DELAY_LCR					0x0500
 #define XGMIDI_DELAY_LR						0x0600
 #define XGMIDI_ECHO						0x0700
@@ -251,6 +259,14 @@ enum {
 #define XGMIDI_NOISE_GATE					0x5400
 #define XGMIDI_VOICE_CANCEL					0x5500
 
+/* A/D part, addr_mid = channel no. */
+#define XGMIDI_BANK_SELECT_MSB					0x01
+#define XGMIDI_BANK_SELECT_LSB					0x02
+#define XGMIDI_PROGRAM_NUMBER					0x03
+#define XGMIDI_DRY_LEVEL					0x11
+#define XGMIDI_CHORUS_SEND					0x12
+#define XGMIDI_REVERB_SEN					0x13
+#define XGMIDI_VARIATION_SEND					0x14
 
 } // namespace aax
 

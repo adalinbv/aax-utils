@@ -268,6 +268,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         rv = true;
                        break;
                     default:
+                        LOG(99, "LOG: Unsupported XG reverb type: %d\n", type);
                         break;
                     }
                     break;
@@ -343,6 +344,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         rv = true;
                         break;
                     default:
+                        LOG(99, "LOG: Unsupported XG chorus type: %d\n", type);
                         break;
                     }
                     break;
@@ -353,13 +355,40 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 }
                 default:
+                    LOG(99, "LOG: Unsupported XG Effect1 address: %d %d\n",
+                            addr_mid, addr_low);
                     break;
                 }
                 break;
             case XGMIDI_EFFECT2:
+                LOG(99, "LOG: Unsupported XG sysex type: Effect2\n");
+                break;
             case XGMIDI_MULTI_EQ:
+                LOG(99, "LOG: Unsupported XG sysex type: Multi EQ\n");
+                break;
+            case XGMIDI_MULTI_PART:
+                LOG(99, "LOG: Unsupported XG sysex type: Multi Part\n");
+                break;
+            case XGMIDI_A_D_PART:
+                LOG(99, "LOG: Unsupported XG sysex type: A/D Part\n");
+                break;
+            case XGMIDI_A_D_SETUP:
+                LOG(99, "LOG: Unsupported XG sysex type: A/D Setup\n");
+                break;
+            case XGMIDI_DRUM_SETUP:
+                LOG(99, "LOG: Unsupported XG sysex type: Drum Setup\n");
+                break;
+            case XGMIDI_DISPLAY_DATA:
+            {
+                std::string text;
+                for (int i=offset()-offs; i<size-1; ++i) {
+                    toUTF8(text, pull_byte());
+                }
+                MESSAGE("Display: %s\n", text.c_str());
+                break;
+            }
             default:
-                LOG(99, "LOG: Unsupported XG sysex parameter type: 0x%x (%d)\n",
+                LOG(99, "LOG: Unsupported XG sysex effect type: 0x%x (%d)\n",
                               type, type);
                 break;
             }
@@ -383,14 +412,15 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 midi.set_tuning(pitch);
                 rv = true;
             }
+            break;
         }
         default:
-            LOG(99, "LOG: Unsupported XG sysex parameter: 0x%x (%d)\n", byte, byte);
+            LOG(99, "LOG: Unsupported XG sysex parameter category: 0x%x (%d)\n", byte, byte);
                 break;
         }
         break;
     default:
-        LOG(99, "LOG: Unsupported XG sysex type: 0x%x (%d)\n", type, type);
+        LOG(99, "LOG: Unsupported XG category type: 0x%x (%d)\n", type, type);
         break;
     }
 
