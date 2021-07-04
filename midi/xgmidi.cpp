@@ -214,7 +214,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         break;
                     case XGMIDI_REVERB_HALL2:
                         midi.set_reverb("reverb/concerthall-large");
-                        INFO("Switching to Lrge Concert Hall reveberation");
+                        INFO("Switching to Large Concert Hall reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM1:
@@ -268,7 +268,8 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         rv = true;
                        break;
                     default:
-                        LOG(99, "LOG: Unsupported XG reverb type: %d\n", type);
+                        LOG(99, "LOG: Unsupported XG reverb type: 0x%x (%d)\n",
+                                type, type);
                         break;
                     }
                     break;
@@ -344,7 +345,8 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         rv = true;
                         break;
                     default:
-                        LOG(99, "LOG: Unsupported XG chorus type: %d\n", type);
+                        LOG(99, "LOG: Unsupported XG chorus type: 0x%x (%d)\n",
+                                type, type);
                         break;
                     }
                     break;
@@ -355,8 +357,8 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 }
                 default:
-                    LOG(99, "LOG: Unsupported XG Effect1 address: %d %d\n",
-                            addr_mid, addr_low);
+                    LOG(99, "LOG: Unsupported XG Effect1 address: 0x%x 0x%x (%d %d)\n",
+                            addr_mid, addr_low, addr_mid, addr_low);
                     break;
                 }
                 break;
@@ -389,7 +391,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             }
             default:
                 LOG(99, "LOG: Unsupported XG sysex effect type: 0x%x (%d)\n",
-                              type, type);
+                        type, type);
                 break;
             }
             break;
@@ -415,8 +417,9 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             break;
         }
         default:
-            LOG(99, "LOG: Unsupported XG sysex parameter category: 0x%x (%d)\n", byte, byte);
-                break;
+            LOG(99, "LOG: Unsupported XG sysex parameter category: 0x%x (%d)\n",
+                    byte, byte);
+            break;
         }
         break;
     default:
