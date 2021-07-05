@@ -487,7 +487,7 @@ bool MIDIStream::process_control(uint8_t track_no)
         break;
     case MIDI_POLY_ALL_NOTES_OFF:
         midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
-        channel.set_monophonic(false);;
+        channel.set_monophonic(false);
         mode = MIDI_POLYPHONIC;
         break;
     case MIDI_ALL_SOUND_OFF:
