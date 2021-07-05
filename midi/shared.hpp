@@ -88,7 +88,10 @@ enum {
 #define XGMIDI_MASTER_TUNING					0x27	// 39
 #define XGMIDI_BLOCK1						0x29	// 41
 #define XGMIDI_BLOCK2						0x3f	// 53
-#define XGMIDI_MODEL_ID						0x4c	// 76
+#define XGMIDI_MODEL_MU100_SET					0x49
+#define XGMIDI_MODEL_VL70					0x47
+#define XGMIDI_MODEL_MU100_MODIFY				0x59
+#define XGMIDI_MODEL_XG						0x4c	// 76
 
 /* parameter effect type */
 #define XGMIDI_SYSTEM						0x00

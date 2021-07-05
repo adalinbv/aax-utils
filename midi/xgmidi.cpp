@@ -172,7 +172,8 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
 
 #if 0
  printf(" System Exclusive:");
- while ((byte = pull_byte()) != MIDI_SYSTEM_EXCLUSIVE_END) printf(" %d", byte);
+ push_byte(); push_byte(); push_byte();
+ while ((byte = pull_byte()) != MIDI_SYSTEM_EXCLUSIVE_END) printf(" %x", byte);
  printf("\n");
  byte_stream::rewind( offset() - offs);
 #endif
@@ -189,7 +190,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
         CSV(", %d", byte);
         switch(byte)
         {
-        case XGMIDI_MODEL_ID:
+        case XGMIDI_MODEL_XG:
         {
             uint8_t addr_high = pull_byte();
             uint8_t addr_mid = pull_byte();
@@ -364,6 +365,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 case XGMIDI_VARIATION_TYPE:
                 {
                     uint16_t type = pull_byte() << 8 | pull_byte();
+                    LOG(99, "LOG: Unsupported XG variation type: %d\n", type);
                     break;
                 }
                 default:
@@ -417,8 +419,11 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     LOG(99, "LOG: Unsupported XG Note Shift\n");
                     break;
                 case XGMIDI_DETUNE: // -12.8 - 12.7Hz
-                    LOG(99, "LOG: Unsupported XG Detune\n");
+                {   // 1st bit3-0: bit7-4, 2nd bit3-0: bit3-0
+                    int8_t tune = (addr_low << 4) | (pull_byte() & 0xf);
+                    LOG(99, "LOG: Unsupported XG Detune: %.1fHz\n", 0.1f* tune);
                     break;
+                }
                 case XGMIDI_VOLUME: // 0-127
                     LOG(99, "LOG: Unsupported XG Volume\n");
                     break;
@@ -520,6 +525,13 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             }
             break;
         }
+        case XGMIDI_MODEL_MU100_SET:
+        case XGMIDI_MODEL_MU100_MODIFY:
+            LOG(99, "LOG: Unsupported XG sysex model ID: MU100\n");
+            break;
+        case XGMIDI_MODEL_VL70:
+            LOG(99, "LOG: Unsupported XG sysex model ID: VL70\n");
+            break;
         default:
             LOG(99, "LOG: Unsupported XG sysex parameter category: 0x%x (%d)\n",
                     byte, byte);
