@@ -71,10 +71,6 @@ public:
 
     void rewind();
     bool process(uint64_t, uint32_t&, uint32_t&);
-    bool process_control(uint8_t);
-    bool process_meta();
-    bool process_sysex();
-    bool process_XG_sysex(uint64_t);
 
     MIDIDriver& midi;
 private:
@@ -128,6 +124,13 @@ private:
         "Instrument_name_t", "Lyrics_t", "Marker_t", "Cue_point_t",
         "Device_name_t"
     };
+
+    bool process_control(uint8_t);
+    bool process_meta();
+    bool process_sysex();
+
+    void display_XG_data(uint32_t, uint8_t, std::string&);
+    bool process_XG_sysex(uint64_t);
 };
 
 } // namespace aax

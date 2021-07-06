@@ -35,45 +35,6 @@
 #include <midi/stream.hpp>
 #include <midi/driver.hpp>
 
-/** XGMIDI defaults (reverb, chorus, distortion and EQ):
- *
- * param:       1   2   3   4   5   6   7   8   9   10  11  12  13  14  15  16
- *              --------------------------------------------------------------
- * HALL1        18  10  8   13  49  0   0   0   0   40  0   4   50  8   64  0
- * HALL2        25  10  28  6   46  0   0   0   0   40  13  3   74  7   64  0
- * ROOM1        5   10  16  4   49  0   0   0   0   40  5   3   64  8   64  0
- * ROOM2        12  10  5   4   38  0   0   0   0   40  0   4   50  8   64  0
- * ROOM3        9   10  47  5   36  0   0   0   0   40  0   4   60  8   64  0
- * STAGE1       19  10  16  7   54  0   0   0   0   40  0   3   64  6   64  0
- * STAGE2       11  10  16  7   51  0   0   0   0   40  2   2   64  6   64  0
- * PLATE        25  10  6   8   49  0   0   0   0   40  2   3   64  5   64  0
- * WHITEROOM    9   5   11  0   46  30  50  70  7   40  34  4   64  7   64  0
- * TUNNEL       48  6   19  0   44  33  52  70  16  40  20  4   64  7   64  0
- * CANYON       59  6   63  0   45  34  62  91  13  40  25  4   64  4   64  0
- * BASEMENT     3   6   3   0   34  26  29  59  15  40  32  4   64  8   64  0
- *
- * CHORUS1      6   54  77  106 0   28  64  46  64  64  46  64  10  0   0   0
- * CHORUS2      8   63  64  30  0   28  62  42  58  64  46  64  10  0   0   0
- * CHORUS3      4   44  64  110 0   28  64  46  66  64  46  64  10  0   0   0
- * CHORUS4      9   32  69  104 0   28  64  46  64  64  46  64  10  0   1   0
- * CELESTE1     12  32  64  0   0   28  64  46  64  127 40  68  10  0   0   0
- * CELESTE2     28  18  90  2   0   28  62  42  60  84  40  68  10  0   0   0
- * CELESTE3     4   63  44  2   0   28  64  46  68  127 40  68  10  0   0   0
- * CELESTE4     8   29  64  0   0   28  64  51  66  127 40  68  10  0   1   0
- * FLANGER1     14  14  104 2   0   28  64  46  64  96  40  64  10  4   0   0
- * FLANGER2     32  17  26  2   0   28  64  46  60  96  40  64  10  4   0   0
- * FLANGER3     4   109 109 2   0   28  64  46  64  127 40  64  10  4   0   0
- * PHASER1      8   111 74  104 0   28  64  46  64  64  6   1   64  0   0   0
- * PHASER2      8   111 74  104 0   28  64  46  64  64  5   1   4   0   0   0
- *
- * DISTORTION   40  20  72  53  48  0   43  74  10  127 120 0   0   0   0   0
- * OVERDRIVE    29  24  68  45  55  0   41  72  10  127 104 0   0   0   0   0
- *
- * 3-BAND EQ	70  34  60  10  70  28  46  0   0   127 0   0   0   0   0   0
- * 2-BAND EQ    28  70  46  70  0   0   0   0   0   127 34  64  10  0   0   0
- *
- */
-
 namespace aax
 {
 
@@ -147,6 +108,15 @@ static float XGMIDI_compressor_ratio_table[8] = {
  1.f, 1.5f, 2.f, 3.f, 5.f, 7.f, 10.f, 20.0f
 };
 
+static float XGMIDI_reverb_time[70] = {
+ 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.f, 1.1f, 1.2f, 1.3f, 1.4f, 1.5f,
+ 1.6f, 1.7f, 1.8f, 1.9f, 2.f, 2.1f, 2.2f, 2.3f, 2.4f, 2.5f, 2.6f, 2.7f, 2.8f,
+ 2.9f, 3.f, 3.1f, 3.2f, 3.3f, 3.4f, 3.5f, 3.6f, 3.7f, 3.8f, 3.9f, 4.f, 4.1f,
+ 4.2f, 4.3f, 4.4f, 4.5f, 4.6f, 4.7f, 4.8f, 4.9f, 5.f, 5.5f, 6.f, 6.5f, 7.f,
+ 7.5f, 8.f, 8.5f, 9.f, 9.5f, 10.f, 11.f, 12.f, 13.f, 14.f, 15.f, 16.f, 17.f,
+ 18.f, 19.f, 20.f, 25.f, 30.f
+};
+
 static float XGMIDI_reverb_dimensions[105] = {
  0.5f, 0.8f, 1.f, 1.3f, 1.5f, 1.8f, 2.f, 2.3f, 2.6f, 2.8f, 3.1f, 3.3f, 3.6f,
  3.9f, 4.1f, 4.4f, 4.6f, 4.9f, 5.2f, 5.4f, 5.7f, 5.9f, 6.2f, 6.5f, 6.7f, 7.f,
@@ -159,9 +129,119 @@ static float XGMIDI_reverb_dimensions[105] = {
  29.2f, 29.5f, 29.9f, 30.2f
 };
 
+typedef struct {
+    const char* name;
+    int param[16];
+} XGMIDI_effect_t;
+
+#define XGMIDI_MAX_REVERB_TYPES		12
+static XGMIDI_effect_t XGMIDI_reverb_types[XGMIDI_MAX_REVERB_TYPES] = {
+ { "HALL1",    18, 10,  8, 13, 49,  0,  0,  0,  0, 40,  0, 4, 50, 8, 64, 0 },
+ { "HALL2",    25, 10, 28,  6, 46,  0,  0,  0,  0, 40, 13, 3, 74, 7, 64, 0 },
+ { "ROOM1",     5, 10, 16,  4, 49,  0,  0,  0,  0, 40,  5, 3, 64, 8, 64, 0 },
+ { "ROOM2",    12, 10,  5,  4, 38,  0,  0,  0,  0, 40,  0, 4, 50, 8, 64, 0 },
+ { "ROOM3",     9, 10, 47,  5, 36,  0,  0,  0,  0, 40,  0, 4, 60, 8, 64, 0 },
+ { "STAGE1",   19, 10, 16,  7, 54,  0,  0,  0,  0, 40,  0, 3, 64, 6, 64, 0 },
+ { "STAGE2",   11, 10, 16,  7, 51,  0,  0,  0,  0, 40,  2, 2, 64, 6, 64, 0 },
+ { "PLATE",    25, 10,  6,  8, 49,  0,  0,  0,  0, 40,  2, 3, 64, 5, 64, 0 },
+ { "WHITEROOM", 9,  5, 11,  0, 46, 30, 50, 70,  7, 40, 34, 4, 64, 7, 64, 0 },
+ { "TUNNEL",   48,  6, 19,  0, 44, 33, 52, 70, 16, 40, 20, 4, 64, 7, 64, 0 },
+ { "CANYON",   59,  6, 63,  0, 45, 34, 62, 91, 13, 40, 25, 4, 64, 4, 64, 0 },
+ { "BASEMENT",  3,  6,  3,  0, 34, 26, 29, 59, 15, 40, 32, 4, 64, 8, 64, 0 }
+};
+
+#define XGMIDI_MAX_CHORUS_TYPES		13
+static XGMIDI_effect_t XGMIDI_chorus_types[XGMIDI_MAX_CHORUS_TYPES] = {
+ { "CHORUS1",   6,  54,  77, 106, 0, 28, 64, 46, 64,  64, 46, 64, 10, 0, 0, 0 },
+ { "CHORUS2",   8,  63,  64,  30, 0, 28, 62, 42, 58,  64, 46, 64, 10, 0, 0, 0 },
+ { "CHORUS3",   4,  44,  64, 110, 0, 28, 64, 46, 66,  64, 46, 64, 10, 0, 0, 0 },
+ { "CHORUS4",   9,  32,  69, 104, 0, 28, 64, 46, 64,  64, 46, 64, 10, 0, 1, 0 },
+ { "CELESTE1", 12,  32,  64,   0, 0, 28, 64, 46, 64, 127, 40, 68, 10, 0, 0, 0 },
+ { "CELESTE2", 28,  18,  90,   2, 0, 28, 62, 42, 60,  84, 40, 68, 10, 0, 0, 0 },
+ { "CELESTE3",  4,  63,  44,   2, 0, 28, 64, 46, 68, 127, 40, 68, 10, 0, 0, 0 },
+ { "CELESTE4",  8,  29,  64,   0, 0, 28, 64, 51, 66, 127, 40, 68, 10, 0, 1, 0 },
+ { "FLANGER1", 14,  14, 104,   2, 0, 28, 64, 46, 64,  96, 40, 64, 10, 4, 0, 0 },
+ { "FLANGER2", 32,  17,  26,   2, 0, 28, 64, 46, 60,  96, 40, 64, 10, 4, 0, 0 },
+ { "FLANGER3",  4, 109, 109,   2, 0, 28, 64, 46, 64, 127, 40, 64, 10, 4, 0, 0 },
+ { "PHASER1",   8, 111,  74, 104, 0, 28, 64, 46, 64,  64,  6,  1, 64, 0, 0, 0 },
+ { "PHASER2",   8, 111,  74, 104, 0, 28, 64, 46, 64,  64,  5,  1,  4, 0, 0, 0 }
+};
+
+#define XGMIDI_MAX_DISTORTION_TYPES	2
+static XGMIDI_effect_t XGMIDI_distortion_types[XGMIDI_MAX_DISTORTION_TYPES] = {
+ { "DISTORTION", 40, 20, 72, 53, 48, 0, 43, 74, 10, 127, 120, 0, 0, 0, 0, 0 },
+ { "OVERDRIVE",  29, 24, 68, 45, 55, 0, 41, 72, 10, 127, 104, 0, 0, 0, 0, 0 }
+};
+
+#define XGMIDI_MAX_EQ_TYPES		2
+static XGMIDI_effect_t XGMIDI_EQ_types[XGMIDI_MAX_EQ_TYPES] = {
+ { "3-BAND EQ", 70, 34, 60, 10, 70, 28, 46, 0, 0, 127,  0,  0, 0,  0,  0,  0 },
+ { "2-BAND EQ", 28, 70, 46, 70,  0,  0,  0, 0, 0, 127, 34, 64, 10, 0,  0,  0 }
+};
+
 }
 
 using namespace aax;
+
+void
+MIDIStream::display_XG_data(uint32_t size, uint8_t type, std::string &text)
+{
+    if (size > 6)
+    {
+        midi.set_lyrics(true);
+        size_t len = text.size();
+        switch(type)
+        {
+        case 6:	// center text
+            if (len > 13) {
+                size_t pos = text.find("  ");
+                size_t size = (pos != std::string::npos) ? pos : 13;
+                std::string line1 = text.substr(0, size);
+                int padlen1 = (13 - line1.size()) / 2;
+                MESSAGE("Display: %*s%s%*s",
+                          padlen1, "", line1.c_str(), padlen1, "");
+
+                std::string line2 = text.substr(13);
+                int padlen2 = (13 - line2.size()) / 2;
+                MESSAGE(" - %*s%s%*s\r",
+                          padlen2, "", line2.c_str(), padlen2, "");
+            } else {
+                int padlen1 = (13 - len) / 2;
+                MESSAGE("Display: %*s%s%*s",
+                          padlen1, "", text.c_str(), padlen1, "");
+                MESSAGE("%-19s\r", "");
+            }
+            break;
+        case 16:
+        case 17:
+        if (len > 16) {
+                std::string line1 = text.substr(0, 16);
+                std::string line2 = text.substr(16);
+                MESSAGE("Display: %-16s - %-16s\r",
+                         line1.c_str(), line2.c_str());
+            } else {
+                MESSAGE("Display: %-16s - %-16s\r", "", text.c_str());
+            }
+            break;
+        default:
+            if (len > 16) {
+                std::string line1 = text.substr(0, 16);
+                std::string line2 = text.substr(16);
+                MESSAGE("Display: %-16s - %-16s\r",
+                         line1.c_str(), line2.c_str());
+            } else {
+                MESSAGE("Display: %-16s%-19s\r", text.c_str(), "");
+            }
+            break;
+        }
+        FLUSH();
+    }
+    else
+    {
+         MESSAGE("Display: %-16s   %-16s\r", "", "");
+        midi.set_lyrics(false);
+    }
+}
 
 bool MIDIStream::process_XG_sysex(uint64_t size)
 {
@@ -234,22 +314,22 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM2:
-                        midi.set_reverb("reverb/room-medium");
+                        midi.set_reverb("reverb/room-large");
                         INFO("Switching to Medium Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM3:
-                        midi.set_reverb("reverb/room-large");
+                        midi.set_reverb("reverb/room-medium");
                         INFO("Switching to Large Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_STAGE1:
-                       midi.set_reverb("reverb/concerthall");
+                       midi.set_reverb("reverb/stage-large");
                        INFO("Switching to Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_STAGE2:
-                       midi.set_reverb("reverb/concerthall-large");
+                       midi.set_reverb("reverb/stage-small");
                        INFO("Switching to Large Stage reveberation");
                         rv = true;
                        break;
@@ -264,17 +344,17 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         rv = true;
                        break;
                     case XGMIDI_REVERB_TUNNEL:
-                       midi.set_reverb("reverb/room-empty");
+                       midi.set_reverb("reverb/tunnel");
                        INFO("Switching to Tunnel reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_CANYON:
-                       midi.set_reverb("reverb/arena");
+                       midi.set_reverb("reverb/canyon");
                        INFO("Switching to Canyon reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_BASEMENT:
-                       midi.set_reverb("reverb/room-small");
+                       midi.set_reverb("reverb/basement");
                        INFO("Switching to Basement reveberation");
                         rv = true;
                        break;
@@ -350,7 +430,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         INFO("Switching to symphony");
                         rv = true;
                         break;
-                    case XGMIDI_PHASING:  
+                    case XGMIDI_PHASING:
                         midi.set_chorus("chorus/phaser");
                         INFO("Switching to phasing");
                         rv = true;
@@ -495,7 +575,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 for (int i=offset()-offs; i<size; ++i) {
                     toUTF8(text, pull_byte());
                 }
-                MESSAGE("Display: %s\n", text.c_str());
+                display_XG_data(size, addr_low, text);
                 break;
             }
             default:
