@@ -134,39 +134,6 @@ typedef struct {
     int param[16];
 } XGMIDI_effect_t;
 
-#define XGMIDI_MAX_REVERB_TYPES		12
-static XGMIDI_effect_t XGMIDI_reverb_types[XGMIDI_MAX_REVERB_TYPES] = {
- { "HALL1",    18, 10,  8, 13, 49,  0,  0,  0,  0, 40,  0, 4, 50, 8, 64, 0 },
- { "HALL2",    25, 10, 28,  6, 46,  0,  0,  0,  0, 40, 13, 3, 74, 7, 64, 0 },
- { "ROOM1",     5, 10, 16,  4, 49,  0,  0,  0,  0, 40,  5, 3, 64, 8, 64, 0 },
- { "ROOM2",    12, 10,  5,  4, 38,  0,  0,  0,  0, 40,  0, 4, 50, 8, 64, 0 },
- { "ROOM3",     9, 10, 47,  5, 36,  0,  0,  0,  0, 40,  0, 4, 60, 8, 64, 0 },
- { "STAGE1",   19, 10, 16,  7, 54,  0,  0,  0,  0, 40,  0, 3, 64, 6, 64, 0 },
- { "STAGE2",   11, 10, 16,  7, 51,  0,  0,  0,  0, 40,  2, 2, 64, 6, 64, 0 },
- { "PLATE",    25, 10,  6,  8, 49,  0,  0,  0,  0, 40,  2, 3, 64, 5, 64, 0 },
- { "WHITEROOM", 9,  5, 11,  0, 46, 30, 50, 70,  7, 40, 34, 4, 64, 7, 64, 0 },
- { "TUNNEL",   48,  6, 19,  0, 44, 33, 52, 70, 16, 40, 20, 4, 64, 7, 64, 0 },
- { "CANYON",   59,  6, 63,  0, 45, 34, 62, 91, 13, 40, 25, 4, 64, 4, 64, 0 },
- { "BASEMENT",  3,  6,  3,  0, 34, 26, 29, 59, 15, 40, 32, 4, 64, 8, 64, 0 }
-};
-
-#define XGMIDI_MAX_CHORUS_TYPES		13
-static XGMIDI_effect_t XGMIDI_chorus_types[XGMIDI_MAX_CHORUS_TYPES] = {
- { "CHORUS1",   6,  54,  77, 106, 0, 28, 64, 46, 64,  64, 46, 64, 10, 0, 0, 0 },
- { "CHORUS2",   8,  63,  64,  30, 0, 28, 62, 42, 58,  64, 46, 64, 10, 0, 0, 0 },
- { "CHORUS3",   4,  44,  64, 110, 0, 28, 64, 46, 66,  64, 46, 64, 10, 0, 0, 0 },
- { "CHORUS4",   9,  32,  69, 104, 0, 28, 64, 46, 64,  64, 46, 64, 10, 0, 1, 0 },
- { "CELESTE1", 12,  32,  64,   0, 0, 28, 64, 46, 64, 127, 40, 68, 10, 0, 0, 0 },
- { "CELESTE2", 28,  18,  90,   2, 0, 28, 62, 42, 60,  84, 40, 68, 10, 0, 0, 0 },
- { "CELESTE3",  4,  63,  44,   2, 0, 28, 64, 46, 68, 127, 40, 68, 10, 0, 0, 0 },
- { "CELESTE4",  8,  29,  64,   0, 0, 28, 64, 51, 66, 127, 40, 68, 10, 0, 1, 0 },
- { "FLANGER1", 14,  14, 104,   2, 0, 28, 64, 46, 64,  96, 40, 64, 10, 4, 0, 0 },
- { "FLANGER2", 32,  17,  26,   2, 0, 28, 64, 46, 60,  96, 40, 64, 10, 4, 0, 0 },
- { "FLANGER3",  4, 109, 109,   2, 0, 28, 64, 46, 64, 127, 40, 64, 10, 4, 0, 0 },
- { "PHASER1",   8, 111,  74, 104, 0, 28, 64, 46, 64,  64,  6,  1, 64, 0, 0, 0 },
- { "PHASER2",   8, 111,  74, 104, 0, 28, 64, 46, 64,  64,  5,  1,  4, 0, 0, 0 }
-};
-
 #define XGMIDI_MAX_DISTORTION_TYPES	2
 static XGMIDI_effect_t XGMIDI_distortion_types[XGMIDI_MAX_DISTORTION_TYPES] = {
  { "DISTORTION", 40, 20, 72, 53, 48, 0, 43, 74, 10, 127, 120, 0, 0, 0, 0, 0 },
@@ -272,62 +239,62 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     switch (type)
                     {
                     case XGMIDI_REVERB_HALL1:
-                        midi.set_reverb("reverb/concerthall");
+                        midi.set_reverb("reverb/XG/hall1");
                         INFO("Switching to Concert Hall Reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_HALL2:
-                        midi.set_reverb("reverb/concerthall-large");
+                        midi.set_reverb("reverb/XG/hall2");
                         INFO("Switching to Large Concert Hall reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM1:
-                        midi.set_reverb("reverb/room-small");
-                        INFO("Switching to Small Room reveberation");
-                        rv = true;
-                        break;
-                    case XGMIDI_REVERB_ROOM2:
-                        midi.set_reverb("reverb/room-large");
+                        midi.set_reverb("reverb/XG/room1");
                         INFO("Switching to Medium Room reveberation");
                         rv = true;
                         break;
+                    case XGMIDI_REVERB_ROOM2:
+                        midi.set_reverb("reverb/XG/room2");
+                        INFO("Switching to Small Room reveberation");
+                        rv = true;
+                        break;
                     case XGMIDI_REVERB_ROOM3:
-                        midi.set_reverb("reverb/room-medium");
+                        midi.set_reverb("reverb/XG/room3");
                         INFO("Switching to Large Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_STAGE1:
-                       midi.set_reverb("reverb/stage-large");
-                       INFO("Switching to Stage reveberation");
+                       midi.set_reverb("reverb/XG/stage1");
+                       INFO("Switching to Small Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_STAGE2:
-                       midi.set_reverb("reverb/stage-small");
+                       midi.set_reverb("reverb/XG/stage2");
                        INFO("Switching to Large Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_PLATE:
-                        midi.set_reverb("reverb/plate");
+                        midi.set_reverb("reverb/XG/plate");
                         INFO("Switching to Plate reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_WHITE_ROOM:
-                       midi.set_reverb("reverb/bathroom");
+                       midi.set_reverb("reverb/XG/whiteroom");
                        INFO("Switching to White Room reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_TUNNEL:
-                       midi.set_reverb("reverb/tunnel");
+                       midi.set_reverb("reverb/XG/tunnel");
                        INFO("Switching to Tunnel reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_CANYON:
-                       midi.set_reverb("reverb/canyon");
+                       midi.set_reverb("reverb/XG/canyon");
                        INFO("Switching to Canyon reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_BASEMENT:
-                       midi.set_reverb("reverb/basement");
+                       midi.set_reverb("reverb/XG/basement");
                        INFO("Switching to Basement reveberation");
                         rv = true;
                        break;
