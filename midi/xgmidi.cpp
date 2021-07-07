@@ -184,55 +184,28 @@ static XGMIDI_effect_t XGMIDI_EQ_types[XGMIDI_MAX_EQ_TYPES] = {
 using namespace aax;
 
 void
-MIDIStream::display_XG_data(uint32_t size, uint8_t type, std::string &text)
+MIDIStream::display_XG_data(uint32_t size, uint8_t padding, std::string &text)
 {
     if (size > 6)
     {
         midi.set_lyrics(true);
-        size_t len = text.size();
-        switch(type)
-        {
-        case 6:	// center text
-            if (len > 13) {
-                size_t pos = text.find("  ");
-                size_t size = (pos != std::string::npos) ? pos : 13;
-                std::string line1 = text.substr(0, size);
-                int padlen1 = (13 - line1.size()) / 2;
-                MESSAGE("Display: %*s%s%*s",
-                          padlen1, "", line1.c_str(), padlen1, "");
 
-                std::string line2 = text.substr(13);
-                int padlen2 = (13 - line2.size()) / 2;
-                MESSAGE(" - %*s%s%*s\r",
-                          padlen2, "", line2.c_str(), padlen2, "");
-            } else {
-                int padlen1 = (13 - len) / 2;
-                MESSAGE("Display: %*s%s%*s",
-                          padlen1, "", text.c_str(), padlen1, "");
-                MESSAGE("%-19s\r", "");
-            }
-            break;
-        case 16:
-        case 17:
-        if (len > 16) {
-                std::string line1 = text.substr(0, 16);
-                std::string line2 = text.substr(16);
-                MESSAGE("Display: %-16s - %-16s\r",
-                         line1.c_str(), line2.c_str());
-            } else {
-                MESSAGE("Display: %-16s - %-16s\r", "", text.c_str());
-            }
-            break;
-        default:
-            if (len > 16) {
-                std::string line1 = text.substr(0, 16);
-                std::string line2 = text.substr(16);
-                MESSAGE("Display: %-16s - %-16s\r",
-                         line1.c_str(), line2.c_str());
-            } else {
-                MESSAGE("Display: %-16s%-19s\r", text.c_str(), "");
-            }
-            break;
+        text.insert(0, padding, ' ');
+
+        size_t len = text.size();
+        if (len > 32) {
+            text = text.substr(0, 32);
+        }
+
+        len = text.size();
+        if (len > 16)
+        {
+            std::string line1 = text.substr(0, 16);
+            std::string line2 = text.substr(16);
+            MESSAGE("Display: %-16s - %-16s\r",
+                     line1.c_str(), line2.c_str());
+        } else {
+            MESSAGE("Display: %-16s%-19s\r", text.c_str(), "");
         }
         FLUSH();
     }
