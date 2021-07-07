@@ -739,13 +739,13 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     LOG(99, "LOG: Unsupported XG MW Amplitude Control\n");
                     break;
                 case XGMIDI_MW_LFO_PMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG MW LFO PMOD Depth\n");
+                    LOG(99, "LOG: Unsupported XG MW LFO Phase Modulation Depth\n");
                     break;
                 case XGMIDI_MW_LFO_FMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG MW LFO FMOD Depth\n");
+                    LOG(99, "LOG: Unsupported XG MW LFO Frequency Modulation Depth\n");
                     break;
                 case XGMIDI_MW_LFO_AMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG MW LFO AMOD depth\n");
+                    LOG(99, "LOG: Unsupported XG MW LFO Amplitude Modulation Depth\n");
                     break;
                 case XGMIDI_BEND_PITCH_CONTROL: // // -24 - +24 semitones
                     LOG(99, "LOG: Unsupported XG Bend Pitch Control\n");
@@ -757,13 +757,13 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     LOG(99, "LOG: Unsupported XG Bend Amplitude Control\n");
                     break;
                 case XGMIDI_BEND_LFO_PMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG Bend LFO PMOD Depth\n");
+                    LOG(99, "LOG: Unsupported XG Bend LFO Phase Modulation Depth\n");
                     break;
                 case XGMIDI_BEND_LFO_FMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG Bend LFO FMOD Depth\n");
+                    LOG(99, "LOG: Unsupported XG Bend LFO Frequency Modulation  Depth\n");
                     break;
                 case XGMIDI_BEND_LFO_AMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG bend LFO AMOD Depth\n");
+                    LOG(99, "LOG: Unsupported XG bend LFO Amplitude Modulation Depth\n");
                     break;
                 default:
                     LOG(99, "LOG: Unsupported XG multi part type: 0x%x (%d)\n",
