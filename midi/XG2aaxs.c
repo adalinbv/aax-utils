@@ -149,6 +149,12 @@ static XGMIDI_effect_t XGMIDI_chorus_types[XGMIDI_MAX_CHORUS_TYPES] = {
  { "flanger1", { 14,  14, 104,   2, 0, 28, 64, 46, 64,  96, 40, 64, 10, 4, 0, 0 } },
  { "flanger2", { 32,  17,  26,   2, 0, 28, 64, 46, 60,  96, 40, 64, 10, 4, 0, 0 } },
  { "flanger3", {  4, 109, 109,   2, 0, 28, 64, 46, 64, 127, 40, 64, 10, 4, 0, 0 } },
+  { "symphonic",{ 12,  25,  16,   0, 0, 28, 64, 46, 64, 127, 46, 64, 10, 0, 0, 0 } },
+ { "rotary-speaker" , { 81, 35, 0, 0, 0, 24, 60, 45, 54, 127, 33, 52, 30, 0, 0, 0 } }
+};
+
+#define XGMIDI_MAX_PHASING_TYPES        2
+static XGMIDI_effect_t XGMIDI_phasing_types[XGMIDI_MAX_PHASING_TYPES] = {
  { "phaser1",  {  8, 111,  74, 104, 0, 28, 64, 46, 64,  64,  6,  1, 64, 0, 0, 0 } },
  { "phaser2",  {  8, 111,  74, 104, 0, 28, 64, 46, 64,  64,  5,  1,  4, 0, 0, 0 } }
 };
@@ -283,21 +289,21 @@ int write_chorus()
          int dt = type->param[3];	// Delay Offset
          int fl = type->param[5];	// EQ Low Frequency
          int fh = type->param[7];	// EQ High frequency
-         int dw = type->param[10];	// Dry/Wet
+         int dw = type->param[9];	// Dry/Wet
 
          float lfo_frequency = XGMIDI_LFO_frequency_table[lf];
-         float lfo_offset = XGMIDI_delay_offset_table[dt];
-         float lfo_depth = (pd - 1)/127.0f;
+         float lfo_offset = XGMIDI_delay_offset_table[dt]/50.0f;
+         float lfo_depth = pd/127.0f;
          float gain = (dw - 1)/127.0f;
 
          float cutoff_freq_low = XGMIDI_EQ_frequency_table[fl];
          float cutoff_freq_high = XGMIDI_EQ_frequency_table[fh];
-         float feedback = (fb - 1)/127.0f;
+         float feedback = _MAX(fb - 64, 0)/127.0f;
 
          fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
          fprintf(stream, "<aeonwave>\n\n");
          fprintf(stream, " <audioframe>\n");
-         fprintf(stream, "  <effect type=\"chorus\" src=\"inverse\">\n");
+         fprintf(stream, "  <effect type=\"chorus\" src=\"sine\">\n");
          fprintf(stream, "   <slot n=\"0\">\n");
          fprintf(stream, "    <param n=\"0\">%5.3f</param>\n", gain);
          fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", lfo_frequency);
@@ -314,7 +320,81 @@ int write_chorus()
          fprintf(stream, " </audioframe>\n\n");
 
          fprintf(stream, " <mixer>\n");
-         fprintf(stream, "  <effect type=\"chorus\" src=\"inverse\">\n");
+         fprintf(stream, "  <effect type=\"chorus\" src=\"sine\">\n");
+         fprintf(stream, "   <slot n=\"0\">\n");
+         fprintf(stream, "    <param n=\"0\">%5.3f</param>\n", gain);
+         fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", lfo_frequency);
+         fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", lfo_depth);
+         fprintf(stream, "    <param n=\"3\">%5.3f</param>\n", lfo_offset);
+         fprintf(stream, "   </slot>\n");
+         fprintf(stream, "   <slot n=\"1\">\n");
+         fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff_freq_low);
+         fprintf(stream, "    <param n=\"1\">%5.1f</param>\n", cutoff_freq_high);
+         fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", feedback);
+         fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
+         fprintf(stream, "   </slot>\n");
+         fprintf(stream, "  </effect>\n");
+         fprintf(stream, " </mixer>\n\n");
+         fprintf(stream, "</aeonwave>\n");
+      }
+      else printf(" Failed to open for writing: %s\n", strerror(errno));
+   }
+
+   return 0;
+}
+
+int write_phasing()
+{
+   for (int i=0; i<XGMIDI_MAX_PHASING_TYPES; ++i)
+   {
+      char fname[256];
+
+      XGMIDI_effect_t *type = &XGMIDI_phasing_types[i];
+
+      snprintf(fname, 255, "%s.aaxs", type->name);
+      printf("Generating phasing: %s\n", fname);
+
+      FILE *stream = fopen(fname, "w+");
+      if (stream)
+      {
+         int lf = type->param[0];	// LFO Frequency
+         int pd = type->param[1];	// LFO Depth
+         int fb = type->param[3];	// Feedback Level
+         int dt = type->param[2];	// Delay Offset
+         int fl = type->param[5];	// EQ Low Frequency
+         int fh = type->param[7];	// EQ High frequency
+         int dw = type->param[9];	// Dry/Wet
+
+         float lfo_frequency = XGMIDI_LFO_frequency_table[lf];
+         float lfo_offset = dt/127.0f;
+         float lfo_depth = pd/127.0f - lfo_offset;
+         float gain = (dw - 1)/127.0f;
+
+         float cutoff_freq_low = XGMIDI_EQ_frequency_table[fl];
+         float cutoff_freq_high = XGMIDI_EQ_frequency_table[fh];
+         float feedback = _MAX(fb - 64, 0)/127.0f;
+
+         fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
+         fprintf(stream, "<aeonwave>\n\n");
+         fprintf(stream, " <audioframe>\n");
+         fprintf(stream, "  <effect type=\"phasing\" src=\"sine\">\n");
+         fprintf(stream, "   <slot n=\"0\">\n");
+         fprintf(stream, "    <param n=\"0\">%5.3f</param>\n", gain);
+         fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", lfo_frequency);
+         fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", lfo_depth);
+         fprintf(stream, "    <param n=\"3\">%5.3f</param>\n", lfo_offset);
+         fprintf(stream, "   </slot>\n");
+         fprintf(stream, "   <slot n=\"1\">\n");
+         fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff_freq_low);
+         fprintf(stream, "    <param n=\"1\">%5.1f</param>\n", cutoff_freq_high);
+         fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", feedback);
+         fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
+         fprintf(stream, "   </slot>\n");
+         fprintf(stream, "  </effect>\n");
+         fprintf(stream, " </audioframe>\n\n");
+
+         fprintf(stream, " <mixer>\n");
+         fprintf(stream, "  <effect type=\"phasing\" src=\"sine\">\n");
          fprintf(stream, "   <slot n=\"0\">\n");
          fprintf(stream, "    <param n=\"0\">%5.3f</param>\n", gain);
          fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", lfo_frequency);
@@ -341,6 +421,7 @@ int main()
 {
    write_reverb();
    write_chorus();
+   write_phasing();
 
    return 0;
 }
