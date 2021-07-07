@@ -338,6 +338,37 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     }
                     break;
                 }
+                case XGMIDI_REVERB_PARAMETER1:
+                case XGMIDI_REVERB_PARAMETER2:
+                case XGMIDI_REVERB_PARAMETER3:
+                case XGMIDI_REVERB_PARAMETER4:
+                case XGMIDI_REVERB_PARAMETER5:
+                case XGMIDI_REVERB_PARAMETER6:
+                case XGMIDI_REVERB_PARAMETER7:
+                case XGMIDI_REVERB_PARAMETER8:
+                case XGMIDI_REVERB_PARAMETER9:
+                case XGMIDI_REVERB_PARAMETER10:
+                case XGMIDI_REVERB_PARAMETER11:
+                case XGMIDI_REVERB_PARAMETER12:
+                case XGMIDI_REVERB_PARAMETER13:
+                case XGMIDI_REVERB_PARAMETER14:
+                case XGMIDI_REVERB_PARAMETER15:
+                case XGMIDI_REVERB_PARAMETER16:
+                {
+                    uint8_t param = addr - XGMIDI_REVERB_TYPE;
+                    if (param > XGMIDI_REVERB_PARAMETER10) {
+                        param -= (XGMIDI_REVERB_PARAMETER1 - XGMIDI_REVERB_PARAMETER10);
+                    }
+                    LOG(99, "LOG: Unsupported XG Reverb Parameter %d\n",
+                            param);
+                    break;
+                }
+                case XGMIDI_REVERB_RETURN:
+                    LOG(99, "LOG: Unsupported XG Reverb Return\n");
+                    break;
+                case XGMIDI_REVERB_PAN:
+                    LOG(99, "LOG: Unsupported XG Reverb Pan\n");
+                    break;
                 case XGMIDI_CHORUS_TYPE:
                 {
                     uint16_t type = pull_byte() << 8 | pull_byte();
@@ -415,12 +446,176 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     }
                     break;
                 }
+                case XGMIDI_CHORUS_PARAMETER1:
+                case XGMIDI_CHORUS_PARAMETER2:
+                case XGMIDI_CHORUS_PARAMETER3:
+                case XGMIDI_CHORUS_PARAMETER4:
+                case XGMIDI_CHORUS_PARAMETER5:
+                case XGMIDI_CHORUS_PARAMETER6:
+                case XGMIDI_CHORUS_PARAMETER7:
+                case XGMIDI_CHORUS_PARAMETER8:
+                case XGMIDI_CHORUS_PARAMETER9:
+                case XGMIDI_CHORUS_PARAMETER10:
+                case XGMIDI_CHORUS_PARAMETER11:
+                case XGMIDI_CHORUS_PARAMETER12:
+                case XGMIDI_CHORUS_PARAMETER13:
+                case XGMIDI_CHORUS_PARAMETER14:
+                case XGMIDI_CHORUS_PARAMETER15:
+                case XGMIDI_CHORUS_PARAMETER16:
+                {
+                    uint8_t param = addr - XGMIDI_CHORUS_TYPE;
+                    if (param > XGMIDI_CHORUS_PARAMETER10) {
+                        param -= (XGMIDI_CHORUS_PARAMETER11 - XGMIDI_CHORUS_PARAMETER10);
+                    }
+                    LOG(99, "LOG: Unsupported XG Chorus Parameter %d\n",
+                            param);
+                    break;
+                }
+                case XGMIDI_CHORUS_RETURN:
+                    LOG(99, "LOG: Unsupported XG Chorus Return\n");
+                    break;
+                case XGMIDI_CHORUS_PAN:
+                    LOG(99, "LOG: Unsupported XG Chorus Pan\n");
+                    break;
+                case XGMIDI_CHORUS_SEND_TO_REVERB:
+                    LOG(99, "LOG: Unsupported XG Chorus Send to Reverb\n");
+                    break;
                 case XGMIDI_VARIATION_TYPE:
                 {
                     uint16_t type = pull_byte() << 8 | pull_byte();
-                    LOG(99, "LOG: Unsupported XG variation type: %d\n", type);
+                    switch (type)
+                    {
+                    case XGMIDI_DELAY_LCR:
+                        LOG(99, "LOG: Unsupported XG variation type: Delay L/C/R\n");
+                        break;
+                    case XGMIDI_DELAY_LR:
+                        LOG(99, "LOG: Unsupported XG variation type: Delay L/R\n");
+                        break;
+                    case XGMIDI_ECHO:
+                        LOG(99, "LOG: Unsupported XG variation type: Echo\n");
+                        break;
+                    case XGMIDI_X_DELAY:
+                        LOG(99, "LOG: Unsupported XG variation type: Cross Delay\n");
+                        break;
+                    case XGMIDI_ER1:
+                        LOG(99, "LOG: Unsupported XG variation type: ER1\n");
+                        break;
+                    case XGMIDI_ER2:
+                        LOG(99, "LOG: Unsupported XG variation type: ER2\n");
+                        break;
+                    case XGMIDI_GATED_REVERB:
+                        LOG(99, "LOG: Unsupported XG variation type: gated Reverb\n");
+                        break;
+                    case XGMIDI_REVERSE_GATE:
+                        LOG(99, "LOG: Unsupported XG variation type: Reverse Gate\n");
+                        break;
+                    case XGMIDI_THRU:
+                        LOG(99, "LOG: Unsupported XG variation type: Thru\n");
+                        break;
+                    case XGMIDI_ROTARY_SPEAKER:
+                        LOG(99, "LOG: Unsupported XG variation type: Rotary Speaker\n");
+                        break;
+                    case XGMIDI_TREMOLO:
+                        LOG(99, "LOG: Unsupported XG variation type: Tremolo\n");
+                        break;
+                    case XGMIDI_AUTO_PAN:
+                        LOG(99, "LOG: Unsupported XG variation type: Auto Pan\n");
+                        break;
+                    case XGMIDI_DISTORTION:
+                        LOG(99, "LOG: Unsupported XG variation type: Distortion\n");
+                        break;
+                    case XGMIDI_OVER_DRIVE:
+                        LOG(99, "LOG: Unsupported XG variation type: Over Drive\n");
+                        break;
+                    case XGMIDI_AMP_SIMULATOR:
+                        LOG(99, "LOG: Unsupported XG variation type: Amp Simulator\n");
+                        break;
+                    case XGMIDI_3_BAND_EQ:
+                        LOG(99, "LOG: Unsupported XG variation type: 3 band EQ\n");
+                        break;
+                    case XGMIDI_2_BAND_EQ:
+                        LOG(99, "LOG: Unsupported XG variation type: 2 band EQ\n");
+                        break;
+                    case XGMIDI_AUTO_WAH:
+                        LOG(99, "LOG: Unsupported XG variation type: Auto Wah\n");
+                        break;
+                    case XGMIDI_PITCH_CHANGE:
+                        LOG(99, "LOG: Unsupported XG variation type: Pitch Change\n");
+                        break;
+                    case XGMIDI_AURAL_ENHANCER:
+                        LOG(99, "LOG: Unsupported XG variation type: Aural Enhancer\n");
+                        break;
+                    case XGMIDI_TOUCH_WAH:
+                        LOG(99, "LOG: Unsupported XG variation type: Touch Wah\n");
+                        break;
+                    case XGMIDI_TOUCH_WAH_DIST:
+                        LOG(99, "LOG: Unsupported XG variation type: Touch Wah and Distortion\n");
+                        break;
+                    case XGMIDI_COMPRESSOR:
+                        LOG(99, "LOG: Unsupported XG variation type: Compressor\n");
+                        break;
+                    case XGMIDI_NOISE_GATE:
+                        LOG(99, "LOG: Unsupported XG variation type: Noise Gate\n");
+                        break;
+                    case XGMIDI_VOICE_CANCEL:
+                        LOG(99, "LOG: Unsupported XG variation type: Voice Cancel\n");
+                        break;
+                    default:
+                        LOG(99, "LOG: Unsupported XG variation type: 0x%x (%d)\n",
+                                type, type);
+                        break;
+                    }
                     break;
                 }
+                case XGMIDI_VARIATION_PARAMETER1:
+                case XGMIDI_VARIATION_PARAMETER2:
+                case XGMIDI_VARIATION_PARAMETER3:
+                case XGMIDI_VARIATION_PARAMETER4:
+                case XGMIDI_VARIATION_PARAMETER5:
+                case XGMIDI_VARIATION_PARAMETER6:
+                case XGMIDI_VARIATION_PARAMETER7:
+                case XGMIDI_VARIATION_PARAMETER8:
+                case XGMIDI_VARIATION_PARAMETER9:
+                case XGMIDI_VARIATION_PARAMETER10:
+                {
+                    uint8_t param = (addr - XGMIDI_VARIATION_TYPE )/2;
+                    LOG(99, "LOG: Unsupported XG Variation Parameter %d\n",
+                            param);
+                    break;
+                }
+                case XGMIDI_VARIATION_RETURN:
+                    LOG(99, "LOG: Unsupported XG Variation Return\n");
+                    break;
+                case XGMIDI_VARIATION_PAN:
+                    LOG(99, "LOG: Unsupported XG Variation Pan\n");
+                    break;
+                case XGMIDI_VARIATION_SEND_TO_REVERB:
+                    LOG(99, "LOG: Unsupported XG Variation Send to Reverb\n");
+                    break;
+                case XGMIDI_VARIATION_SEND_TO_CHORUS:
+                    LOG(99, "LOG: Unsupported XG Variation Send to Chorus\n");
+                    break;
+                case XGMIDI_VARIATION_CONNECTION:
+                    LOG(99, "LOG: Unsupported XG Variation Connection\n");
+                    break;
+                case XGMIDI_VARIATION_PART_NUMBER:
+                    LOG(99, "LOG: Unsupported XG Variation Part Number\n");
+                    break;
+                case XGMIDI_MW_VARIATION_CONTROL_DEPTH:
+                    LOG(99, "LOG: Unsupported XG Variation MW Contgrol Depth\n");
+                    break;
+                case XGMIDI_BEND_VARIATION_CONTROL_DEPTH:
+                    LOG(99, "LOG: Unsupported XG Variation Bend Control Depth\n");
+                    break;
+                case XGMIDI_CAT_VARIATION_CONTROL_DEPTH:
+                    LOG(99, "LOG: Unsupported XG Variation Cat Control Depth\n");
+                    break;
+                case XGMIDI_AC1_VARIATION_CONTROL_DEPTH:
+                    LOG(99, "LOG: Unsupported XG Variation AC1 Control Depth\n");
+                    break;
+                case XGMIDI_AC2_VARIATION_CONTROL_DEPTH:
+                    LOG(99, "LOG: Unsupported XG Variation AC2 Control Depth\n");
+                    break;
                 default:
                     LOG(99, "LOG: Unsupported XG Effect1 address: 0x%x 0x%x (%d %d)\n",
                             addr_mid, addr_low, addr_mid, addr_low);
@@ -448,6 +643,9 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     } catch(const std::invalid_argument& e) {
                         ERROR("Error: " << e.what());
                     }
+                    break;
+                case XGMIDI_REV_CHANNEL:
+                    LOG(99, "LOG: Unsupported XG Rev. Channel\n");
                     break;
                 case XGMIDI_MONO_POLY_MODE: // 0: mono, 1: poly
                 {
@@ -508,25 +706,65 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                      LOG(99, "LOG: Unsupported XG Variation Send\n");
                      break;
                 case XGMIDI_VIBRATO_RATE: // -64 - +63
+                    LOG(99, "LOG: Unsupported XG Vibrato Rate\n");
+                    break;
                 case XGMIDI_VIBRATO_DEPTH: // -64 - +63
+                    LOG(99, "LOG: Unsupported XG Vibrato Depth\n");
+                    break;
                 case XGMIDI_VIBRATO_DELAY: // -64 - +63
+                    LOG(99, "LOG: Unsupported XG Vibrato Delay\n");
+                    break;
                 case XGMIDI_FILTER_CUTOFF_FREQUENCY: // -64 - +63
+                    LOG(99, "LOG: Unsupported XG Filter Cutoff Frequency\n");
+                    break;
                 case XGMIDI_FILTER_RESONANCE: // -64 - +63
+                    LOG(99, "LOG: Unsupported XG Filter Resonance\n");
+                    break;
                 case XGMIDI_EG_ATTACK_TIME: // -64 - +63
+                    LOG(99, "LOG: Unsupported XG EG Attack Time\n");
+                    break;
                 case XGMIDI_EG_DECAY_TIME: // -64 - +63
+                    LOG(99, "LOG: Unsupported XG EG Decay Time\n");
+                    break;
                 case XGMIDI_EG_RELEASE_TIME: // -64 - +63
+                    LOG(99, "LOG: Unsupported XG EG Release Time\n");
+                    break;
                 case XGMIDI_MW_PITCH_CONTROL: // -24 - +24 semitones
+                    LOG(99, "LOG: Unsupported XG MW Pitch Control\n");
+                    break;
                 case XGMIDI_MW_FILTER_CONTROL: // -9600 - +9450 cents
+                    LOG(99, "LOG: Unsupported XG MW Filter Control\n");
+                    break;
                 case XGMIDI_MW_AMPLITUDE_CONTROL: // -100 - +100%
+                    LOG(99, "LOG: Unsupported XG MW Amplitude Control\n");
+                    break;
                 case XGMIDI_MW_LFO_PMOD_DEPTH: // 0 - 127
+                    LOG(99, "LOG: Unsupported XG MW LFO PMOD Depth\n");
+                    break;
                 case XGMIDI_MW_LFO_FMOD_DEPTH: // 0 - 127
+                    LOG(99, "LOG: Unsupported XG MW LFO FMOD Depth\n");
+                    break;
                 case XGMIDI_MW_LFO_AMOD_DEPTH: // 0 - 127
+                    LOG(99, "LOG: Unsupported XG MW LFO AMOD depth\n");
+                    break;
                 case XGMIDI_BEND_PITCH_CONTROL: // // -24 - +24 semitones
+                    LOG(99, "LOG: Unsupported XG Bend Pitch Control\n");
+                    break;
                 case XGMIDI_BEND_FILTER_CONTROL: // -9600 - +9450 cents
+                    LOG(99, "LOG: Unsupported XG Bend Filter Control\n");
+                    break;
                 case XGMIDI_BEND_AMPLITUDE_CONTROL: // -100 - +100%
+                    LOG(99, "LOG: Unsupported XG Bend Amplitude Control\n");
+                    break;
                 case XGMIDI_BEND_LFO_PMOD_DEPTH: // 0 - 127
+                    LOG(99, "LOG: Unsupported XG Bend LFO PMOD Depth\n");
+                    break;
                 case XGMIDI_BEND_LFO_FMOD_DEPTH: // 0 - 127
+                    LOG(99, "LOG: Unsupported XG Bend LFO FMOD Depth\n");
+                    break;
                 case XGMIDI_BEND_LFO_AMOD_DEPTH: // 0 - 127
+                    LOG(99, "LOG: Unsupported XG bend LFO AMOD Depth\n");
+                    break;
                 default:
                     LOG(99, "LOG: Unsupported XG multi part type: 0x%x (%d)\n",
                             addr_mid, addr_mid);
