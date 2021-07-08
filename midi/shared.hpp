@@ -77,6 +77,51 @@ enum {
     MIDI_MODE_MAX
 };
 
+/* GSMIDI */
+#define GSMIDI_DATA_REQUEST1					0x11
+#define GSMIDI_DATA_SET1					0x12
+
+/* parameter type */
+#define GSMIDI_SYSTEM						0x10
+
+#define GSMIDI_PARAMETER_CHANGE					0x40
+#define GSMIDI_MODEL_GS						0x42
+
+/* GS parameter map */
+#define GSMIDI_GS_RESET						0x007f
+#define GSMIDI_REVERB_TYPE					0x0130
+#define GSMIDI_CHORUS_TYPE					0x0138
+#define GSMIDI_EQUALIZER_TYPE					0x0200
+#define GSMIDI_MULTI_PART					0x1100
+#define GSMIDI_DRUM_PART9					0x1915
+#define GSMIDI_DRUM_PART11					0x1a15
+
+/* Reverb */
+#define GSMIDI_REVERB_ROOM1					0x00
+#define GSMIDI_REVERB_ROOM2					0x01
+#define GSMIDI_REVERB_ROOM3					0x02
+#define GSMIDI_REVERB_HALL1					0x03
+#define GSMIDI_REVERB_HALL2					0x04
+#define GSMIDI_REVERB_PLATE					0x05
+#define GSMIDI_REVERB_DELAY					0x06
+#define GSMIDI_REVERB_PAN_DELAY					0x07
+
+/* Chorus */
+#define GSMIDI_CHORUS1						0x00
+#define GSMIDI_CHORUS2						0x01
+#define GSMIDI_CHORUS3						0x02
+#define GSMIDI_CHORUS4						0x03
+#define GSMIDI_CHORUS_FEEDBACK					0x04
+#define GSMIDI_FLANGER						0x05
+#define GSMIDI_DELAY						0x06
+#define GSMIDI_DELAY_FEEDBACK					0x07
+
+/* EQ */
+#define GSMIDI_EQUALIZER_FREQUENCY_LOW				0x0201
+#define GSMIDI_EQUALIZER_GAIN_LOW
+#define GSMIDI_EQUALIZER_FREQUENCY_HIGH
+#define GSMIDI_EQUALIZER_GAIN_HIGH
+
 /* XGMIDI */
 /* categroy */
 #define XGMIDI_BULK_DUMP					0x00

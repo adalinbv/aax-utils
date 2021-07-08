@@ -786,7 +786,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             }
             default:
                 LOG(99, "LOG: Unsupported XG sysex effect type: 0x%x (%d)\n",
-                        type, type);
+                        addr_high, addr_high);
                 break;
             }
             break;

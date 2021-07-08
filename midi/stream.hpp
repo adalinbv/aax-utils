@@ -129,6 +129,8 @@ private:
     bool process_meta();
     bool process_sysex();
 
+    bool process_GS_sysex(uint64_t);
+
     void display_XG_data(uint32_t, uint8_t, std::string&);
     bool process_XG_sysex(uint64_t);
     uint8_t XG_part_no[32] = {

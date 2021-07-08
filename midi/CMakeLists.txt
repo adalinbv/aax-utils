@@ -1,9 +1,10 @@
 
 set( MIDI_OBJS
-     instrument.cpp
      driver.cpp
-     stream.cpp
      file.cpp
+     instrument.cpp
+     stream.cpp
+     gsmidi.cpp
      xgmidi.cpp
    )
 

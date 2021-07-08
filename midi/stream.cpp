@@ -761,61 +761,7 @@ bool MIDIStream::process_sysex()
     switch(byte)
     {
     case MIDI_SYSTEM_EXCLUSIVE_ROLAND:
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte != 0x10) break;
-
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte != 0x42) break;
-
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte != 0x12) break;
-
-        byte = pull_byte();
-        CSV(", %d", byte);
-        if (byte == 0x40)
-        {
-            byte = pull_byte();
-            CSV(", %d", byte);
-            switch(byte)
-            {
-            case 0x00:
-                byte = pull_byte();
-                CSV(", %d", byte);
-                if (byte != 0x7f) break;
-
-                byte = pull_byte();
-                CSV(", %d", byte);
-                if (byte != 0x00) break;
-
-                byte = pull_byte();
-                CSV(", %d", byte);
-                if (byte == 0x41) {
-                    midi.set_mode(MIDI_GENERAL_STANDARD);
-                }
-                break;
-            case 0x19:
-            case 0x1a:
-                byte = pull_byte();
-                CSV(", %d", byte);
-                if (byte != 0x15) break;
-
-                byte = pull_byte();
-                CSV(", %d", byte);
-                if (byte == 0x02)
-                {
-                    byte = pull_byte();
-                    CSV(",%d", byte);
-                    if (byte == 0x10) midi.channel(9).set_drums(true);
-                    else if (byte == 0xf) midi.channel(11).set_drums(true);
-                }
-                break;
-            default:
-                break;
-            }
-        }
+        process_GS_sysex(size-2);
         break;
     case MIDI_SYSTEM_EXCLUSIVE_YAMAHA:
         process_XG_sysex(size-2);
