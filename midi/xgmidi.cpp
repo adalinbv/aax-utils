@@ -216,6 +216,9 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             uint8_t addr_mid = pull_byte();
             uint8_t addr_low = pull_byte();
             uint16_t addr = addr_mid << 8 | addr_low;
+            uint16_t part_no = XG_part_no[addr_mid];
+            auto& channel = midi.channel(part_no);
+
             CSV(", %d, %d, %d", addr_high, addr_mid, addr_low);
             switch (addr_high)
             {
@@ -596,13 +599,15 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 LOG(99, "LOG: Unsupported XG sysex type: Multi EQ\n");
                 break;
             case XGMIDI_MULTI_PART:
-                switch (addr_mid)
+            {	// http://www.studio4all.de/htmle/main92.html#xgprgxgpart02a01
+                uint8_t value = pull_byte();
+                switch (addr_low)
                 {
                 case XGMIDI_BANK_SELECT_MSB:// 0-127
-                    bank_no = (uint16_t)addr_low << 7;
+                    bank_no = (uint16_t)value << 7;
                     break;
                 case XGMIDI_BANK_SELECT_LSB: // 0-127
-                    bank_no += addr_low;
+                    bank_no += value;
                     break;
                 case XGMIDI_PROGRAM_NUMBER: // 1-128
                     try {
@@ -611,14 +616,12 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         ERROR("Error: " << e.what());
                     }
                     break;
-                case XGMIDI_REV_CHANNEL:
-                    LOG(99, "LOG: Unsupported XG Rev. Channel\n");
+                case XGMIDI_RECV_CHANNEL:
+                    XG_part_no[addr_mid] = value;
                     break;
                 case XGMIDI_MONO_POLY_MODE: // 0: mono, 1: poly
-                {
-                    auto& channel = midi.channel(track_no);
-                    midi.process(track_no, MIDI_NOTE_OFF, 0, 0, true);
-                    if (addr_low == 0) {
+                    midi.process(part_no, MIDI_NOTE_OFF, 0, 0, true);
+                    if (value == 0) {
                         mode = MIDI_MONOPHONIC;
                         channel.set_monophonic(true);
                     } else {
@@ -626,24 +629,27 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         mode = MIDI_POLYPHONIC;
                     }
                     break;
-                }
                 case XGMIDI_KEY_ON_ASSIGN: // 0: multi, 1: inst (for drum)
                     LOG(99, "LOG: Unsupported XG Same Note Number Key On Assign\n");
                     break;
                 case XGMIDI_PART_MODE: // 0: normal, 1: drum, 2-5: drums1-4
-                    LOG(99, "LOG: Unsupported XG Part Mode\n");
+                    // http://www.studio4all.de/htmle/main93.html
+                    if (value) channel.set_drums(true);
+                    else channel.set_drums(false);
                     break;
                 case XGMIDI_NOTE_SHIFT: // -24 - +24 semitones
                     LOG(99, "LOG: Unsupported XG Note Shift\n");
                     break;
-                case XGMIDI_DETUNE: // -12.8 - 12.7Hz
+                case XGMIDI_DETUNE: // -12.8 - 12.7 cent
                 {   // 1st bit3-0: bit7-4, 2nd bit3-0: bit3-0
-                    int8_t tune = (addr_low << 4) | (pull_byte() & 0xf);
-                    LOG(99, "LOG: Unsupported XG Detune: %.1fHz\n", 0.1f* tune);
+                    int8_t tune = (value << 4) | (pull_byte() & 0xf);
+                    float level = 0.1f*tune;
+                    level = cents2pitch(level, part_no);
+                    channel.set_detune(level);
                     break;
                 }
                 case XGMIDI_VOLUME: // 0-127
-                    LOG(99, "LOG: Unsupported XG Volume\n");
+                    channel.set_gain((float)value/127.0f);
                     break;
                 case XGMIDI_VELOCITY_SENSE_DEPTH: // 0-127
                     LOG(99, "LOG: Unsupported XG Velocity Sense Depth\n");
@@ -652,7 +658,9 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     LOG(99, "LOG: Unsupported XG Velocity Sense Offset\n");
                     break;
                 case XGMIDI_PAN: // 0: random, L63 - C - R63 (1 - 64 - 127)
-                    LOG(99, "LOG: Unsupported XG Pan\n");
+                    if (!midi.get_mono()) {
+                        channel.set_pan(((float)value-64.f)/64.f);
+                    }
                     break;
                 case XGMIDI_NOTE_LIMIT_LOW: // C2 - G8
                     LOG(99, "LOG: Unsupported XG Note Limit Low\n");
@@ -664,37 +672,56 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                      LOG(99, "LOG: Unsupported XG Dry Level\n");
                      break;
                 case XGMIDI_CHORUS_SEND: // 0-127
-                     LOG(99, "LOG: Unsupported XG Chorus Send\n");
+                {
+                    float val = (float)value/127.0f;
+                    channel.set_chorus_level(val);
                      break;
+                }
                 case XGMIDI_REVERB_SEND: // 0-127
-                     LOG(99, "LOG: Unsupported XG Reverb Send\n");
+                     midi.set_reverb_level(part_no, value);
                      break;
                 case XGMIDI_VARIATION_SEND: // 0-127
                      LOG(99, "LOG: Unsupported XG Variation Send\n");
                      break;
                 case XGMIDI_VIBRATO_RATE: // -64 - +63
-                    LOG(99, "LOG: Unsupported XG Vibrato Rate\n");
+                {
+                    float val = 0.5f + (float)value/64.0f;
+                    channel.set_vibrato_rate(val);
                     break;
+                }
                 case XGMIDI_VIBRATO_DEPTH: // -64 - +63
-                    LOG(99, "LOG: Unsupported XG Vibrato Depth\n");
+                {
+                    float val = (float)value/64.0f;
+                    channel.set_vibrato_depth(val);
                     break;
+                }
                 case XGMIDI_VIBRATO_DELAY: // -64 - +63
-                    LOG(99, "LOG: Unsupported XG Vibrato Delay\n");
+                {
+                    float val = (float)value/64.0f;
+                    channel.set_vibrato_delay(val);
                     break;
+                }
                 case XGMIDI_FILTER_CUTOFF_FREQUENCY: // -64 - +63
-                    LOG(99, "LOG: Unsupported XG Filter Cutoff Frequency\n");
+                {
+                    float val = (float)value/64.0f;
+                    if (val < 1.0f) val = 0.5f + 0.5f*val;
+                    channel.set_filter_cutoff(val);
                     break;
+                }
                 case XGMIDI_FILTER_RESONANCE: // -64 - +63
-                    LOG(99, "LOG: Unsupported XG Filter Resonance\n");
+                {
+                    float val = (float)value/32.0f;
+                    channel.set_filter_resonance(val);
                     break;
+                }
                 case XGMIDI_EG_ATTACK_TIME: // -64 - +63
-                    LOG(99, "LOG: Unsupported XG EG Attack Time\n");
+                    channel.set_attack_time(value);
                     break;
                 case XGMIDI_EG_DECAY_TIME: // -64 - +63
-                    LOG(99, "LOG: Unsupported XG EG Decay Time\n");
+                    channel.set_decay_time(value);
                     break;
                 case XGMIDI_EG_RELEASE_TIME: // -64 - +63
-                    LOG(99, "LOG: Unsupported XG EG Release Time\n");
+                    channel.set_release_time(value);
                     break;
                 case XGMIDI_MW_PITCH_CONTROL: // -24 - +24 semitones
                     LOG(99, "LOG: Unsupported XG MW Pitch Control\n");
@@ -738,6 +765,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 }
                 break;
+            }
             case XGMIDI_A_D_PART:
                 LOG(99, "LOG: Unsupported XG sysex type: A/D Part\n");
                 break;

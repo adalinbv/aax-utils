@@ -131,6 +131,10 @@ private:
 
     void display_XG_data(uint32_t, uint8_t, std::string&);
     bool process_XG_sysex(uint64_t);
+    uint8_t XG_part_no[32] = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+       17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31
+    };
 };
 
 } // namespace aax
