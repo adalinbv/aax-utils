@@ -67,6 +67,9 @@ namespace aax
 #define MIDI_DRUMS_CHANNEL              0x9
 #define MIDI_FILE_FORMAT_MAX            0x3
 
+#define LEVEL_60DB			0.0001f
+#define MAX_REVERB_EFFECTS_TIME		0.210f
+
 enum {
     MIDI_MODE0 = 0,
     MIDI_GENERAL_MIDI1,
@@ -76,6 +79,12 @@ enum {
 
     MIDI_MODE_MAX
 };
+
+/* GMMIDI */
+#define GMMIDI_BROADCAST					0x7f
+
+#define GMMIDI_GM_RESET						0x01
+#define GMMIDI_GM2_RESET					0x03
 
 /* GSMIDI */
 #define GSMIDI_DATA_REQUEST1					0x11
@@ -93,8 +102,22 @@ enum {
 #define GSMIDI_CHORUS_TYPE					0x0138
 #define GSMIDI_EQUALIZER_TYPE					0x0200
 #define GSMIDI_MULTI_PART					0x1100
+
+#define GSMIDI_DRUM_PART1					0x1115
+#define GSMIDI_DRUM_PART2					0x1215
+#define GSMIDI_DRUM_PART3					0x1315
+#define GSMIDI_DRUM_PART4					0x1415
+#define GSMIDI_DRUM_PART5					0x1515
+#define GSMIDI_DRUM_PART6					0x1615
+#define GSMIDI_DRUM_PART7					0x1715
+#define GSMIDI_DRUM_PART8					0x1815
 #define GSMIDI_DRUM_PART9					0x1915
 #define GSMIDI_DRUM_PART11					0x1a15
+#define GSMIDI_DRUM_PART12					0x1b15
+#define GSMIDI_DRUM_PART13					0x1c15
+#define GSMIDI_DRUM_PART14					0x1d15
+#define GSMIDI_DRUM_PART15					0x1e15
+#define GSMIDI_DRUM_PART16					0x1f15
 
 /* Reverb */
 #define GSMIDI_REVERB_ROOM1					0x00
