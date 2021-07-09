@@ -249,11 +249,10 @@ MIDIDriver::set_reverb_type(uint8_t value)
 }
 
 void
-MIDIDriver::set_reverb_level(uint8_t channel, uint8_t value)
+MIDIDriver::set_reverb_level(uint8_t channel, float val)
 {
-    if (value)
+    if (val)
     {
-        float val = (float)value/127.0f;
         midi.channel(channel).set_reverb_level(val);
 
         auto it = reverb_channels.find(channel);
@@ -277,6 +276,19 @@ MIDIDriver::set_reverb_level(uint8_t channel, uint8_t value)
             AeonWave::add(*it->second);
         }
     }
+}
+
+void MIDIDriver::set_reverb_cutoff(uint8_t channel, float value) {
+    midi.channel(channel).set_reverb_cutoff(value);
+}
+void MIDIDriver::set_reverb_time_rt60(uint8_t channel, float value) {
+    midi.channel(channel).set_reverb_time_rt60(value);
+}
+void MIDIDriver::set_reverb_delay_depth(uint8_t channel, float value) {
+    midi.channel(channel).set_reverb_delay_depth(value);
+}
+void MIDIDriver::set_reverb_decay_level(uint8_t channel, float value) {
+    midi.channel(channel).set_reverb_decay_level(value);
 }
 
 /*

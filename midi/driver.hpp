@@ -176,8 +176,13 @@ public:
     void set_chorus_rate(float rate);
 
     void set_reverb(const char *t);
-    void set_reverb_level(uint8_t channel, uint8_t value);
     void set_reverb_type(uint8_t value);
+    void set_reverb_level(uint8_t channel, float value);
+    void set_reverb_cutoff(uint8_t channel, float value);
+    void set_reverb_time_rt60(uint8_t channel, float value);
+    void set_reverb_delay_depth(uint8_t channel, float value);
+    void set_reverb_decay_level(uint8_t channel, float value);
+
     inline void set_decay_depth(float rt) { reverb_decay_depth = 0.1f*rt; }
 
     // ** buffer management ******
