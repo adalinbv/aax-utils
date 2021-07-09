@@ -171,7 +171,9 @@ static XGMIDI_effect_t XGMIDI_EQ_types[XGMIDI_MAX_EQ_TYPES] = {
  { "2-band eq", { 28, 70, 46, 70,  0,  0,  0, 0, 0, 127, 34, 64, 10, 0,  0,  0 } }
 };
 
-#define LEVEL_60DB	0.0001f
+#define LEVEL_60DB		0.0001f
+#define MAX_REVERB_EFFECTS_TIME	0.210f
+
 #define _MAX(a,b)       (((a)>(b)) ? (a) : (b))
 #define _MIN(a,b)       (((a)<(b)) ? (a) : (b))
 #define _MINMAX(a,b,c)  (((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
@@ -222,7 +224,7 @@ int write_reverb()
 
          float reverb_time = XGMIDI_reverb_time[rt];
 
-         float diffusion = 0.07f*df;
+         float diffusion = 0.1f*MAX_REVERB_EFFECTS_TIME*df;
          float decay_level = powf(LEVEL_60DB, 0.5f*diffusion/reverb_time);
 
          fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
