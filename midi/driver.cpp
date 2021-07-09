@@ -170,29 +170,37 @@ MIDIDriver::set_balance(float b)
 }
 
 void
-MIDIDriver::set_chorus_type(uint8_t value)
+MIDIDriver::set_chorus_type(uint8_t type)
 {
-    switch(value)
+    switch(type)
     {
     case 0:
         midi.set_chorus("chorus/chorus1");
+        INFO("Switching to type 1 chorus");
         break;
     case 1:
         midi.set_chorus("chorus/chorus2");
+        INFO("Switching to type 22chorus");
         break;
     case 2:
         midi.set_chorus("chorus/chorus3");
+        INFO("Switching to type 3 chorus");
         break;
     case 3:
         midi.set_chorus("chorus/chorus4");
+        INFO("Switching to type 4 chorus");
         break;
     case 4:
         midi.set_chorus("chorus/chorus_freedback");
+        INFO("Switching to type deedback chorus");
         break;
     case 5:
         midi.set_chorus("chorus/flanger");
+        INFO("Switching to type flanging");
         break;
     default:
+        LOG(99, "LOG: Unsupported GS chorus type: 0x%x (%d)\n",
+                                type, type);
         break;
     }
 }
@@ -242,10 +250,10 @@ MIDIDriver::set_reverb(const char *t)
 }
 
 void
-MIDIDriver::set_reverb_type(uint8_t value)
+MIDIDriver::set_reverb_type(uint8_t type)
 {
-    reverb_type = value;
-    switch (value)
+    reverb_type = type;
+    switch (type)
     {
     case 0:
         midi.set_reverb("reverb/room-small");
@@ -272,6 +280,8 @@ MIDIDriver::set_reverb_type(uint8_t value)
         INFO("Switching to Plate reveberation");
         break;
     default:
+        LOG(99, "LOG: Unsupported reverb type: 0x%x (%d)\n",
+                                type, type);
         break;
     }
 }

@@ -131,27 +131,34 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                         switch (value)
                         {
                         case GSMIDI_REVERB_ROOM1:
+                            midi.set_reverb("reverb/room-small");
+                            INFO("Switching to Small Room reveberation");
+                            break;
                         case GSMIDI_REVERB_ROOM2:
+                            midi.set_reverb("reverb/room-medium");
+                            INFO("Switching to Medium Room reveberation");
+                            break;
                         case GSMIDI_REVERB_ROOM3:
+                            midi.set_reverb("reverb/room-large");
+                            INFO("Switching to Large Room reveberation");
+                            break;
                         case GSMIDI_REVERB_HALL1:
+                            midi.set_reverb("reverb/concerthall");
+                            INFO("Switching to Concert Hall Reveberation");
+                            break;
                         case GSMIDI_REVERB_HALL2:
+                            midi.set_reverb("reverb/concerthall-large");
+                            INFO("Switching to Lrge Concert Hall reveberation");
+                            break;
                         case GSMIDI_REVERB_PLATE:
-                            midi.set_reverb_type(value);
+                            midi.set_reverb("reverb/plate");
+                            INFO("Switching to Plate reveberation");
                             break;
                         case GSMIDI_REVERB_DELAY:
                         case GSMIDI_REVERB_PAN_DELAY:
-/*
-Reverb		Room1	Room2	Room3	Hall1	Hall2	Plate	Delay	PanDelay
-Rev Level	64	64	64	64	64	64	64	64
-Rev Character	0	1	2	3	4	5	6	7
-Rev Pre-LPF	3	4	0	4	0	0	0	0
-Rev Time	80	56	64	72	64	88	32	64
-Rev Dly Fb	0	0	0	0	0	0	40	32
-Rev PreDlyTm	0	0	0	0	0	0	0	0
-*/
                         default:
-                            LOG(99, "LOG: Unsupported GS reverb type: 0x%x (%d)\n",
-                                type, type);
+                            LOG(99, "LOG: Unsupported reverb type: 0x%x (%d)\n",
+                                    type, type);
                             break;
                         }
                         break;
@@ -168,17 +175,6 @@ Rev PreDlyTm	0	0	0	0	0	0	0	0
                             break;
                         case GSMIDI_DELAY:
                         case GSMIDI_DELAY_FEEDBACK:
-/*				Fb			Fb
-		Chorus1	Chorus2	Chorus3	Chorus4	Chorus Flanger	SDelay	SDelay
-Cho Level	64	64	64	64	64	64	64	64
-Cho Pre-LPF	0	0	0	0	0	0	0	0
-Cho Feedback	0	5	8	16	64	112	0	80
-Cho Delay	112	80	80	64	127	127	127	12
-7Cho Rate	3	9	3	9	2	1	0	0
-Cho Depth	5	19	19	16	24	5	127	127
-Cho To Rev	0	0	0	0	0	0	0	0
-Cho To Dly	0	0	0	0	0	0	0	0
-*/
                         default:
                             LOG(99, "LOG: Unsupported GS chorus type: 0x%x (%d)\n",
                                 type, type);
