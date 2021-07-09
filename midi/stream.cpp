@@ -899,29 +899,7 @@ bool MIDIStream::process_sysex()
                     switch(param)
                     {
                     case 0:     // CHORUS_TYPE
-                        switch(value)
-                        {
-                        case 0:
-                            midi.set_chorus("chorus/chorus1");
-                            break;
-                        case 1:
-                            midi.set_chorus("chorus/chorus2");
-                            break;
-                        case 2:
-                            midi.set_chorus("chorus/chorus3");
-                            break;
-                        case 3:
-                            midi.set_chorus("chorus/chorus4");
-                            break;
-                        case 4:
-                            midi.set_chorus("chorus/chorus_freedback");
-                            break;
-                        case 5:
-                            midi.set_chorus("chorus/flanger");
-                            break;
-                        default:
-                            break;
-                        }
+                        midi.set_chorus_type(value);
                         break;
                     case 1:     // CHORUS_MOD_RATE
                     // the modulation frequency in Hz

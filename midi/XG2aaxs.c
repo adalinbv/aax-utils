@@ -121,7 +121,7 @@ typedef struct {
  */
 #define XGMIDI_MAX_REVERB_TYPES         12
 static XGMIDI_effect_t XGMIDI_reverb_types[XGMIDI_MAX_REVERB_TYPES] = {
-//      param:  0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
+//      param:     0   1   2   3   4   5   6   7   8   9  10  11  12  13  14  15
  { "hall1",     { 18, 10,  8, 13, 49,  0,  0,  0,  0, 40,  0,  4, 50,  8, 64,  0 } },
  { "hall2",     { 25, 10, 28,  6, 46,  0,  0,  0,  0, 40, 13,  3, 74,  7, 64,  0 } },
  { "room1",     {  5, 10, 16,  4, 49,  0,  0,  0,  0, 40,  5,  3, 64,  8, 64,  0 } },

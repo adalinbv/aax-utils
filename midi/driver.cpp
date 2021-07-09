@@ -170,6 +170,34 @@ MIDIDriver::set_balance(float b)
 }
 
 void
+MIDIDriver::set_chorus_type(uint8_t value)
+{
+    switch(value)
+    {
+    case 0:
+        midi.set_chorus("chorus/chorus1");
+        break;
+    case 1:
+        midi.set_chorus("chorus/chorus2");
+        break;
+    case 2:
+        midi.set_chorus("chorus/chorus3");
+        break;
+    case 3:
+        midi.set_chorus("chorus/chorus4");
+        break;
+    case 4:
+        midi.set_chorus("chorus/chorus_freedback");
+        break;
+    case 5:
+        midi.set_chorus("chorus/flanger");
+        break;
+    default:
+        break;
+    }
+}
+
+void
 MIDIDriver::set_chorus(const char *t)
 {
     Buffer& buf = AeonWave::buffer(t);

@@ -81,15 +81,15 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                 uint8_t addr_mid = pull_byte();
                 uint8_t addr_low = pull_byte();
                 uint16_t addr = addr_mid << 8 | addr_low;
+                uint8_t value = pull_byte();
+                CSV(", %d", value);
                 switch (addr_high)
                 {
                 case GSMIDI_PARAMETER_CHANGE:
                     switch(addr)
                     {
                     case GSMIDI_GS_RESET:
-                        byte = pull_byte();
-                        CSV(", %d", byte);
-                        if (byte != 0x00) break;
+                        if (value != 0x00) break;
 
                         byte = pull_byte();
                         CSV(", %d", byte);
@@ -116,9 +116,7 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                     case GSMIDI_DRUM_PART16:
                     {
                         uint8_t part_no = addr_mid & 0xf;
-                        byte = pull_byte();
-                        CSV(", %d", byte);
-                        if (byte == 0x02)
+                        if (value == 0x02)
                         {
                             byte = pull_byte();
                             CSV(",%d", byte); 
@@ -130,9 +128,7 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                         break;
                     }
                     case GSMIDI_REVERB_TYPE:
-                    {
-                        uint8_t type = pull_byte();
-                        switch (type)
+                        switch (value)
                         {
                         case GSMIDI_REVERB_ROOM1:
                         case GSMIDI_REVERB_ROOM2:
@@ -140,6 +136,8 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                         case GSMIDI_REVERB_HALL1:
                         case GSMIDI_REVERB_HALL2:
                         case GSMIDI_REVERB_PLATE:
+                            midi.set_reverb_type(value);
+                            break;
                         case GSMIDI_REVERB_DELAY:
                         case GSMIDI_REVERB_PAN_DELAY:
 /*
@@ -157,11 +155,8 @@ Rev PreDlyTm	0	0	0	0	0	0	0	0
                             break;
                         }
                         break;
-                    }
                     case GSMIDI_CHORUS_TYPE:
-                    {
-                        uint8_t type = pull_byte();
-                        switch (type)
+                        switch (value)
                         {
                         case GSMIDI_CHORUS1:
                         case GSMIDI_CHORUS2:
@@ -169,6 +164,8 @@ Rev PreDlyTm	0	0	0	0	0	0	0	0
                         case GSMIDI_CHORUS4:
                         case GSMIDI_CHORUS_FEEDBACK:
                         case GSMIDI_FLANGER:
+                            midi.set_chorus_type(value);
+                            break;
                         case GSMIDI_DELAY:
                         case GSMIDI_DELAY_FEEDBACK:
 /*				Fb			Fb
@@ -188,7 +185,6 @@ Cho To Dly	0	0	0	0	0	0	0	0
                             break;
                         }
                         break;
-                    }
                     default:
                         LOG(99, "LOG: Unsupported GS address: 0x%x 0x%x (%d %d)\n",
                                 addr_mid, addr_low, addr_mid, addr_low);

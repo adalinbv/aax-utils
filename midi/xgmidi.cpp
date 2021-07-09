@@ -215,13 +215,11 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             uint8_t addr_high = pull_byte();
             uint8_t addr_mid = pull_byte();
             uint8_t addr_low = pull_byte();
+            uint8_t value = pull_byte();
             uint16_t addr = addr_mid << 8 | addr_low;
             uint16_t part_no = XG_part_no[addr_mid];
             auto& channel = midi.channel(part_no);
-            uint8_t value = pull_byte();
-            CSV(", %d", value);
-
-            CSV(", %d, %d, %d", addr_high, addr_mid, addr_low);
+            CSV(", %d, %d, %d, %d", addr_high, addr_mid, addr_low, value);
             switch (addr_high)
             {
             case XGMIDI_SYSTEM:
@@ -238,7 +236,10 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 {
                 case XGMIDI_REVERB_TYPE:
                 {
-                    uint16_t type = value << 8 | pull_byte();
+                    uint16_t type = value << 8;
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    type |= byte;
                     switch (type)
                     {
                     case XGMIDI_REVERB_HALL1:
@@ -361,7 +362,10 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 case XGMIDI_CHORUS_TYPE:
                 {
-                    uint16_t type = value << 8 | pull_byte();
+                    uint16_t type = value << 8;
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    type |= byte;
                     switch (type)
                     {
                     case XGMIDI_CHORUS1:
@@ -472,7 +476,10 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 case XGMIDI_VARIATION_TYPE:
                 {
-                    uint16_t type = value << 8 | pull_byte();
+                    uint16_t type = value << 8;
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    type |= byte;
                     switch (type)
                     {
                     case XGMIDI_DELAY_LCR:
@@ -661,9 +668,12 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 case XGMIDI_DETUNE: // -12.8 - 12.7 cent
                 {   // 1st bit3-0: bit7-4, 2nd bit3-0: bit3-0
-                    int8_t tune = (value << 4) | (pull_byte() & 0xf);
-                    float level = 0.1f*tune;
-                    level = cents2pitch(level, part_no);
+                    int8_t tune = (value << 4);
+                    float level;
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    tune |= byte & 0xf;
+                    level = cents2pitch(0.1f*tune, part_no);
                     channel.set_detune(level);
                     break;
                 }
@@ -819,6 +829,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             uint8_t addr_mid = pull_byte();
             uint8_t addr_low = pull_byte();
             uint32_t addr = addr_high << 16 | addr_mid << 8 | addr_low;
+            CSV(", %d, %d, %d", addr_high, addr_mid, addr_low);
             if (addr == 0x300000)
             {
                 uint8_t mm = pull_byte();
@@ -826,6 +837,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 uint8_t cc = pull_byte();
                 uint16_t tuning = mm << 7 | ll;
                 float pitch = (float)tuning-8192.0f;
+                CSV(", %d, %d, %d", mm, ll, cc);
                 if (pitch < 0) pitch /= 8192.0f;
                 else pitch /= 8191.0f;
                 midi.set_tuning(pitch);

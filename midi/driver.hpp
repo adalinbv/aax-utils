@@ -171,6 +171,7 @@ public:
     inline uint16_t get_ppqn() { return PPQN; }
 
     void set_chorus(const char *t);
+    void set_chorus_type(uint8_t value);
     void set_chorus_level(float lvl);
     void set_chorus_depth(float depth);
     void set_chorus_rate(float rate);
