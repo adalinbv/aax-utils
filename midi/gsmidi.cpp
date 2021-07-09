@@ -93,14 +93,27 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
 
                         byte = pull_byte();
                         CSV(", %d", byte);
-                        if (byte == MIDI_SYSTEM_EXCLUSIVE_ROLAND)
+                        if (byte == 0x41) // checksum
                         {
                             midi.set_mode(MIDI_GENERAL_STANDARD);
                             rv = true;
                         }
                         break;
+                    case GSMIDI_DRUM_PART1:
+                    case GSMIDI_DRUM_PART2:
+                    case GSMIDI_DRUM_PART3:
+                    case GSMIDI_DRUM_PART4:
+                    case GSMIDI_DRUM_PART5:
+                    case GSMIDI_DRUM_PART6:
+                    case GSMIDI_DRUM_PART7:
+                    case GSMIDI_DRUM_PART8:
                     case GSMIDI_DRUM_PART9:
                     case GSMIDI_DRUM_PART11:
+                    case GSMIDI_DRUM_PART12:
+                    case GSMIDI_DRUM_PART13:
+                    case GSMIDI_DRUM_PART14:
+                    case GSMIDI_DRUM_PART15:
+                    case GSMIDI_DRUM_PART16:
                     {
                         uint8_t part_no = addr_mid & 0xf;
                         byte = pull_byte();
