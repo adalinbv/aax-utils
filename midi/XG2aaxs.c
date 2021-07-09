@@ -224,8 +224,8 @@ int write_reverb()
 
          float reverb_time = XGMIDI_reverb_time[rt];
 
-         float diffusion = 0.1f*MAX_REVERB_EFFECTS_TIME*df;
-         float decay_level = powf(LEVEL_60DB, 0.5f*diffusion/reverb_time);
+         float decay_depth = 0.1f*MAX_REVERB_EFFECTS_TIME*df;
+         float decay_level = powf(LEVEL_60DB, 0.5f*decay_depth/reverb_time);
 
          fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
          fprintf(stream, "<aeonwave>\n\n");
@@ -235,7 +235,7 @@ int write_reverb()
          fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff_freq);
          fprintf(stream, "    <param n=\"1\">%5.4f</param>\n", delay_depth);
          fprintf(stream, "    <param n=\"2\">%4.3f</param>\n", decay_level);
-         fprintf(stream, "    <param n=\"3\">%4.3f</param>\n", diffusion);
+         fprintf(stream, "    <param n=\"3\">%4.3f</param>\n", decay_depth);
          fprintf(stream, "   </slot>\n");
          fprintf(stream, "   <slot n=\"1\">\n");
          fprintf(stream, "    <param n=\"0\">%3.1f</param>\n", width);
@@ -252,7 +252,7 @@ int write_reverb()
          fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff_freq);
          fprintf(stream, "    <param n=\"1\">%5.4f</param>\n", delay_depth);
          fprintf(stream, "    <param n=\"2\">%4.3f</param>\n", decay_level);
-         fprintf(stream, "    <param n=\"3\">%4.3f</param>\n", diffusion);
+         fprintf(stream, "    <param n=\"3\">%4.3f</param>\n", decay_depth);
          fprintf(stream, "   </slot>\n");
          fprintf(stream, "   <slot n=\"1\">\n");
          fprintf(stream, "    <param n=\"0\">%3.1f</param>\n", width);
