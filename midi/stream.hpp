@@ -44,6 +44,8 @@
 namespace aax
 {
 
+#define _MINMAX(a,b,c)	(((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))
+
 class MIDIDriver;
 
 struct param_t
@@ -74,6 +76,11 @@ public:
 
     MIDIDriver& midi;
 private:
+    float _lin2log(float v) { return log10f(v); }
+    float _log2lin(float v) { return powf(10.0f,v); }
+    float _lin2db(float v) { return 20.0f*log10f(v); }
+    float _db2lin(float v) { return _MINMAX(powf(10.0f,v/20.0f),0.0f,10.0f); }
+
     float key2pitch(MIDIInstrument& channel, uint16_t key);
     int16_t get_key(MIDIInstrument& channel, int16_t key);
     float get_pitch(MIDIInstrument& channel);

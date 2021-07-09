@@ -127,7 +127,8 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                         }
                         break;
                     }
-                    case GSMIDI_REVERB_TYPE:
+                    case GSMIDI_REVERB_MACRO:
+                    case GSMIDI_REVERB_CHARACTER:
                         switch (value)
                         {
                         case GSMIDI_REVERB_ROOM1:
@@ -162,14 +163,36 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                             break;
                         }
                         break;
-                    case GSMIDI_CHORUS_TYPE:
+                    case GSMIDI_REVERB_PRE_LPF:
+                    {
+                        float val = value/7.0f;
+                        float fc = 22000.0f - _log2lin(val*_lin2log(22000.0f));
+                        midi.set_reverb_cutoff(track_no, fc);
+                        break;
+                    }
+                    case GSMIDI_REVERB_LEVEL:
+                    {
+                        float val = (float)value/127.0f;
+                        midi.set_reverb_level(track_no, val);
+                        break;
+                    }
+                    case GSMIDI_REVERB_TIME:
+                    {
+                        float reverb_time = 0.7f*value/127.0f;
+                        midi.set_reverb_time_rt60(track_no, reverb_time);
+                        break;
+                    }
+                    case GSMIDI_REVERB_DELAY_FEEDBACK:
+                        LOG(99, "LOG: Unsupported Reverb Delay Feedback\n");
+                        break;
+                    case GSMIDI_CHORUS_MACRO:
                         switch (value)
                         {
                         case GSMIDI_CHORUS1:
                         case GSMIDI_CHORUS2:
                         case GSMIDI_CHORUS3:
                         case GSMIDI_CHORUS4:
-                        case GSMIDI_CHORUS_FEEDBACK:
+                        case GSMIDI_FEEDBACK_CHORUS:
                         case GSMIDI_FLANGER:
                             midi.set_chorus_type(value);
                             break;
@@ -180,6 +203,27 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                                 type, type);
                             break;
                         }
+                        break;
+                    case GSMIDI_CHORUS_PRE_LPF:
+                        LOG(99, "LOG: Unsupported GS Chorus Pre-LPF");
+                        break;
+                    case GSMIDI_CHORUS_LEVEL:
+                        LOG(99, "LOG: Unsupported GS Chorus Level");
+                        break;
+                    case GSMIDI_CHORUS_FEEDBACK:
+                        LOG(99, "LOG: Unsupported GS Chorus Feedback");
+                        break;
+                    case GSMIDI_CHORUS_DELAY:
+                        LOG(99, "LOG: Unsupported GS Chorus Delay");
+                        break;
+                    case GSMIDI_CHORUS_RATE:
+                        LOG(99, "LOG: Unsupported GS Chorus Rate");
+                        break;
+                    case GSMIDI_CHORUS_DEPTH:
+                        LOG(99, "LOG: Unsupported GS Chorus Depth");
+                        break;
+                    case GSMIDI_CHORUS_SEND_LEVEL_TO_REVERB:
+                        LOG(99, "LOG: Unsupported GS Chorus Send Level To Reverb");
                         break;
                     default:
                         LOG(99, "LOG: Unsupported GS address: 0x%x 0x%x (%d %d)\n",

@@ -704,17 +704,17 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 {
                     float val = (float)value/127.0f;
                     channel.set_chorus_level(val);
-                     break;
+                    break;
                 }
                 case XGMIDI_REVERB_SEND: // 0-127
                 {
-                     float val = (float)value/127.0f;
-                     midi.set_reverb_level(part_no, val);
-                     break;
+                    float val = (float)value/127.0f;
+                    midi.set_reverb_level(part_no, val);
+                    break;
                 }
                 case XGMIDI_VARIATION_SEND: // 0-127
-                     LOG(99, "LOG: Unsupported XG Variation Send\n");
-                     break;
+                    LOG(99, "LOG: Unsupported XG Variation Send\n");
+                    break;
                 case XGMIDI_VIBRATO_RATE: // -64 - +63
                 {
                     float val = 0.5f + (float)value/64.0f;
