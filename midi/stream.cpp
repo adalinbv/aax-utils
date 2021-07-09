@@ -606,8 +606,11 @@ bool MIDIStream::process_control(uint8_t track_no)
         channel.set_sustain(value >= 0x40);
         break;
     case MIDI_REVERB_SEND_LEVEL:
-        midi.set_reverb_level(track_no, value);
+    {
+        float val = (float)value/127.0f;
+        midi.set_reverb_level(track_no, val);
         break;
+    }
     case MIDI_CHORUS_SEND_LEVEL:
     {
         float val = (float)value/127.0f;
@@ -749,13 +752,11 @@ bool MIDIStream::process_sysex()
     const char *s = nullptr;
 
 #if 0
- uint8_t i=0, *p = (uint8_t*)*this;
- p += offset();
- printf("System_exclusive, %lu, %d, ", size, byte);
- do  {
-     printf("%d, ", p[i]);
- } while (p[i++] != MIDI_SYSTEM_EXCLUSIVE_END);
+ printf(" System Exclusive:");
+ push_byte(); push_byte(); push_byte();
+ while ((byte = pull_byte()) != MIDI_SYSTEM_EXCLUSIVE_END) printf(" %x", byte);
  printf("\n");
+ byte_stream::rewind( offset() - offs);
 #endif
     CSV("System_exclusive, %lu, %d", size, byte);
     switch(byte)
@@ -767,12 +768,11 @@ bool MIDIStream::process_sysex()
         process_XG_sysex(size-2);
         break;
     case MIDI_SYSTEM_EXCLUSIVE_NON_REALTIME:
-        // GM1 rewind: F0 7E 7F 09 01 F7
-        // GM2 rewind: F0 7E 7F 09 03 F7
-        // GS  rewind: F0 41 10 42 12 40 00 7F 00 41 F7
+        // GM1 reset: F0 7E 7F 09 01 F7
+        // GM2 reset: F0 7E 7F 09 03 F7
         byte = pull_byte();
         CSV(", %d", byte);
-        if (byte == 0x7F)
+        if (byte == GMMIDI_BROADCAST)
         {
             byte = pull_byte();
             CSV(", %d", byte);
@@ -784,14 +784,14 @@ bool MIDIStream::process_sysex()
                 midi.set_mode(byte);
                 switch(byte)
                 {
-                case 0x01:
+                case GMMIDI_GM_RESET:
                     midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
                     midi.set_mode(MIDI_GENERAL_MIDI1);
                     break;
                 case 0x02:
                     // midi.set_mode(MIDI_MODE0);
                     break;
-                case 0x03:
+                case GMMIDI_GM2_RESET:
                     midi.process(channel_no, MIDI_NOTE_OFF, 0, 0, true);
                     midi.set_mode(MIDI_GENERAL_MIDI2);
                     break;
@@ -869,7 +869,7 @@ bool MIDIStream::process_sysex()
             {
                 uint8_t path_len, id_width, val_width;
                 uint8_t param, value;
-                uint16_t slot;
+                uint16_t slot_path;
 
                 path_len = pull_byte();
                 CSV(", %d", path_len);
@@ -880,11 +880,11 @@ bool MIDIStream::process_sysex()
                 val_width = pull_byte();
                 CSV(", %d", val_width);
 
-                slot = pull_byte();
-                CSV(", %d", slot);
+                slot_path = pull_byte();
+                CSV(", %d", slot_path);
 
                 byte = pull_byte();
-                slot |= byte << 7;
+                slot_path |= byte << 7;
                 CSV(", %d", byte);
 
                 param =  pull_byte();
@@ -893,7 +893,7 @@ bool MIDIStream::process_sysex()
                 value = pull_byte();
                 CSV(", %d", value);
 
-                switch(slot)
+                switch(slot_path)
                 {
                 case MIDI_CHORUS_PARAMETER:
                     switch(param)
@@ -948,7 +948,7 @@ bool MIDIStream::process_sysex()
                 case MIDI_REVERB_PARAMETER:
                     switch(param)
                     {
-                    case 0:     // Reverb Typ
+                    case 0:     // Reverb Type
                         midi.set_reverb_type(value);
                         break;
                     case 1:     //Reverb Time
