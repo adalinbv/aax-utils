@@ -218,6 +218,8 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             uint16_t addr = addr_mid << 8 | addr_low;
             uint16_t part_no = XG_part_no[addr_mid];
             auto& channel = midi.channel(part_no);
+            uint8_t value = pull_byte();
+            CSV(", %d", value);
 
             CSV(", %d, %d, %d", addr_high, addr_mid, addr_low);
             switch (addr_high)
@@ -225,9 +227,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
             case XGMIDI_SYSTEM:
                 if (addr == XGMIDI_SYSTEM_ON)
                 {
-                    byte = pull_byte();
-                    CSV(", %d", byte);
-                    if (byte == 0x00) {
+                    if (value == 0x00) {
                         midi.set_mode(MIDI_EXTENDED_GENERAL_MIDI);
                     }
                     rv = true;
@@ -238,7 +238,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 {
                 case XGMIDI_REVERB_TYPE:
                 {
-                    uint16_t type = pull_byte() << 8 | pull_byte();
+                    uint16_t type = value << 8 | pull_byte();
                     switch (type)
                     {
                     case XGMIDI_REVERB_HALL1:
@@ -267,13 +267,13 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         rv = true;
                         break;
                     case XGMIDI_REVERB_STAGE1:
-                       midi.set_reverb("reverb/XG/stage1");
-                       INFO("Switching to Small Stage reveberation");
+                        midi.set_reverb("reverb/XG/stage1");
+                        INFO("Switching to Small Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_STAGE2:
-                       midi.set_reverb("reverb/XG/stage2");
-                       INFO("Switching to Large Stage reveberation");
+                        midi.set_reverb("reverb/XG/stage2");
+                        INFO("Switching to Large Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_PLATE:
@@ -282,23 +282,23 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         rv = true;
                         break;
                     case XGMIDI_REVERB_WHITE_ROOM:
-                       midi.set_reverb("reverb/XG/whiteroom");
-                       INFO("Switching to White Room reveberation");
+                        midi.set_reverb("reverb/XG/whiteroom");
+                        INFO("Switching to White Room reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_TUNNEL:
-                       midi.set_reverb("reverb/XG/tunnel");
-                       INFO("Switching to Tunnel reveberation");
+                        midi.set_reverb("reverb/XG/tunnel");
+                        INFO("Switching to Tunnel reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_CANYON:
-                       midi.set_reverb("reverb/XG/canyon");
-                       INFO("Switching to Canyon reveberation");
+                        midi.set_reverb("reverb/XG/canyon");
+                        INFO("Switching to Canyon reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_BASEMENT:
-                       midi.set_reverb("reverb/XG/basement");
-                       INFO("Switching to Basement reveberation");
+                        midi.set_reverb("reverb/XG/basement");
+                        INFO("Switching to Basement reveberation");
                         rv = true;
                        break;
                     default:
@@ -308,21 +308,41 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     }
                     break;
                 }
-                case XGMIDI_REVERB_PARAMETER1:
-                case XGMIDI_REVERB_PARAMETER2:
-                case XGMIDI_REVERB_PARAMETER3:
-                case XGMIDI_REVERB_PARAMETER4:
-                case XGMIDI_REVERB_PARAMETER5:
-                case XGMIDI_REVERB_PARAMETER6:
-                case XGMIDI_REVERB_PARAMETER7:
-                case XGMIDI_REVERB_PARAMETER8:
-                case XGMIDI_REVERB_PARAMETER9:
-                case XGMIDI_REVERB_PARAMETER10:
-                case XGMIDI_REVERB_PARAMETER11:
-                case XGMIDI_REVERB_PARAMETER12:
-                case XGMIDI_REVERB_PARAMETER13:
-                case XGMIDI_REVERB_PARAMETER14:
-                case XGMIDI_REVERB_PARAMETER15:
+                case XGMIDI_REVERB_PARAMETER1:	// Reverb Time
+                {
+                    float reverb_time = XGMIDI_reverb_time[value];
+                    midi.set_reverb_time_rt60(part_no, reverb_time);
+                    break;
+                }
+                case XGMIDI_REVERB_PARAMETER2:	// Diffusion
+                {
+                    float decay_depth = 0.1f*MAX_REVERB_EFFECTS_TIME*value;
+                    midi.set_reverb_decay_level(part_no, decay_depth);
+                    break;
+                }
+                case XGMIDI_REVERB_PARAMETER3:	// Initial Delay
+                {
+                    float delay_depth = XGMIDI_delay_time_table[value]*1e-3f;
+                    midi.set_reverb_delay_depth(part_no, delay_depth);
+                    break;
+                }
+                case XGMIDI_REVERB_PARAMETER5:	// LPF Cutoff
+                {
+                    float cutoff_freq = XGMIDI_EQ_frequency_table[value];
+                    midi.set_reverb_cutoff(part_no, cutoff_freq);
+                    break;
+                }
+                case XGMIDI_REVERB_PARAMETER14:	// High Damp
+                case XGMIDI_REVERB_PARAMETER6:	// Room Width
+                case XGMIDI_REVERB_PARAMETER7:	// Room Height
+                case XGMIDI_REVERB_PARAMETER8:	// Room Depth
+                case XGMIDI_REVERB_PARAMETER9:	// Wall Vary
+                case XGMIDI_REVERB_PARAMETER4:	// HPF Cutoff
+                case XGMIDI_REVERB_PARAMETER10:	// Dry/Wet
+                case XGMIDI_REVERB_PARAMETER11:	// Rev Delay
+                case XGMIDI_REVERB_PARAMETER12:	// Density
+                case XGMIDI_REVERB_PARAMETER13:	// Rev/Er Balance
+                case XGMIDI_REVERB_PARAMETER15:	// Feedback Level
                 case XGMIDI_REVERB_PARAMETER16:
                 {
                     uint8_t param = addr - XGMIDI_REVERB_TYPE;
@@ -341,7 +361,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 case XGMIDI_CHORUS_TYPE:
                 {
-                    uint16_t type = pull_byte() << 8 | pull_byte();
+                    uint16_t type = value << 8 | pull_byte();
                     switch (type)
                     {
                     case XGMIDI_CHORUS1:
@@ -416,22 +436,22 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     }
                     break;
                 }
-                case XGMIDI_CHORUS_PARAMETER1:
-                case XGMIDI_CHORUS_PARAMETER2:
-                case XGMIDI_CHORUS_PARAMETER3:
-                case XGMIDI_CHORUS_PARAMETER4:
+                case XGMIDI_CHORUS_PARAMETER1:	// LO Frequency
+                case XGMIDI_CHORUS_PARAMETER2:	// LFO (PM) Depth
+                case XGMIDI_CHORUS_PARAMETER3:	// Feedback Level
+                case XGMIDI_CHORUS_PARAMETER4:	// Delay Offset
                 case XGMIDI_CHORUS_PARAMETER5:
-                case XGMIDI_CHORUS_PARAMETER6:
-                case XGMIDI_CHORUS_PARAMETER7:
-                case XGMIDI_CHORUS_PARAMETER8:
-                case XGMIDI_CHORUS_PARAMETER9:
-                case XGMIDI_CHORUS_PARAMETER10:
-                case XGMIDI_CHORUS_PARAMETER11:
-                case XGMIDI_CHORUS_PARAMETER12:
-                case XGMIDI_CHORUS_PARAMETER13:
-                case XGMIDI_CHORUS_PARAMETER14:
-                case XGMIDI_CHORUS_PARAMETER15:
-                case XGMIDI_CHORUS_PARAMETER16:
+                case XGMIDI_CHORUS_PARAMETER6:	// EQ Low Frequency
+                case XGMIDI_CHORUS_PARAMETER7:	// EQ Low Gain
+                case XGMIDI_CHORUS_PARAMETER8:	// EQ High Frequency
+                case XGMIDI_CHORUS_PARAMETER9:	// EQ High Gain
+                case XGMIDI_CHORUS_PARAMETER10:	// Dry/Wet
+                case XGMIDI_CHORUS_PARAMETER11:	// EQ Mid Frequency
+                case XGMIDI_CHORUS_PARAMETER12:	// EQ Mid Gain
+                case XGMIDI_CHORUS_PARAMETER13:	// EQ Mid Width
+                case XGMIDI_CHORUS_PARAMETER14:	// EQ High Gain
+                case XGMIDI_CHORUS_PARAMETER15:	// LFO AM Depth
+                case XGMIDI_CHORUS_PARAMETER16:	// Mono/Stereo
                 {
                     uint8_t param = addr - XGMIDI_CHORUS_TYPE;
                     if (param > XGMIDI_CHORUS_PARAMETER10) {
@@ -452,7 +472,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 case XGMIDI_VARIATION_TYPE:
                 {
-                    uint16_t type = pull_byte() << 8 | pull_byte();
+                    uint16_t type = value << 8 | pull_byte();
                     switch (type)
                     {
                     case XGMIDI_DELAY_LCR:
@@ -600,7 +620,6 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 break;
             case XGMIDI_MULTI_PART:
             {	// http://www.studio4all.de/htmle/main92.html#xgprgxgpart02a01
-                uint8_t value = pull_byte();
                 switch (addr_low)
                 {
                 case XGMIDI_BANK_SELECT_MSB:// 0-127
@@ -678,8 +697,11 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                      break;
                 }
                 case XGMIDI_REVERB_SEND: // 0-127
-                     midi.set_reverb_level(part_no, value);
+                {
+                     float val = (float)value/127.0f;
+                     midi.set_reverb_level(part_no, val);
                      break;
+                }
                 case XGMIDI_VARIATION_SEND: // 0-127
                      LOG(99, "LOG: Unsupported XG Variation Send\n");
                      break;
