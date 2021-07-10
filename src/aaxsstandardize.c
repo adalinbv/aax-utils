@@ -1554,8 +1554,11 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
         aaxDriverClose(config);
         aaxDriverDestroy(config);
 
-//      fval = 6.0f*_MAX(peak, 0.1f) * _db2lin(-24.0f - loudness);
+#if 1
+        fval = 6.0f*_MAX(peak, 0.1f) * _db2lin(-24.0f - loudness);
+#else
         fval = _db2lin(-16.0f - loudness);
+#endif
 
         printf("%-42s: %4.0f Hz, R128: % -3.1f", infile, freq, loudness);
         printf(", new gain: %4.1f\n", (*gain > 0.0f) ? fval : -*gain);
