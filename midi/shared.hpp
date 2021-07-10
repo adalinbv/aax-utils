@@ -67,7 +67,9 @@ namespace aax
 #define MIDI_DRUMS_CHANNEL              0x9
 #define MIDI_FILE_FORMAT_MAX            0x3
 
-#define LEVEL_60DB			0.0001f
+#ifndef LEVEL_60DB
+# define LEVEL_60DB			0.0001f
+#endif
 #define MAX_REVERB_EFFECTS_TIME		0.210f
 
 enum {
