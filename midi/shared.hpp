@@ -80,13 +80,13 @@ enum {
     MIDI_MODE_MAX
 };
 
-/* GMMIDI */
+/**** GMMIDI ****/
 #define GMMIDI_BROADCAST					0x7f
 
 #define GMMIDI_GM_RESET						0x01
 #define GMMIDI_GM2_RESET					0x03
 
-/* GSMIDI */
+/**** GSMIDI ****/
 #define GSMIDI_DATA_REQUEST1					0x11
 #define GSMIDI_DATA_SET1					0x12
 
@@ -94,6 +94,7 @@ enum {
 #define GSMIDI_SYSTEM						0x10
 
 #define GSMIDI_PARAMETER_CHANGE					0x40
+#define GSMIDI_DRUM_SETUP_PARAMETER_CHANGE			0x41
 #define GSMIDI_MODEL_GS						0x42
 
 /* GS parameter map */
@@ -101,12 +102,14 @@ enum {
 #define GSMIDI_EQUALIZER_TYPE					0x0200
 #define GSMIDI_MULTI_PART					0x1100
 
+/* system parameters */
 #define GSMIDI_MASTER_TUNE					0x0000
 #define GSMIDI_MASTER_VOLUME					0x0004
 #define GSMIDI_MASTER_KEY_SHIFT					0x0005
 #define GSMIDI_MASTER_PAN					0x0006
 #define GSMIDI_MODE_SET						0x007f
 
+/* patch parameters */
 #define GSMIDI_REVERB_MACRO					0x0130
 #define GSMIDI_REVERB_CHARACTER					0x0131
 #define GSMIDI_REVERB_PRE_LPF					0x0132
@@ -165,7 +168,7 @@ enum {
 #define GSMIDI_EQUALIZER_FREQUENCY_HIGH
 #define GSMIDI_EQUALIZER_GAIN_HIGH
 
-/* XGMIDI */
+/**** XGMIDI *****/
 /* categroy */
 #define XGMIDI_BULK_DUMP					0x00
 #define XGMIDI_PARAMETER_CHANGE					0x10

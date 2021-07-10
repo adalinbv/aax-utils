@@ -171,8 +171,8 @@ static XGMIDI_effect_t XGMIDI_EQ_types[XGMIDI_MAX_EQ_TYPES] = {
  { "2-band eq", { 28, 70, 46, 70,  0,  0,  0, 0, 0, 127, 34, 64, 10, 0,  0,  0 } }
 };
 
-#define LEVEL_60DB		0.0001f
-#define MAX_REVERB_EFFECTS_TIME	0.210f
+#define LEVEL_60DB		0.001f
+#define MAX_REVERB_EFFECTS_TIME	0.700f
 
 #define _MAX(a,b)       (((a)>(b)) ? (a) : (b))
 #define _MIN(a,b)       (((a)<(b)) ? (a) : (b))
@@ -225,12 +225,12 @@ int write_reverb()
          float reverb_time = XGMIDI_reverb_time[rt];
 
          float decay_depth = 0.1f*MAX_REVERB_EFFECTS_TIME*df;
-         float decay_level = powf(LEVEL_60DB, 0.5f*decay_depth/reverb_time);
+         float decay_level = powf(LEVEL_60DB, 0.2f*decay_depth/reverb_time);
 
          fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
          fprintf(stream, "<aeonwave>\n\n");
          fprintf(stream, " <audioframe>\n");
-         fprintf(stream, "  <effect type=\"reverb\" src=\"inverse\">\n");
+         fprintf(stream, "  <effect type=\"reverb\" src=\"true\">\n");
          fprintf(stream, "   <slot n=\"0\">\n");
          fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff_freq);
          fprintf(stream, "    <param n=\"1\">%5.4f</param>\n", delay_depth);
@@ -247,7 +247,7 @@ int write_reverb()
          fprintf(stream, " </audioframe>\n\n");
 
          fprintf(stream, " <mixer>\n");
-         fprintf(stream, "  <effect type=\"reverb\" src=\"inverse\">\n");
+         fprintf(stream, "  <effect type=\"reverb\" src=\"true\">\n");
          fprintf(stream, "   <slot n=\"0\">\n");
          fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff_freq);
          fprintf(stream, "    <param n=\"1\">%5.4f</param>\n", delay_depth);
