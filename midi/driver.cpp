@@ -180,7 +180,7 @@ MIDIDriver::set_chorus_type(uint8_t type)
         break;
     case 1:
         midi.set_chorus("chorus/chorus2");
-        INFO("Switching to type 22chorus");
+        INFO("Switching to type 2 chorus");
         break;
     case 2:
         midi.set_chorus("chorus/chorus3");
@@ -192,11 +192,11 @@ MIDIDriver::set_chorus_type(uint8_t type)
         break;
     case 4:
         midi.set_chorus("chorus/chorus_freedback");
-        INFO("Switching to type deedback chorus");
+        INFO("Switching to feedback chorus");
         break;
     case 5:
         midi.set_chorus("chorus/flanger");
-        INFO("Switching to type flanging");
+        INFO("Switching to flanging");
         break;
     default:
         LOG(99, "LOG: Unsupported GS chorus type: 0x%x (%d)\n",
@@ -273,7 +273,7 @@ MIDIDriver::set_reverb_type(uint8_t type)
         break;
     case 4:
         midi.set_reverb("reverb/concerthall-large");
-        INFO("Switching to Lrge Concert Hall reveberation");
+        INFO("Switching to Large Concert Hall reveberation");
         break;
     case 8:
         midi.set_reverb("reverb/plate");

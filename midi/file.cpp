@@ -239,7 +239,7 @@ MIDIFile::initialize(const char *grep)
             }
 
             enum aaxRenderMode render_mode = aaxRenderMode(midi.render_mode());
-            std::string r = "Rendering : ";
+            std::string r;
             if (cores < 4 || !simd) {
                 r += " mono playback";
                 midi.set_mono(true);
