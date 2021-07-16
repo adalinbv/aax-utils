@@ -915,7 +915,7 @@ bool MIDIStream::process_sysex()
                         break;
                     case 4:     // CHORUS_SEND_TO_REVERB
                         // the send level from Chorus to Reverb in %
-                        midi.set_chorus_level(track_no, 0.787f*value);
+                        midi.send_chorus_to_reverb(0.787f*value);
                         break;
                     default:
                         LOG(99, "LOG: Unsupported chorus parameter: %x\n",

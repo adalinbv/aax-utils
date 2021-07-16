@@ -318,7 +318,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 case XGMIDI_REVERB_PARAMETER2:	// Diffusion
                 {
                     float decay_depth = 0.1f*MAX_REVERB_EFFECTS_TIME*value;
-                    midi.set_reverb_decay_level(decay_depth);
+                    midi.set_reverb_decay_depth(decay_depth);
                     break;
                 }
                 case XGMIDI_REVERB_PARAMETER3:	// Initial Delay
@@ -466,12 +466,16 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     break;
                 }
                 case XGMIDI_CHORUS_RETURN:
+                    // -inf dB...0dB...+6dB(0...64...127)
                     LOG(99, "LOG: Unsupported XG Chorus Return\n");
                     break;
                 case XGMIDI_CHORUS_PAN:
+                    // L63...C...R63(1...64...127)
                     LOG(99, "LOG: Unsupported XG Chorus Pan\n");
                     break;
                 case XGMIDI_CHORUS_SEND_TO_REVERB:
+                    // -inf dB...0dB...+6dB(0...64...127)
+                    midi.send_chorus_to_reverb(value/64.0f);
                     LOG(99, "LOG: Unsupported XG Chorus Send to Reverb\n");
                     break;
                 case XGMIDI_VARIATION_TYPE:

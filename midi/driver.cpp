@@ -71,6 +71,11 @@ MIDIDriver::MIDIDriver(const char* n, const char *selections, enum aaxRenderMode
         }
     }
 
+    chorus.tie(chorus_level, AAX_VOLUME_FILTER, AAX_GAIN);
+    chorus.tie(chorus_depth, AAX_CHORUS_EFFECT, AAX_LFO_OFFSET);
+    chorus.tie(chorus_rate, AAX_CHORUS_EFFECT, AAX_LFO_FREQUENCY);
+    chorus.tie(chorus_feedback, AAX_CHORUS_EFFECT, AAX_FEEDBACK_GAIN);
+
     reverb.tie(reverb_decay_level, AAX_REVERB_EFFECT, AAX_DECAY_LEVEL);
     reverb.tie(reverb_decay_depth, AAX_REVERB_EFFECT, AAX_DECAY_DEPTH);
     reverb.tie(reverb_cutoff_frequency, AAX_REVERB_EFFECT, AAX_CUTOFF_FREQUENCY);
@@ -96,11 +101,18 @@ MIDIDriver::set_path()
 void
 MIDIDriver::start()
 {
+    chorus_state = AAX_SINE_WAVE;
+    set_chorus_type(2);
+    chorus.set(AAX_INITIALIZED);
+    chorus.set(AAX_PLAYING);
+    AeonWave::add(chorus);
+
     reverb_state = AAX_REVERB_2ND_ORDER;
     set_reverb("reverb/concerthall-large");
     reverb.set(AAX_INITIALIZED);
     reverb.set(AAX_PLAYING);
     AeonWave::add(reverb);
+
     midi.set_gain(1.0f);
     midi.set(AAX_PLAYING);
 }
@@ -108,8 +120,9 @@ MIDIDriver::start()
 void
 MIDIDriver::stop()
 {
-    reverb.set(AAX_PLAYING);
-    midi.set(AAX_PLAYING);
+    chorus.set(AAX_STOPPED);
+    reverb.set(AAX_STOPPED);
+    midi.set(AAX_STOPPED);
 }
 
 void
@@ -117,6 +130,13 @@ MIDIDriver::rewind()
 {
     channels.clear();
     uSPP = tempo/PPQN;
+
+    for (const auto& it : chorus_channels)
+    {
+        chorus.remove(*it.second);
+        AeonWave::add(*it.second);
+    }
+    chorus_channels.clear();
 
     for (const auto& it : reverb_channels)
     {
@@ -210,40 +230,68 @@ void
 MIDIDriver::set_chorus(const char *t)
 {
     Buffer& buf = AeonWave::buffer(t);
-    for(auto& it : channels) {
-        it.second->add(buf);
+    chorus.add(buf);
+}
+
+void
+MIDIDriver::send_chorus_to_reverb(float val)
+{
+    if (val)
+    {
+        AeonWave::remove(chorus);
+        chorus_level = val;
+        reverb.add(chorus);
+    }
+    else
+    {
+        reverb.remove(chorus);
+        AeonWave::add(chorus);
     }
 }
 
 void
-MIDIDriver::set_chorus_level(uint16_t part_no, float lvl)
+MIDIDriver::set_chorus_level(uint16_t part_no, float val)
 {
-    midi.channel(part_no).set_chorus_level(lvl);
-}
+    if (val)
+    {
+        midi.channel(part_no).set_gain(val);
 
-void
-MIDIDriver::set_chorus_depth(float ms)
-{
-    float us = 1e-3f*ms;
-    for(auto& it : channels) {
-        it.second->set_chorus_depth(us);
+        auto it = chorus_channels.find(part_no);
+        if (it == chorus_channels.end())
+        {
+            it = channels.find(part_no);
+            if (it != channels.end() && it->second)
+            {
+                AeonWave::remove(*it->second);
+                chorus.add(*it->second);
+                chorus_channels[it->first] = it->second;
+            }
+        }
+    }
+    else
+    {
+        auto it = chorus_channels.find(part_no);
+        if (it != chorus_channels.end() && it->second)
+        {
+            chorus.remove(*it->second);
+            AeonWave::add(*it->second);
+        }
     }
 }
 
 void
-MIDIDriver::set_chorus_rate(float rate)
-{
-    for(auto& it : channels) {
-        it.second->set_chorus_rate(rate);
-    }
+MIDIDriver::set_chorus_depth(float ms) {
+    chorus_depth = ms*1e-3f;
 }
 
 void
-MIDIDriver::set_chorus_feedback(float feedback)
-{
-    for(auto& it : channels) {
-        it.second->set_chorus_feedback(feedback);
-    }
+MIDIDriver::set_chorus_rate(float rate) {
+    chorus_rate = rate;
+}
+
+void
+MIDIDriver::set_chorus_feedback(float feedback) {
+    chorus_feedback = feedback;
 }
 
 void
@@ -329,15 +377,13 @@ MIDIDriver::set_reverb_cutoff_frequency(float value) {
 }
 void
 MIDIDriver::set_reverb_time_rt60(float value) {
-    reverb_decay_level = powf(LEVEL_60DB, 0.5f*reverb_decay_depth/value);
-}
-void
-MIDIDriver::set_reverb_decay_level(float value) {
-    reverb_decay_level = value;
+    reverb_time = value;
+    reverb_decay_level = powf(LEVEL_60DB, 0.2f*reverb_decay_depth/value);
 }
 void
 MIDIDriver::set_reverb_decay_depth(float value) {
     reverb_decay_depth = 0.1f*value;
+    set_reverb_time_rt60(reverb_time);
 }
 void
 MIDIDriver::set_reverb_delay_depth(float value) {
