@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <math.h>
 
-static float XGMIDI_LFO_frequency_table[128] = {	// Hz
+static float XGMIDI_LFO_frequency_table_Hz[128] = {	// Hz
  0.f, 0.08f, 0.08f, 0.16f, 0.16f, 0.25f, 0.25f, 0.33f, 0.33f, 0.42f, 0.42f,
  0.5f, 0.5f, 0.58f, 0.58f, 0.67f, 0.67f, 0.75f, 0.75f, 0.84, 0.84f, 0.92f,
  0.92f, 1.f, 1.f, 1.09f, 1.09f, 1.17f, 1.17f, 1.26f, 1.26f, 1.34f, 1.34f,
@@ -19,7 +19,7 @@ static float XGMIDI_LFO_frequency_table[128] = {	// Hz
  30.2f, 31.6f, 32.9f, 34.3f, 37.f, 39.7f
 };
 
-static float XGMIDI_delay_offset_table[128] = {
+static float XGMIDI_delay_offset_table_ms[128] = {	// ms
  0.f, 0.1f, 0.2f, 0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.f, 1.1f, 1.2f,
  1.3f, 1.4f, 1.5f, 1.6f, 1.7f, 1.8f, 1.9f, 2.f, 2.1f, 2.2f, 2.3f, 2.4f, 2.5f,
  2.6f, 2.7f, 2.8f, 2.9f, 3.f, 3.1f, 3.2f, 3.3f, 3.4f, 3.5f, 3.6f, 3.7f, 3.8f,
@@ -33,7 +33,7 @@ static float XGMIDI_delay_offset_table[128] = {
  46.9f, 48.4f, 50.f
 };
 
-static float XGMIDI_delay_time_table[128] = {	// ms
+static float XGMIDI_delay_time_table_200ms[128] = {	// ms
  0.1f, 1.7f, 3.2f, 4.8f, 6.4f, 8.0f, 9.5f, 11.1f, 12.7f, 14.3f, 15.8f, 17.4f,
  19.f, 2.6f, 22.1f, 23.7f, 25.3f, 26.9f, 28.4f, 30.f, 31.6f, 33.2f, 34.7f,
  36.3f, 37.9f, 39.5f, 41.f, 42.6f, 44.2f, 45.7f, 47.3f, 48.9f, 50.5f, 52.f,
@@ -49,7 +49,7 @@ static float XGMIDI_delay_time_table[128] = {	// ms
  198.4f, 200.f
 };
 
-static float XGMIDI_EQ_frequency_table[61] = {
+static float XGMIDI_EQ_frequency_table_Hz[61] = {	// Hz
  20.f, 22.f, 25.f, 28.f, 32.f, 36.f, 40.f, 45.f, 50.f, 56.f, 63.f, 70.f, 80.f,
  90.f, 100.f, 110.f, 125.f, 140.f, 160.f, 180.f, 200.f, 225.f, 250.f, 280.f,
  315.f, 355.f, 400.f, 450.f, 500.f, 560.f, 630.f, 700.f, 800.f, 900.f, 1000.f,
@@ -58,14 +58,19 @@ static float XGMIDI_EQ_frequency_table[61] = {
  9000.f, 10000.f, 11000.0f, 12000.f, 14000.f, 16000.f, 18000.f, 20000.f
 };
 
-static float XGMIDI_room_size_table[45] = {
+static float XGMIDI_room_size_table_m[45] = {		// m
  0.1f, 0.3f, 0.4f, 0.6f, .7f, 0.9f, 1.f, 1.2f, 1.4f, 1.5f, 1.7f, 1.8f, 2.f,
  2.1f, 2.3f, 2.5f, 2.6f, 2.8f, 2.9f, 3.1f, 4.2f, 3.4f, 3.5f, 3.7f, 3.9f, 4.f,
  4.2f, 4.3f, 4.5f, 4.6f, 4.8f, 5.f, 5.1f, 5.3f, 5.4f, 5.6f, 5.7f, 5.9f, 6.1f,
  6.2f, 6.4f, 6.5f, 6.7f, 6.8f, 7.f
 };
 
-static float XGMIDI_compressor_release_time_table[16] = {
+static float XGMIDI_compressor_attack_time_table_ms[19] = { // ms
+ 1.f, 2.f, 3.f, 4.f, 5.f, 6.f, 7.f, 8.f, 9.f, 10.f, 12.f, 14.f, 16.f, 18.f,
+ 20.f, 23.f, 26.f, 30.f, 35.f, 40.f
+};
+
+static float XGMIDI_compressor_release_time_table_ms[16] = { // ms
  10.f, 15.f, 25.f, 35.f, 45.f, 55.f, 65.f, 75.f, 85.f, 100.f, 115.f, 140.f,
  170.f, 230.f, 340.f, 680.f
 };
@@ -74,7 +79,7 @@ static float XGMIDI_compressor_ratio_table[8] = {
  1.f, 1.5f, 2.f, 3.f, 5.f, 7.f, 10.f, 20.0f
 };
 
-static float XGMIDI_reverb_time[70] = {
+static float XGMIDI_reverb_time_sec[70] = {		// s
  0.3f, 0.4f, 0.5f, 0.6f, 0.7f, 0.8f, 0.9f, 1.f, 1.1f, 1.2f, 1.3f, 1.4f, 1.5f,
  1.6f, 1.7f, 1.8f, 1.9f, 2.f, 2.1f, 2.2f, 2.3f, 2.4f, 2.5f, 2.6f, 2.7f, 2.8f,
  2.9f, 3.f, 3.1f, 3.2f, 3.3f, 3.4f, 3.5f, 3.6f, 3.7f, 3.8f, 3.9f, 4.f, 4.1f,
@@ -83,7 +88,7 @@ static float XGMIDI_reverb_time[70] = {
  18.f, 19.f, 20.f, 25.f, 30.f
 };
 
-static float XGMIDI_reverb_dimensions[105] = {
+static float XGMIDI_reverb_dimensions_m[105] = {		// m
  0.5f, 0.8f, 1.f, 1.3f, 1.5f, 1.8f, 2.f, 2.3f, 2.6f, 2.8f, 3.1f, 3.3f, 3.6f,
  3.9f, 4.1f, 4.4f, 4.6f, 4.9f, 5.2f, 5.4f, 5.7f, 5.9f, 6.2f, 6.5f, 6.7f, 7.f,
  7.2f, 7.5f, 7.8f, 8.f, 8.3f, 8.6f, 8.8f, 9.1f, 9.4f, 9.6f, 9.9f, 10.2f, 10.4f,
@@ -93,6 +98,22 @@ static float XGMIDI_reverb_dimensions[105] = {
  20.5f, 20.8f, 21.1f, 22.f, 22.4f, 22.7f, 23.f, 23.3f, 23.6f, 23.9f, 24.2f,
  24.5f, 24.9f, 25.2f, 25.5f, 25.8f, 27.1f, 27.5f, 27.8f, 28.1f, 28.5f, 28.8f,
  29.2f, 29.5f, 29.9f, 30.2f
+};
+
+static float XGMIDI_delay_time_400ms[128] = {		// ms
+ 0.1f, 3.2f, 6.4f, 9.5f, 12.7f, 15.8f, 19.f, 22.1f, 25.3f, 28.4f, 31.6f, 34.7f,
+ 37.9f, 41.f, 442.f, 47.3f, 50.5f, 53.6f, 56.8f, 59.9f, 63.1f, 66.2f, 69.4f,
+ 72.5f, 75.7f, 78.8f, 82.f, 85.1f, 88.3f, 91.4f, 94.6f, 97.7f, 100.9f, 104.f,
+ 107.2f, 110.3f, 113.5f, 116.6f, 119.8f, 122.9f, 126.1f, 129.2f, 132.4f, 135.5f,
+ 138.6f, 141.8f, 144.9f, 148.1f, 151.2f, 154.4f, 157.5f, 160.7f, 163.8f, 167.f,
+ 170.1f, 173.3f, 176.4f, 179.6f, 182.7f, 185.9f, 189.f, 192.2f, 195.3f, 198.5f,
+ 201.6f, 204.8f, 207.9f, 211.1f, 214.2f, 217.4f, 220.5f, 223.7f, 226.8f, 230.f,
+ 233.1f, 236.3f, 239.4f, 242.6f, 245.7f, 248.9f, 252.f, 255.2f, 258.3f, 261.5f,
+ 264.6f, 267.7f, 270.9f, 274.f, 277.2f, 280.3f, 283.5f, 286.6f, 289.8f, 292.9f,
+ 296.1f, 299.2f, 302.4f, 305.5f, 308.7f, 311.8f, 315.f, 318.1f, 321.3f, 324.4f,
+ 327.6f, 330.7f, 333.9f, 337.f, 340.2f, 343.3f, 346.5f, 349.6f, 352.8f, 355.9f,
+ 359.1f, 362.2f, 365.4f, 368.5f, 371.7f, 374.8f, 378.f, 381.1f, 384.3f, 387.4f,
+ 390.6f, 393.7f, 396.9f, 400.f
 };
 
 typedef struct {
@@ -171,6 +192,14 @@ static XGMIDI_effect_t XGMIDI_EQ_types[XGMIDI_MAX_EQ_TYPES] = {
  { "2-band eq", { 28, 70, 46, 70,  0,  0,  0, 0, 0, 127, 34, 64, 10, 0,  0,  0 } }
 };
 
+#define PHASING_MIN      50e-6f
+#define PHASING_MAX      10e-3f
+#define CHORUS_MIN       10e-3f
+#define CHORUS_MAX       60e-3f
+#define FLANGING_MIN     10e-3f
+#define FLANGING_MAX     60e-3f
+#define DELAY_MIN        60e-3f
+#define DELAY_MAX       200e-3f
 #define LEVEL_60DB		0.001f
 #define MAX_REVERB_EFFECTS_TIME	0.700f
 
@@ -206,23 +235,23 @@ int write_reverb()
 
          /* room dimansions */
          int size = type->param[5];
-         float width = XGMIDI_reverb_dimensions[size];
+         float width = XGMIDI_reverb_dimensions_m[size];
 
          size = type->param[6];
-         float height = XGMIDI_reverb_dimensions[size];
+         float height = XGMIDI_reverb_dimensions_m[size];
 
          size = type->param[7];
-         float depth = XGMIDI_reverb_dimensions[size];
+         float depth = XGMIDI_reverb_dimensions_m[size];
 
          float density = 0.0f; // XGMIDI_reverb_types[i].param[9]/63.0f;
 
          /* basic parameters */
-         float cutoff_freq = XGMIDI_EQ_frequency_table[fc];
+         float cutoff_freq = XGMIDI_EQ_frequency_table_Hz[fc];
          cutoff_freq = (1.1f - 0.1f*hd) * cutoff_freq;
 
-         float delay_depth = XGMIDI_delay_time_table[id]*1e-3f;
+         float delay_depth = XGMIDI_delay_time_table_200ms[id]*1e-3f;
 
-         float reverb_time = XGMIDI_reverb_time[rt];
+         float reverb_time = XGMIDI_reverb_time_sec[rt];
 
          float decay_depth = 0.1f*MAX_REVERB_EFFECTS_TIME*df;
          float decay_level = powf(LEVEL_60DB, 0.2f*decay_depth/reverb_time);
@@ -286,20 +315,20 @@ int write_chorus()
       if (stream)
       {
          int lf = type->param[0];	// LFO Frequency
-         int pd = type->param[1];	// LFO Phase Modulation Depth
+         int pd = type->param[1];	// LFO Pitch Modulation Depth
          int fb = type->param[2];	// Feedback Level
          int dt = type->param[3];	// Delay Offset
          int fl = type->param[5];	// EQ Low Frequency
          int fh = type->param[7];	// EQ High frequency
          int dw = type->param[9];	// Dry/Wet
 
-         float lfo_frequency = XGMIDI_LFO_frequency_table[lf];
-         float lfo_offset = XGMIDI_delay_offset_table[dt]/50.0f;
+         float lfo_frequency = XGMIDI_LFO_frequency_table_Hz[lf];
+         float lfo_offset = XGMIDI_delay_offset_table_ms[dt];
          float lfo_depth = pd/127.0f;
          float gain = (dw - 1)/127.0f;
 
-         float cutoff_freq_low = XGMIDI_EQ_frequency_table[fl];
-         float cutoff_freq_high = XGMIDI_EQ_frequency_table[fh];
+         float cutoff_freq_low = XGMIDI_EQ_frequency_table_Hz[fl];
+         float cutoff_freq_high = XGMIDI_EQ_frequency_table_Hz[fh];
          float feedback = _MAX(fb - 64, 0)/127.0f;
 
          fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
@@ -310,7 +339,7 @@ int write_chorus()
          fprintf(stream, "    <param n=\"0\">%5.3f</param>\n", gain);
          fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", lfo_frequency);
          fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", lfo_depth);
-         fprintf(stream, "    <param n=\"3\">%5.3f</param>\n", lfo_offset);
+         fprintf(stream, "    <param n=\"3\" type=\"usec\">%5.1f</param>\n", lfo_offset*1e3f);
          fprintf(stream, "   </slot>\n");
          fprintf(stream, "   <slot n=\"1\">\n");
          fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff_freq_low);
@@ -327,7 +356,7 @@ int write_chorus()
          fprintf(stream, "    <param n=\"0\">%5.3f</param>\n", gain);
          fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", lfo_frequency);
          fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", lfo_depth);
-         fprintf(stream, "    <param n=\"3\">%5.3f</param>\n", lfo_offset);
+         fprintf(stream, "    <param n=\"3\" type=\"usec\">%5.1f</param>\n", lfo_offset*1e3f);
          fprintf(stream, "   </slot>\n");
          fprintf(stream, "   <slot n=\"1\">\n");
          fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff_freq_low);
@@ -367,13 +396,13 @@ int write_phasing()
          int fh = type->param[7];	// EQ High frequency
          int dw = type->param[9];	// Dry/Wet
 
-         float lfo_frequency = XGMIDI_LFO_frequency_table[lf];
+         float lfo_frequency = XGMIDI_LFO_frequency_table_Hz[lf];
          float lfo_offset = dt/127.0f;
          float lfo_depth = pd/127.0f - lfo_offset;
          float gain = (dw - 1)/127.0f;
 
-         float cutoff_freq_low = XGMIDI_EQ_frequency_table[fl];
-         float cutoff_freq_high = XGMIDI_EQ_frequency_table[fh];
+         float cutoff_freq_low = XGMIDI_EQ_frequency_table_Hz[fl];
+         float cutoff_freq_high = XGMIDI_EQ_frequency_table_Hz[fh];
          float feedback = _MAX(fb - 64, 0)/127.0f;
 
          fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
