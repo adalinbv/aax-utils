@@ -902,25 +902,25 @@ bool MIDIStream::process_sysex()
                         midi.set_chorus_type(value);
                         break;
                     case 1:     // CHORUS_MOD_RATE
-                    // the modulation frequency in Hz
+                        // the modulation frequency in Hz
                         midi.set_chorus_rate(0.122f*value);
                         break;
                     case 2:     // CHORUS_MOD_DEPTH
-                    {
-                    // the peak-to-peak swing of the modulation in ms
-                        float ms = 1e-3f*(value+1.0f)/3.2f;
-                        midi.set_chorus_depth(ms);
+                        // the peak-to-peak swing of the modulation in ms
+                        midi.set_chorus_depth(((value+1.0f)/3.2f)*1e-3f);
                         break;
-                    }
                     case 3:     // CHORUS_FEEDBACK
-                        midi.set_chorus_level(0.763f*value);
-                    // the amount of feedback from Chorus output in %
+                        // the amount of feedback from Chorus output in %
+                        midi.set_chorus_feedback(0.763f*value);
                         break;
                     case 4:     // CHORUS_SEND_TO_REVERB
-                    // the send level from Chorus to Reverb in %
-                        midi.set_chorus_level(0.787f*value);
+                        // the send level from Chorus to Reverb in %
+                        midi.set_chorus_level(track_no, 0.787f*value);
+                        break;
                     default:
-                       break;
+                        LOG(99, "LOG: Unsupported chorus parameter: %x\n",
+                                 param);
+                        break;
                     }
                     break;
                 case MIDI_REVERB_PARAMETER:
@@ -930,12 +930,12 @@ bool MIDIStream::process_sysex()
                         midi.set_reverb_type(value);
                         break;
                     case 1:     //Reverb Time
-                    {
-                        float rt = expf((value-40)*0.025);
-                        midi.set_decay_depth(rt);
-                    }
+                        midi.set_reverb_time_rt60(expf((value-40)*0.025f));
+                        break;
                     default:
-                       break;
+                        LOG(99, "LOG: Unsupported reverb parameter: %x\n",
+                                param);
+                        break;
                     }
                     break;
                 default:

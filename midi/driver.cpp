@@ -71,6 +71,7 @@ MIDIDriver::MIDIDriver(const char* n, const char *selections, enum aaxRenderMode
         }
     }
 
+    reverb.tie(reverb_decay_level, AAX_REVERB_EFFECT, AAX_DECAY_LEVEL);
     reverb.tie(reverb_decay_depth, AAX_REVERB_EFFECT, AAX_DECAY_DEPTH);
     reverb.tie(reverb_cutoff_frequency, AAX_REVERB_EFFECT, AAX_CUTOFF_FREQUENCY);
     reverb.tie(reverb_state, AAX_REVERB_EFFECT);
@@ -215,11 +216,9 @@ MIDIDriver::set_chorus(const char *t)
 }
 
 void
-MIDIDriver::set_chorus_level(float lvl)
+MIDIDriver::set_chorus_level(uint16_t part_no, float lvl)
 {
-    for(auto& it : channels) {
-        it.second->set_chorus_level(lvl);
-    }
+    midi.channel(part_no).set_chorus_level(lvl);
 }
 
 void
@@ -236,6 +235,14 @@ MIDIDriver::set_chorus_rate(float rate)
 {
     for(auto& it : channels) {
         it.second->set_chorus_rate(rate);
+    }
+}
+
+void
+MIDIDriver::set_chorus_feedback(float feedback)
+{
+    for(auto& it : channels) {
+        it.second->set_chorus_feedback(feedback);
     }
 }
 
@@ -287,16 +294,16 @@ MIDIDriver::set_reverb_type(uint8_t type)
 }
 
 void
-MIDIDriver::set_reverb_level(uint8_t channel, float val)
+MIDIDriver::set_reverb_level(uint16_t part_no, float val)
 {
     if (val)
     {
-        midi.channel(channel).set_reverb_level(val);
+        midi.channel(part_no).set_reverb_level(val);
 
-        auto it = reverb_channels.find(channel);
+        auto it = reverb_channels.find(part_no);
         if (it == reverb_channels.end())
         {
-            it = channels.find(channel);
+            it = channels.find(part_no);
             if (it != channels.end() && it->second)
             {
                 AeonWave::remove(*it->second);
@@ -307,7 +314,7 @@ MIDIDriver::set_reverb_level(uint8_t channel, float val)
     }
     else
     {
-        auto it = reverb_channels.find(channel);
+        auto it = reverb_channels.find(part_no);
         if (it != reverb_channels.end() && it->second)
         {
             reverb.remove(*it->second);
@@ -316,17 +323,27 @@ MIDIDriver::set_reverb_level(uint8_t channel, float val)
     }
 }
 
-void MIDIDriver::set_reverb_cutoff(uint8_t channel, float value) {
-    midi.channel(channel).set_reverb_cutoff(value);
+void
+MIDIDriver::set_reverb_cutoff_frequency(float value) {
+    reverb_cutoff_frequency = value;
 }
-void MIDIDriver::set_reverb_time_rt60(uint8_t channel, float value) {
-    midi.channel(channel).set_reverb_time_rt60(value);
+void
+MIDIDriver::set_reverb_time_rt60(float value) {
+    reverb_decay_level = powf(LEVEL_60DB, 0.5f*reverb_decay_depth/value);
 }
-void MIDIDriver::set_reverb_delay_depth(uint8_t channel, float value) {
-    midi.channel(channel).set_reverb_delay_depth(value);
+void
+MIDIDriver::set_reverb_decay_level(float value) {
+    reverb_decay_level = value;
 }
-void MIDIDriver::set_reverb_decay_level(uint8_t channel, float value) {
-    midi.channel(channel).set_reverb_decay_level(value);
+void
+MIDIDriver::set_reverb_decay_depth(float value) {
+    reverb_decay_depth = 0.1f*value;
+}
+void
+MIDIDriver::set_reverb_delay_depth(float value) {
+    for(auto& it : reverb_channels) {
+        it.second->set_reverb_delay_depth(value);
+    }
 }
 
 /*

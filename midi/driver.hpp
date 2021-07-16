@@ -170,21 +170,24 @@ public:
     inline void set_ppqn(uint16_t ppqn) { PPQN = ppqn; }
     inline uint16_t get_ppqn() { return PPQN; }
 
+    /* chorus */
     void set_chorus(const char *t);
     void set_chorus_type(uint8_t value);
-    void set_chorus_level(float lvl);
+    void set_chorus_level(uint16_t part_no, float lvl);
     void set_chorus_depth(float depth);
+    void set_chorus_feedback(float feedback);
     void set_chorus_rate(float rate);
 
+    /* reverb */
     void set_reverb(const char *t);
     void set_reverb_type(uint8_t value);
-    void set_reverb_level(uint8_t channel, float value);
-    void set_reverb_cutoff(uint8_t channel, float value);
-    void set_reverb_time_rt60(uint8_t channel, float value);
-    void set_reverb_delay_depth(uint8_t channel, float value);
-    void set_reverb_decay_level(uint8_t channel, float value);
+    void set_reverb_cutoff_frequency(float value);
+    void set_reverb_decay_level(float value);
+    void set_reverb_decay_depth(float value);
+    void set_reverb_time_rt60(float value);
+    void set_reverb_delay_depth(float value);
 
-    inline void set_decay_depth(float rt) { reverb_decay_depth = 0.1f*rt; }
+    void set_reverb_level(uint16_t part_no, float value);
 
     // ** buffer management ******
     Buffer& buffer(std::string& name, int level=0) {
@@ -299,7 +302,8 @@ private:
     bool csv = false;
 
     uint8_t reverb_type = 4;
-    Param reverb_decay_depth = 0.15f;
+    Param reverb_decay_level = 0.66f;
+    Param reverb_decay_depth = 0.3f;
     Param reverb_cutoff_frequency = 790.0f;
     Status reverb_state = AAX_FALSE;
     aax::Mixer reverb = aax::Mixer(*this);
