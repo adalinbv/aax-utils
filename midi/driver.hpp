@@ -253,7 +253,11 @@ private:
     std::string effects;
     std::string track_name;
     _channel_map_t channels;
+#if 0
     _channel_map_t chorus_channels;
+#else
+    std::vector<int> chorus_channels;
+#endif
     _channel_map_t reverb_channels;
     std::map<uint16_t,std::string> frames;
 

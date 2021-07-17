@@ -131,11 +131,13 @@ MIDIDriver::rewind()
     channels.clear();
     uSPP = tempo/PPQN;
 
+#if 0
     for (const auto& it : chorus_channels)
     {
         chorus.remove(*it.second);
         AeonWave::add(*it.second);
     }
+#endif
     chorus_channels.clear();
 
     for (const auto& it : reverb_channels)
@@ -230,12 +232,19 @@ void
 MIDIDriver::set_chorus(const char *t)
 {
     Buffer& buf = AeonWave::buffer(t);
+#if 0
     chorus.add(buf);
+#else
+    for(int i=0; i<chorus_channels.size(); ++i) {
+        midi.channel(i).add(buf);
+    }
+#endif
 }
 
 void
 MIDIDriver::send_chorus_to_reverb(float val)
 {
+#if 0
     if (val)
     {
         AeonWave::remove(chorus);
@@ -247,11 +256,13 @@ MIDIDriver::send_chorus_to_reverb(float val)
         reverb.remove(chorus);
         AeonWave::add(chorus);
     }
+#endif
 }
 
 void
 MIDIDriver::set_chorus_level(uint16_t part_no, float val)
 {
+#if 0
     if (val)
     {
         midi.channel(part_no).set_gain(val);
@@ -277,21 +288,49 @@ MIDIDriver::set_chorus_level(uint16_t part_no, float val)
             AeonWave::add(*it->second);
         }
     }
+#else
+    auto it = std::find(chorus_channels.begin(),chorus_channels.end(), part_no);
+    if (val) {
+        if (it == chorus_channels.end()) {
+            chorus_channels.push_back(part_no);
+        }
+    } else {
+        chorus_channels.erase(it);
+    }
+    midi.channel(part_no).set_chorus_level(val);
+#endif
 }
 
 void
 MIDIDriver::set_chorus_depth(float ms) {
     chorus_depth = ms*1e-3f;
+#if 1
+    for(int i=0; i<chorus_channels.size(); ++i) {
+        midi.channel(i).set_chorus_depth(chorus_depth);
+    }
+#endif
 }
 
 void
 MIDIDriver::set_chorus_rate(float rate) {
+#if 0
     chorus_rate = rate;
+#else
+    for(int i=0; i<chorus_channels.size(); ++i) {
+        midi.channel(i).set_chorus_rate(rate);
+    }
+#endif
 }
 
 void
 MIDIDriver::set_chorus_feedback(float feedback) {
+#if 0
     chorus_feedback = feedback;
+#else
+    for(int i=0; i<chorus_channels.size(); ++i) {
+        midi.channel(i).set_chorus_feedback(feedback);
+    }
+#endif
 }
 
 void
