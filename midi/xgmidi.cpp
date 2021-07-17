@@ -603,7 +603,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     LOG(99, "LOG: Unsupported XG Variation Part Number\n");
                     break;
                 case XGMIDI_MW_VARIATION_CONTROL_DEPTH:
-                    LOG(99, "LOG: Unsupported XG Variation MW Contgrol Depth\n");
+                    LOG(99, "LOG: Unsupported XG Variation Mod Wheel Contgrol Depth\n");
                     break;
                 case XGMIDI_BEND_VARIATION_CONTROL_DEPTH:
                     LOG(99, "LOG: Unsupported XG Variation Bend Control Depth\n");
@@ -760,22 +760,22 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     channel.set_release_time(value);
                     break;
                 case XGMIDI_MW_PITCH_CONTROL: // -24 - +24 semitones
-                    LOG(99, "LOG: Unsupported XG MW Pitch Control\n");
+                    LOG(99, "LOG: Unsupported XG Mod Wheel Pitch Control\n");
                     break;
                 case XGMIDI_MW_FILTER_CONTROL: // -9600 - +9450 cents
-                    LOG(99, "LOG: Unsupported XG MW Filter Control\n");
+                    LOG(99, "LOG: Unsupported XG Mod Wheel Filter Control\n");
                     break;
                 case XGMIDI_MW_AMPLITUDE_CONTROL: // -100 - +100%
-                    LOG(99, "LOG: Unsupported XG MW Amplitude Control\n");
+                    LOG(99, "LOG: Unsupported XG Mod Wheel Amplitude Control\n");
                     break;
                 case XGMIDI_MW_LFO_PMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG MW LFO Phase Modulation Depth\n");
+                    LOG(99, "LOG: Unsupported XG Mod Wheel LFO Phase Modulation Depth\n");
                     break;
                 case XGMIDI_MW_LFO_FMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG MW LFO Frequency Modulation Depth\n");
+                    LOG(99, "LOG: Unsupported XG Mod Wheel LFO Frequency Modulation Depth\n");
                     break;
                 case XGMIDI_MW_LFO_AMOD_DEPTH: // 0 - 127
-                    LOG(99, "LOG: Unsupported XG MW LFO Amplitude Modulation Depth\n");
+                    LOG(99, "LOG: Unsupported XG Mod Wheel LFO Amplitude Modulation Depth\n");
                     break;
                 case XGMIDI_BEND_PITCH_CONTROL: // // -24 - +24 semitones
                     LOG(99, "LOG: Unsupported XG Bend Pitch Control\n");
