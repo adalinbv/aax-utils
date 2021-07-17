@@ -290,11 +290,9 @@ MIDIDriver::set_chorus_level(uint16_t part_no, float val)
     }
 #else
     auto it = std::find(chorus_channels.begin(),chorus_channels.end(), part_no);
-    if (val) {
-        if (it == chorus_channels.end()) {
-            chorus_channels.push_back(part_no);
-        }
-    } else {
+    if (val && it == chorus_channels.end()) {
+        chorus_channels.push_back(part_no);
+    } else if (it != chorus_channels.end()) {
         chorus_channels.erase(it);
     }
     midi.channel(part_no).set_chorus_level(val);
