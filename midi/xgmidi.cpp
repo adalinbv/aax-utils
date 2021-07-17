@@ -244,62 +244,62 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     {
                     case XGMIDI_REVERB_HALL1:
                         midi.set_reverb("reverb/XG/hall1");
-                        INFO("Switching to Concert Hall Reveberation");
+                        INFO("Switching to XG Concert Hall Reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_HALL2:
                         midi.set_reverb("reverb/XG/hall2");
-                        INFO("Switching to Large Concert Hall reveberation");
+                        INFO("Switching to XG Large Concert Hall reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM1:
                         midi.set_reverb("reverb/XG/room1");
-                        INFO("Switching to Medium Room reveberation");
+                        INFO("Switching to XG Medium Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM2:
                         midi.set_reverb("reverb/XG/room2");
-                        INFO("Switching to Small Room reveberation");
+                        INFO("Switching to XG Small Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM3:
                         midi.set_reverb("reverb/XG/room3");
-                        INFO("Switching to Large Room reveberation");
+                        INFO("Switching to XG Large Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_STAGE1:
                         midi.set_reverb("reverb/XG/stage1");
-                        INFO("Switching to Small Stage reveberation");
+                        INFO("Switching to XG Small Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_STAGE2:
                         midi.set_reverb("reverb/XG/stage2");
-                        INFO("Switching to Large Stage reveberation");
+                        INFO("Switching to XG Large Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_PLATE:
                         midi.set_reverb("reverb/XG/plate");
-                        INFO("Switching to Plate reveberation");
+                        INFO("Switching to XG Plate reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_WHITE_ROOM:
                         midi.set_reverb("reverb/XG/whiteroom");
-                        INFO("Switching to White Room reveberation");
+                        INFO("Switching to XG White Room reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_TUNNEL:
                         midi.set_reverb("reverb/XG/tunnel");
-                        INFO("Switching to Tunnel reveberation");
+                        INFO("Switching to XG Tunnel reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_CANYON:
                         midi.set_reverb("reverb/XG/canyon");
-                        INFO("Switching to Canyon reveberation");
+                        INFO("Switching to XG Canyon reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_BASEMENT:
                         midi.set_reverb("reverb/XG/basement");
-                        INFO("Switching to Basement reveberation");
+                        INFO("Switching to XG Basement reveberation");
                         rv = true;
                        break;
                     default:
