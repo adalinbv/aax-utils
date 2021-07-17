@@ -614,7 +614,7 @@ bool MIDIStream::process_control(uint8_t track_no)
     case MIDI_CHORUS_SEND_LEVEL:
     {
         float val = (float)value/127.0f;
-        channel.set_chorus_level(val);
+        midi.set_chorus_level(track_no, val);
         break;
     }
     case MIDI_FILTER_RESONANCE:
