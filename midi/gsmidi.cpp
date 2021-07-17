@@ -190,35 +190,35 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                         {
                         case GSMIDI_CHORUS1:
                             midi.set_chorus("chorus/chorus1");
-                            INFO("Switching to type 1 chorus");
+                            INFO("Switching to GS type 1 chorus");
                             break;
                         case GSMIDI_CHORUS2:
                             midi.set_chorus("chorus/chorus2");
-                            INFO("Switching to type 2 chorus");
+                            INFO("Switching to GS type 2 chorus");
                             break;
                         case GSMIDI_CHORUS3:
                             midi.set_chorus("chorus/chorus3");
-                            INFO("Switching to type 3 chorus");
+                            INFO("Switching to GS type 3 chorus");
                             break;
                         case GSMIDI_CHORUS4:
                             midi.set_chorus("chorus/chorus4");
-                            INFO("Switching to type 4 chorus");
+                            INFO("Switching to GS type 4 chorus");
                             break;
                         case GSMIDI_FEEDBACK_CHORUS:
                             midi.set_chorus("chorus/chorus_freedback");
-                            INFO("Switching to feedback chorus");
+                            INFO("Switching to GS feedback chorus");
                             break;
                         case GSMIDI_FLANGER:
                             midi.set_chorus("chorus/flanger");
-                            INFO("Switching to flanging");
+                            INFO("Switching to GS flanging");
                             break;
                         case GSMIDI_DELAY:
                             midi.set_chorus("chorus/delay");
-                            INFO("Switching to type short delay");
+                            INFO("Switching to GS short delay");
                             break;
                         case GSMIDI_DELAY_FEEDBACK:
                             midi.set_chorus("chorus/delay_feedback");
-                            INFO("Switching to type short delay with feedback");
+                            INFO("Switching to GS short delay with feedback");
                             break;
                         default:
                             LOG(99, "LOG: Unsupported GS chorus type: 0x%x (%d)\n",

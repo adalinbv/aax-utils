@@ -369,68 +369,68 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     switch (type)
                     {
                     case XGMIDI_CHORUS1:
-                        midi.set_chorus("chorus/chorus1");
-                        INFO("Switching to type 1 chorus");
+                        midi.set_chorus("chorus/XG/chorus1");
+                        INFO("Switching to XG type 1 chorus");
                         rv = true;
                         break;
                     case XGMIDI_CHORUS2:
-                        midi.set_chorus("chorus/chorus2");
-                        INFO("Switching to type 2 chorus");
+                        midi.set_chorus("chorus/XG/chorus2");
+                        INFO("Switching to XG type 2 chorus");
                         rv = true;
                         break;
                     case XGMIDI_CHORUS3:
-                        midi.set_chorus("chorus/chorus3");
-                        INFO("Switching to type 3chorus");
+                        midi.set_chorus("chorus/XG/chorus3");
+                        INFO("Switching to XG type 3chorus");
                         rv = true;
                         break;
                     case XGMIDI_CHORUS4:
-                        midi.set_chorus("chorus/chorus4");
-                        INFO("Switching to type 4 chorus");
+                        midi.set_chorus("chorus/XG/chorus4");
+                        INFO("Switching to XG type 4 chorus");
                         rv = true;
                         break;
                     case XGMIDI_CELESTE1:
-                        midi.set_chorus("chorus/chorus1");
-                        INFO("Switching to type 1 celeste");
+                        midi.set_chorus("chorus/XG/celeste1");
+                        INFO("Switching to XG type 1 celeste");
                         rv = true;
                         break;
                     case XGMIDI_CELESTE2:
-                        midi.set_chorus("chorus/chorus2");
-                        INFO("Switching to type 2 celeste");
+                        midi.set_chorus("chorus/XG/celeste2");
+                        INFO("Switching to XG type 2 celeste");
                         rv = true;
                         break;
                     case XGMIDI_CELESTE3:
-                        midi.set_chorus("chorus/chorus3");
-                        INFO("Switching to type 3 celeste");
+                        midi.set_chorus("chorus/XG/celeste3");
+                        INFO("Switching to XG type 3 celeste");
                         rv = true;
                         break;
                     case XGMIDI_CELESTE4:
-                        midi.set_chorus("chorus/chorus4");
-                        INFO("Switching to type 4 celeste");
+                        midi.set_chorus("chorus/XG/celeste4");
+                        INFO("Switching to XG type 4 celeste");
                         rv = true;
                         break;
                     case XGMIDI_FLANGING1:
-                        midi.set_chorus("chorus/flanger");
-                        INFO("Switching to type 1 flanging");
+                        midi.set_chorus("chorus/XG/flanger1");
+                        INFO("Switching to XG type 1 flanging");
                         rv = true;
                         break;
                     case XGMIDI_FLANGING2:
-                        midi.set_chorus("chorus/flanger2");
-                        INFO("Switching to type 2 flanging");
+                        midi.set_chorus("chorus/XG/flanger2");
+                        INFO("Switching to XG type 2 flanging");
                         rv = true;
                         break;
                     case XGMIDI_FLANGING3:
-                        midi.set_chorus("chorus/flanger3");
-                        INFO("Switching to type 3 flanging");
+                        midi.set_chorus("chorus/XG/flanger3");
+                        INFO("Switching to XG type 3 flanging");
                         rv = true;
                         break;
                     case XGMIDI_SYMPHONIC:
-                        midi.set_chorus("chorus/symphony");
-                        INFO("Switching to symphony");
+                        midi.set_chorus("chorus/XG/symphony");
+                        INFO("Switching to XG symphony");
                         rv = true;
                         break;
                     case XGMIDI_PHASING:
-                        midi.set_chorus("chorus/phaser");
-                        INFO("Switching to phasing");
+                        midi.set_chorus("chorus/XG/phaser1");
+                        INFO("Switching to XG type 1 phasing");
                         rv = true;
                         break;
                     default:
