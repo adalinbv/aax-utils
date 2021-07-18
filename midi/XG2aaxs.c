@@ -157,7 +157,7 @@ static XGMIDI_effect_t XGMIDI_reverb_types[XGMIDI_MAX_REVERB_TYPES] = {
  { "basement",  {  3,  6,  3,  0, 34, 26, 29, 59, 15, 40, 32,  4, 64,  8, 64,  0 } }
 };
 
-#define XGMIDI_MAX_CHORUS_TYPES         13
+#define XGMIDI_MAX_CHORUS_TYPES         16
 static XGMIDI_effect_t XGMIDI_chorus_types[XGMIDI_MAX_CHORUS_TYPES] = {
  { "chorus1",  {  6,  54,  77, 106, 0, 28, 64, 46, 64,  64, 46, 64, 10, 0, 0, 0 } },
  { "chorus2",  {  8,  63,  64,  30, 0, 28, 62, 42, 58,  64, 46, 64, 10, 0, 0, 0 } },
@@ -171,7 +171,10 @@ static XGMIDI_effect_t XGMIDI_chorus_types[XGMIDI_MAX_CHORUS_TYPES] = {
  { "flanger2", { 32,  17,  26,   2, 0, 28, 64, 46, 60,  96, 40, 64, 10, 4, 0, 0 } },
  { "flanger3", {  4, 109, 109,   2, 0, 28, 64, 46, 64, 127, 40, 64, 10, 4, 0, 0 } },
   { "symphonic",{ 12,  25,  16,   0, 0, 28, 64, 46, 64, 127, 46, 64, 10, 0, 0, 0 } },
- { "rotary-speaker" , { 81, 35, 0, 0, 0, 24, 60, 45, 54, 127, 33, 52, 30, 0, 0, 0 } }
+ { "rotary-speaker" , { 81, 35, 0, 0, 0, 24, 60, 45, 54, 127, 33, 52, 30, 0, 0, 0 } },
+ { "karaoke1", { 63,  97,  0, 48, 0, 0, 0, 0, 0, 64, 2, 0, 0, 0, 0, 0 } },
+ { "karaoke2", { 55, 105,  0, 50, 0, 0, 0, 0, 0, 64, 1, 0, 0, 0, 0, 0 } },
+ { "karaoke3", { 43, 110, 14, 53, 0, 0, 0, 0, 0, 64, 0, 0, 0, 0, 0, 0 } }
 };
 
 #define XGMIDI_MAX_PHASING_TYPES        2
@@ -190,6 +193,10 @@ static XGMIDI_effect_t XGMIDI_distortion_types[XGMIDI_MAX_DISTORTION_TYPES] = {
 static XGMIDI_effect_t XGMIDI_EQ_types[XGMIDI_MAX_EQ_TYPES] = {
  { "equalizer-3-band", { 70, 34, 60, 10, 70, 28, 46, 0, 0, 127,  0,  0, 0,  0,  0,  0 } },
  { "equalizer-2-band", { 28, 70, 46, 70,  0,  0,  0, 0, 0, 127, 34, 64, 10, 0,  0,  0 } }
+};
+
+static XGMIDI_effect_t XGMIDI_amp_simulator_types[1] = {
+ { "amp-simulator", { 39, 1, 48, 55,  0,  0,  0, 0, 0, 127, 112, 0, 0, 0,  0,  0 } }
 };
 
 #define PHASING_MIN      50e-6f
@@ -230,7 +237,7 @@ int write_reverb()
          int df = type->param[1];	// Diffusion 0 ~ 10 (0-10)
          int id = type->param[2];	// Initial Delay 0 ~ 63 (0-63 )
          int fc = type->param[4];	// LPF Cutoff 1.0k ~ Thru (34-60)
-         int dw = type->param[9];	// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
+//       int dw = type->param[9];	// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
 //       int ds = type->param[11];	// Density 0 ~ 4 (0-4)
          int hd = type->param[13];	// High Damp 0.1 ~ 1.0 (1-10)
 
@@ -311,7 +318,7 @@ int write_chorus()
       XGMIDI_effect_t *type = &XGMIDI_chorus_types[i];
 
       snprintf(fname, 255, "%s.aaxs", type->name);
-      printf("Generating chorus: %s\n", fname);
+      printf("Generating: %s\n", fname);
 
       FILE *stream = fopen(fname, "w+");
       if (stream)
@@ -432,7 +439,7 @@ int write_phasing()
       XGMIDI_effect_t *type = &XGMIDI_phasing_types[i];
 
       snprintf(fname, 255, "%s.aaxs", type->name);
-      printf("Generating phasing: %s\n", fname);
+      printf("Generating: %s\n", fname);
 
       FILE *stream = fopen(fname, "w+");
       if (stream)
@@ -548,7 +555,7 @@ int write_distortion()
       XGMIDI_effect_t *type = &XGMIDI_distortion_types[i];
 
       snprintf(fname, 255, "%s.aaxs", type->name);
-      printf("Generating distortion: %s\n", fname);
+      printf("Generating: %s\n", fname);
 
       FILE *stream = fopen(fname, "w+");
       if (stream)
@@ -604,7 +611,7 @@ int write_equalizer()
       XGMIDI_effect_t *type = &XGMIDI_EQ_types[i];
 
       snprintf(fname, 255, "%s.aaxs", type->name);
-      printf("Generating phasing: %s\n", fname);
+      printf("Generating: %s\n", fname);
 
       FILE *stream = fopen(fname, "w+");
       if (stream)
@@ -677,6 +684,107 @@ int write_equalizer()
    return 0;
 }
 
+int write_amp_simulator()
+{
+   char fname[256];
+
+   XGMIDI_effect_t *type = &XGMIDI_amp_simulator_types[0];
+
+   snprintf(fname, 255, "%s.aaxs", type->name);
+   printf("Generating: %s\n", fname);
+
+   FILE *stream = fopen(fname, "w+");
+   if (stream)
+   {
+      int dr = type->param[0];		// Drive 0 ~ 127 (0-127)
+      int tp = type->param[1];		// Off,Stack,Combo,Tube (0-3)
+      int fc = type->param[2];		// LPF Cutoff 1.0k ~ Thru (34-60)
+      int ol = type->param[3];		// Output Level 0 ~ 127 (0-127)
+      int dw = type->param[9];		// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
+      int cc = type->param[10];		// Edge(Clip Curve) 0 ~ 127 (0-127)
+
+      float distortion_fact = 2.0f*dr/127.0f;
+      float clipping_fact = cc/127.0f; 
+      float mix_fact = 0.5f*dw/127.0f;
+      float asymmetry = 1.0f - clipping_fact;
+
+      float cutoff = XGMIDI_EQ_frequency_table_Hz[fc];
+      float gain = ol/127.0f;
+
+      distortion_fact =  distortion_fact* distortion_fact;
+      fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
+      fprintf(stream, "<aeonwave>\n\n");
+      fprintf(stream, " <audioframe>\n");
+      if (cutoff > 20.0f && cutoff < 20000.0f && ol > 0.0f) {
+         fprintf(stream, "  <filter type=\"frequency\">\n");
+         fprintf(stream, "   <slot n=\"0\">\n");
+         fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff);
+         fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", gain);
+         fprintf(stream, "    <param n=\"2\">%2.1f</param>\n", 0.0f);
+         fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
+         fprintf(stream, "   </slot>\n");
+         fprintf(stream, "  </filter>\n");
+      }
+      fprintf(stream, "  <effect type=\"distortion\" src=\"envelope\">\n");
+      fprintf(stream, "   <slot n=\"0\">\n");
+      fprintf(stream, "    <param n=\"0\">%5.3f</param>\n", distortion_fact);
+      fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", clipping_fact);
+      fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", mix_fact);
+      fprintf(stream, "    <param n=\"3\">%5.3f</param>\n", asymmetry);
+      fprintf(stream, "   </slot>\n");
+      fprintf(stream, "  </effect>\n");
+      fprintf(stream, " </audioframe>\n\n");
+
+      fprintf(stream, " <mixer>\n");
+      if (cutoff > 20.0f && cutoff < 20000.0f && ol > 0.0f) {
+         fprintf(stream, "  <filter type=\"frequency\">\n");
+         fprintf(stream, "   <slot n=\"0\">\n");
+         fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", cutoff);
+         fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", gain);
+         fprintf(stream, "    <param n=\"2\">%2.1f</param>\n", 0.0f);
+         fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
+         fprintf(stream, "   </slot>\n");
+         fprintf(stream, "  </filter>\n");
+      }
+      fprintf(stream, "  <effect type=\"distortion\" src=\"envelope\">\n");
+      fprintf(stream, "   <slot n=\"0\">\n");
+      fprintf(stream, "    <param n=\"0\">%5.3f</param>\n", distortion_fact);
+      fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", clipping_fact);
+      fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", mix_fact);
+      fprintf(stream, "    <param n=\"3\">%5.3f</param>\n", asymmetry);
+      fprintf(stream, "   </slot>\n");
+      fprintf(stream, "  </effect>\n");
+      fprintf(stream, " </mixer>\n\n");
+      fprintf(stream, "</aeonwave>\n");
+   }
+   else printf(" Failed to open for writing: %s\n", strerror(errno));
+
+   return 0;
+}
+
+int write_unsupported()
+{
+   for (int i=0; i<XGMIDI_MAX_EQ_TYPES; ++i)
+   {
+      char fname[256];
+
+      XGMIDI_effect_t *type = &XGMIDI_EQ_types[i];
+
+      snprintf(fname, 255, "%s.aaxs", type->name);
+      printf("Generating: %s\n", fname);
+
+      FILE *stream = fopen(fname, "w+");
+      if (stream)
+      {
+// TODO
+      }
+      else printf(" Failed to open for writing: %s\n", strerror(errno));
+   }
+
+   return 0;
+}
+
+
 int main()
 {
    write_reverb();
@@ -684,6 +792,7 @@ int main()
    write_phasing();
    write_distortion();
    write_equalizer();
+   write_amp_simulator();
 
    return 0;
 }
