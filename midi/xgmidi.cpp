@@ -428,9 +428,14 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         INFO("Switching to XG symphony");
                         rv = true;
                         break;
-                    case XGMIDI_PHASING:
+                    case XGMIDI_PHASER1:
                         midi.set_chorus("XG/phaser1");
                         INFO("Switching to XG type 1 phasing");
+                        rv = true;
+                        break;
+                    case XGMIDI_PHASER2:
+                        midi.set_chorus("XG/phaser2");
+                        INFO("Switching to XG type 2 phasing");
                         rv = true;
                         break;
                     default:

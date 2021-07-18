@@ -326,7 +326,8 @@ enum {
 #define XGMIDI_FLANGING2					0x4301
 #define XGMIDI_FLANGING3					0x4308
 #define XGMIDI_SYMPHONIC					0x4400
-#define XGMIDI_PHASING						0x4800
+#define XGMIDI_PHASER1						0x4800
+#define XGMIDI_PHASER2						0x4808
 
 /* variation type */
 #define XGMIDI_DELAY_LCR					0x0500
