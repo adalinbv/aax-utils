@@ -226,12 +226,13 @@ int write_reverb()
       FILE *stream = fopen(fname, "w+");
       if (stream)
       {
-         int rt = type->param[0];	// Reverb Time
-         int df = type->param[1];	// Diffusion
-         int id = type->param[2];	// Initial Delay
-         int fc = type->param[4];	// LPF Cutoff
-//       int ds = type->param[11];	// Density
-         int hd = type->param[13];	// High Damp
+         int rt = type->param[0];	// Reverb Time 0.3 ~ 30.0s (0-69)
+         int df = type->param[1];	// Diffusion 0 ~ 10 (0-10)
+         int id = type->param[2];	// Initial Delay 0 ~ 63 (0-63 )
+         int fc = type->param[4];	// LPF Cutoff 1.0k ~ Thru (34-60)
+         int dw  type->param[9];	// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
+//       int ds = type->param[11];	// Density 0 ~ 4 (0-4)
+         int hd = type->param[13];	// High Damp 0.1 ~ 1.0 (1-10)
 
          /* room dimansions */
          int size = type->param[5];
@@ -300,6 +301,7 @@ int write_reverb()
    return 0;
 }
 
+// Chorus, Celeste & Flanger
 int write_chorus()
 {
    for (int i=0; i<XGMIDI_MAX_CHORUS_TYPES; ++i)
@@ -314,11 +316,11 @@ int write_chorus()
       FILE *stream = fopen(fname, "w+");
       if (stream)
       {
-         int f = type->param[0];	// LFO Frequency
-         int pd = type->param[1];	// LFO Pitch Modulation Depth
-         int fb = type->param[2];	// Feedback Level
-         int dt = type->param[3];	// Delay Offset
-         int dw = type->param[9];	// Dry/Wet
+         int f = type->param[0];	// LFO Frequency 0.00 ~ 39.7Hz (0-127)
+         int pd = type->param[1];	// LFO PM Depth 0 ~ 127 (0-127)
+         int fb = type->param[2];	// Feedback Level -63 ~ +63 (1-127)
+         int dt = type->param[3];	// Delay Offset 0 ~ 127 (0-127)
+         int dw = type->param[9];	// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
 
          int lg = type->param[6];	// EQ Low Gain -12 ~ +12dB (52-76)
          int mg = type->param[11];	// EQ Mid Gain -12 ~ +12dB (52-76)
@@ -435,11 +437,11 @@ int write_phasing()
       FILE *stream = fopen(fname, "w+");
       if (stream)
       {
-         int f = type->param[0];	// LFO Frequency
-         int pd = type->param[1];	// LFO Depth
-         int fb = type->param[3];	// Feedback Level
-         int dt = type->param[2];	// Delay Offset
-         int dw = type->param[9];	// Dry/Wet
+         int f = type->param[0];	// LFO Frequency 0.00 ~ 39.7Hz (0-127)
+         int pd = type->param[1];	// LFO Depth 0 ~ 127 (0-127)
+         int dt = type->param[2];	// Phase Shift Offset 0 ~ 127 (0-127)
+         int fb = type->param[3];	// Feedback Level -63 ~ +63 (1-127)
+         int dw = type->param[9];	// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
 
          int lg = type->param[6];	// EQ Low Gain -12 ~ +12dB (52-76)
          int mg = type->param[11];	// EQ Mid Gain -12 ~ +12dB (52-76)
@@ -552,16 +554,17 @@ int write_distortion()
       FILE *stream = fopen(fname, "w+");
       if (stream)
       {
-         int dr = type->param[0];       // Drive
-         int ol = type->param[4];       // Output Level
-         int dw = type->param[9];       // Dry/Wet
-         int cc = type->param[10];	// Edge (Clip Curve)
+         int dr = type->param[0];       // Drive 0 ~ 127 (0-127)
+         int ol = type->param[4];       // Output Level 0 ~ 127 (0-127)
+         int dw = type->param[9];       // Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
+         int cc = type->param[10];	// Edge(Clip Curve) 0 ~ 127 (0-127)
 
-         float distortion_fact = 4.0f*dr/127.0f;
+         float distortion_fact = 2.0f*dr/127.0f;
          float clipping_fact = cc/127.0f;
-         float mix_fact = ol*dw/127.0f;
+         float mix_fact = 0.5f*(ol/127.0f * dw/127.0f);
          float asymmetry = 1.0f - clipping_fact;
 
+         distortion_fact =  distortion_fact* distortion_fact;
          fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
          fprintf(stream, "<aeonwave>\n\n");
          fprintf(stream, " <audioframe>\n");
