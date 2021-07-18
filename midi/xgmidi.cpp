@@ -243,62 +243,62 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     switch (type)
                     {
                     case XGMIDI_REVERB_HALL1:
-                        midi.set_reverb("reverb/XG/hall1");
+                        midi.set_reverb("XG/hall1");
                         INFO("Switching to XG Concert Hall Reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_HALL2:
-                        midi.set_reverb("reverb/XG/hall2");
+                        midi.set_reverb("XG/hall2");
                         INFO("Switching to XG Large Concert Hall reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM1:
-                        midi.set_reverb("reverb/XG/room1");
+                        midi.set_reverb("XG/room1");
                         INFO("Switching to XG Medium Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM2:
-                        midi.set_reverb("reverb/XG/room2");
+                        midi.set_reverb("XG/room2");
                         INFO("Switching to XG Small Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_ROOM3:
-                        midi.set_reverb("reverb/XG/room3");
+                        midi.set_reverb("XG/room3");
                         INFO("Switching to XG Large Room reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_STAGE1:
-                        midi.set_reverb("reverb/XG/stage1");
+                        midi.set_reverb("XG/stage1");
                         INFO("Switching to XG Small Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_STAGE2:
-                        midi.set_reverb("reverb/XG/stage2");
+                        midi.set_reverb("XG/stage2");
                         INFO("Switching to XG Large Stage reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_PLATE:
-                        midi.set_reverb("reverb/XG/plate");
+                        midi.set_reverb("XG/plate");
                         INFO("Switching to XG Plate reveberation");
                         rv = true;
                         break;
                     case XGMIDI_REVERB_WHITE_ROOM:
-                        midi.set_reverb("reverb/XG/whiteroom");
+                        midi.set_reverb("XG/whiteroom");
                         INFO("Switching to XG White Room reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_TUNNEL:
-                        midi.set_reverb("reverb/XG/tunnel");
+                        midi.set_reverb("XG/tunnel");
                         INFO("Switching to XG Tunnel reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_CANYON:
-                        midi.set_reverb("reverb/XG/canyon");
+                        midi.set_reverb("XG/canyon");
                         INFO("Switching to XG Canyon reveberation");
                         rv = true;
                        break;
                     case XGMIDI_REVERB_BASEMENT:
-                        midi.set_reverb("reverb/XG/basement");
+                        midi.set_reverb("XG/basement");
                         INFO("Switching to XG Basement reveberation");
                         rv = true;
                        break;
@@ -369,67 +369,67 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     switch (type)
                     {
                     case XGMIDI_CHORUS1:
-                        midi.set_chorus("chorus/XG/chorus1");
+                        midi.set_chorus("XG/chorus1");
                         INFO("Switching to XG type 1 chorus");
                         rv = true;
                         break;
                     case XGMIDI_CHORUS2:
-                        midi.set_chorus("chorus/XG/chorus2");
+                        midi.set_chorus("XG/chorus2");
                         INFO("Switching to XG type 2 chorus");
                         rv = true;
                         break;
                     case XGMIDI_CHORUS3:
-                        midi.set_chorus("chorus/XG/chorus3");
+                        midi.set_chorus("XG/chorus3");
                         INFO("Switching to XG type 3chorus");
                         rv = true;
                         break;
                     case XGMIDI_CHORUS4:
-                        midi.set_chorus("chorus/XG/chorus4");
+                        midi.set_chorus("XG/chorus4");
                         INFO("Switching to XG type 4 chorus");
                         rv = true;
                         break;
                     case XGMIDI_CELESTE1:
-                        midi.set_chorus("chorus/XG/celeste1");
+                        midi.set_chorus("XG/celeste1");
                         INFO("Switching to XG type 1 celeste");
                         rv = true;
                         break;
                     case XGMIDI_CELESTE2:
-                        midi.set_chorus("chorus/XG/celeste2");
+                        midi.set_chorus("XG/celeste2");
                         INFO("Switching to XG type 2 celeste");
                         rv = true;
                         break;
                     case XGMIDI_CELESTE3:
-                        midi.set_chorus("chorus/XG/celeste3");
+                        midi.set_chorus("XG/celeste3");
                         INFO("Switching to XG type 3 celeste");
                         rv = true;
                         break;
                     case XGMIDI_CELESTE4:
-                        midi.set_chorus("chorus/XG/celeste4");
+                        midi.set_chorus("XG/celeste4");
                         INFO("Switching to XG type 4 celeste");
                         rv = true;
                         break;
                     case XGMIDI_FLANGING1:
-                        midi.set_chorus("chorus/XG/flanger1");
+                        midi.set_chorus("XG/flanger1");
                         INFO("Switching to XG type 1 flanging");
                         rv = true;
                         break;
                     case XGMIDI_FLANGING2:
-                        midi.set_chorus("chorus/XG/flanger2");
+                        midi.set_chorus("XG/flanger2");
                         INFO("Switching to XG type 2 flanging");
                         rv = true;
                         break;
                     case XGMIDI_FLANGING3:
-                        midi.set_chorus("chorus/XG/flanger3");
+                        midi.set_chorus("XG/flanger3");
                         INFO("Switching to XG type 3 flanging");
                         rv = true;
                         break;
                     case XGMIDI_SYMPHONIC:
-                        midi.set_chorus("chorus/XG/symphony");
+                        midi.set_chorus("XG/symphony");
                         INFO("Switching to XG symphony");
                         rv = true;
                         break;
                     case XGMIDI_PHASING:
-                        midi.set_chorus("chorus/XG/phaser1");
+                        midi.set_chorus("XG/phaser1");
                         INFO("Switching to XG type 1 phasing");
                         rv = true;
                         break;
