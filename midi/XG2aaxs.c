@@ -332,9 +332,9 @@ int write_chorus()
          float gain = (dw - 1)/127.0f;
          float feedback = _MAX(fb - 64, 0)/127.0f;
 
-         float low_gain = lg/64.0f;
-         float mid_gain = mg/64.0f;
-         float high_gain = hg/64.0f;
+         float low_gain = _db2lin(-12.0f + 24.0f*(lg-52.0f)/24.0f);
+         float mid_gain = _db2lin(-12.0f + 24.0f*(mg-52.0f)/24.0f);
+         float high_gain = _db2lin(-12.0f + 24.0f*(hg-52.0f)/24.0f);
          float low_cutoff = XGMIDI_EQ_frequency_table_Hz[lf];
          float high_cutoff = XGMIDI_EQ_frequency_table_Hz[hf];
 
@@ -358,7 +358,7 @@ int write_chorus()
          }
          fprintf(stream, "  </effect>\n");
          if (low_gain != 1.0f || mid_gain != 1.0f || high_gain != 1.0f) {
-             fprintf(stream, "  <effect type=\"equalizer\">\n");
+             fprintf(stream, "  <filter type=\"equalizer\">\n");
              fprintf(stream, "   <slot n=\"0\">\n");
              if (low_gain != 1.0f || mid_gain != 1.0f) {
                  fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", low_cutoff);
@@ -373,7 +373,7 @@ int write_chorus()
              fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", high_gain);
              fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
              fprintf(stream, "   </slot>\n");
-             fprintf(stream, "  </effect>\n");
+             fprintf(stream, "  </filter>\n");
          }
          fprintf(stream, " </audioframe>\n\n");
 
@@ -395,7 +395,7 @@ int write_chorus()
          }
          fprintf(stream, "  </effect>\n");
          if (low_gain != 1.0f || mid_gain != 1.0f || high_gain != 1.0f) {
-             fprintf(stream, "  <effect type=\"equalizer\">\n");
+             fprintf(stream, "  <filter type=\"equalizer\">\n");
              fprintf(stream, "   <slot n=\"0\">\n");
              if (low_gain != 1.0f || mid_gain != 1.0f) {
                  fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", low_cutoff);
@@ -410,7 +410,7 @@ int write_chorus()
              fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", high_gain);
              fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
              fprintf(stream, "   </slot>\n");
-             fprintf(stream, "  </effect>\n");
+             fprintf(stream, "  </filter>\n");
          }
          fprintf(stream, " </mixer>\n\n");
          fprintf(stream, "</aeonwave>\n");
@@ -477,7 +477,7 @@ int write_phasing()
          fprintf(stream, "   </slot>\n");
          fprintf(stream, "  </effect>\n");
          if (low_gain != 1.0f || mid_gain != 1.0f || high_gain != 1.0f) {
-             fprintf(stream, "  <effect type=\"equalizer\">\n");
+             fprintf(stream, "  <filter type=\"equalizer\">\n");
              fprintf(stream, "   <slot n=\"0\">\n");
              if (low_gain != 1.0f || mid_gain != 1.0f) {
                  fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", low_cutoff);
@@ -492,7 +492,7 @@ int write_phasing()
              fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", high_gain);
              fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
              fprintf(stream, "   </slot>\n");
-             fprintf(stream, "  </effect>\n");
+             fprintf(stream, "  </filter>\n");
          }
          fprintf(stream, " </audioframe>\n\n");
 
@@ -512,7 +512,7 @@ int write_phasing()
          fprintf(stream, "   </slot>\n");
          fprintf(stream, "  </effect>\n");
          if (low_gain != 1.0f || mid_gain != 1.0f || high_gain != 1.0f) {
-             fprintf(stream, "  <effect type=\"equalizer\">\n");
+             fprintf(stream, "  <filter type=\"equalizer\">\n");
              fprintf(stream, "   <slot n=\"0\">\n");
              if (low_gain != 1.0f || mid_gain != 1.0f) {
                  fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", low_cutoff);
@@ -527,7 +527,7 @@ int write_phasing()
              fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", high_gain);
              fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
              fprintf(stream, "   </slot>\n");
-             fprintf(stream, "  </effect>\n");
+             fprintf(stream, "  </filter>\n");
          }
          fprintf(stream, " </mixer>\n\n");
          fprintf(stream, "</aeonwave>\n");
@@ -626,16 +626,16 @@ int write_equalizer()
 //           mw = type->param[12];	// EQ Mid Width 1.0 ~ 12.0
          }
 
-         float low_gain = lg/64.0f;
-         float mid_gain = mg/64.0f;
-         float high_gain = hg/64.0f;
+         float low_gain = _db2lin(-12.0f + 24.0f*(lg-52.0f)/24.0f);
+         float mid_gain = _db2lin(-12.0f + 24.0f*(mg-52.0f)/24.0f);
+         float high_gain = _db2lin(-12.0f + 24.0f*(hg-52.0f)/24.0f);
          float low_cutoff = XGMIDI_EQ_frequency_table_Hz[lf];
          float high_cutoff = XGMIDI_EQ_frequency_table_Hz[hf];
 
          fprintf(stream, "<?xml version=\"1.0\"?>\n\n");
          fprintf(stream, "<aeonwave>\n\n");
          fprintf(stream, " <audioframe>\n");
-         fprintf(stream, "  <effect type=\"equalizer\">\n");
+         fprintf(stream, "  <filter type=\"equalizer\">\n");
          fprintf(stream, "   <slot n=\"0\">\n");
          fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", low_cutoff);
          fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", low_gain);
@@ -648,11 +648,11 @@ int write_equalizer()
          fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", high_gain);
          fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
          fprintf(stream, "   </slot>\n");
-         fprintf(stream, "  </effect>\n");
+         fprintf(stream, "  </filter>\n");
          fprintf(stream, " </audioframe>\n\n");
 
          fprintf(stream, " <mixer>\n");
-         fprintf(stream, "  <effect type=\"equalizer\">\n");
+         fprintf(stream, "  <filter type=\"equalizer\">\n");
          fprintf(stream, "   <slot n=\"0\">\n");
          fprintf(stream, "    <param n=\"0\">%5.1f</param>\n", low_cutoff);
          fprintf(stream, "    <param n=\"1\">%5.3f</param>\n", low_gain);
@@ -665,7 +665,7 @@ int write_equalizer()
          fprintf(stream, "    <param n=\"2\">%5.3f</param>\n", high_gain);
          fprintf(stream, "    <param n=\"3\">%2.1f</param>\n", 1.0f);
          fprintf(stream, "   </slot>\n");
-         fprintf(stream, "  </effect>\n");
+         fprintf(stream, "  </filter>\n");
          fprintf(stream, " </mixer>\n\n");
          fprintf(stream, "</aeonwave>\n");
       }
