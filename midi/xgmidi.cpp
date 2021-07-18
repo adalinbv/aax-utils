@@ -491,6 +491,44 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     type |= byte;
                     switch (type)
                     {
+                    case XGMIDI_NO_EFFECT:
+                        break;
+                    case XGMIDI_REVERB_HALL1:
+                        LOG(99, "LOG: Unsupported XG variation type: Hall 1 reverb");
+                        break;
+                    case XGMIDI_REVERB_HALL2:
+                        LOG(99, "LOG: Unsupported XG variation type: Hall 2 reverb");
+                        break;
+                    case XGMIDI_REVERB_ROOM1:
+                        LOG(99, "LOG: Unsupported XG variation type: Room 1 reverb");
+                        break;
+                    case XGMIDI_REVERB_ROOM2:
+                        LOG(99, "LOG: Unsupported XG variation type: Room 2 reverb");
+                        break;
+                    case XGMIDI_REVERB_ROOM3:
+                        LOG(99, "LOG: Unsupported XG variation type: Room 3 reverb");
+                        break;
+                    case XGMIDI_REVERB_STAGE1:
+                        LOG(99, "LOG: Unsupported XG variation type: Stage 1 reverb");
+                        break;
+                    case XGMIDI_REVERB_STAGE2:
+                        LOG(99, "LOG: Unsupported XG variation type: Stage 2 reverb");
+                        break;
+                    case XGMIDI_REVERB_PLATE:
+                        LOG(99, "LOG: Unsupported XG variation type: Plate reverb");
+                        break;
+                    case XGMIDI_REVERB_WHITE_ROOM:
+                        LOG(99, "LOG: Unsupported XG variation type: Whiteroom reverb");
+                        break;
+                    case XGMIDI_REVERB_TUNNEL:
+                        LOG(99, "LOG: Unsupported XG variation type: Tunnel reverb");
+                        break;
+                    case XGMIDI_REVERB_CANYON:
+                        LOG(99, "LOG: Unsupported XG variation type: Canyon reverb");
+                        break;
+                    case XGMIDI_REVERB_BASEMENT:
+                        LOG(99, "LOG: Unsupported XG variation type: Basement reverb");
+                        break;
                     case XGMIDI_DELAY_LCR:
                         LOG(99, "LOG: Unsupported XG variation type: Delay L/C/R\n");
                         break;
@@ -501,19 +539,64 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         LOG(99, "LOG: Unsupported XG variation type: Echo\n");
                         break;
                     case XGMIDI_X_DELAY:
-                        LOG(99, "LOG: Unsupported XG variation type: Cross Delay\n");
+                        LOG(99, "LOG: Unsupported XG variation type: Crossed feedback Delay\n");
                         break;
                     case XGMIDI_ER1:
-                        LOG(99, "LOG: Unsupported XG variation type: ER1\n");
+                        LOG(99, "LOG: Unsupported XG variation type: Early Reflections 1\n");
                         break;
                     case XGMIDI_ER2:
-                        LOG(99, "LOG: Unsupported XG variation type: ER2\n");
+                        LOG(99, "LOG: Unsupported XG variation type: Early Reflections 2\n");
                         break;
                     case XGMIDI_GATED_REVERB:
-                        LOG(99, "LOG: Unsupported XG variation type: gated Reverb\n");
+                        LOG(99, "LOG: Unsupported XG variation type: Gated Reverb\n");
                         break;
                     case XGMIDI_REVERSE_GATE:
-                        LOG(99, "LOG: Unsupported XG variation type: Reverse Gate\n");
+                        LOG(99, "LOG: Unsupported XG variation type: Reversed Gate Reverb\n");
+                        break;
+                    case XGMIDI_KARAOKE1:
+                        LOG(99, "LOG: Unsupported XG variation type: Karaoke type 1");
+                        break;
+                    case XGMIDI_KARAOKE2:
+                        LOG(99, "LOG: Unsupported XG variation type: Karaoke type 2");
+                        break;
+                    case XGMIDI_KARAOKE3:
+                        LOG(99, "LOG: Unsupported XG variation type: Karaoke type 3");
+                        break;
+                    case XGMIDI_CHORUS1:
+                        LOG(99, "LOG: Unsupported XG variation type: Chorus type 1");
+                        break;
+                    case XGMIDI_CHORUS2:
+                        LOG(99, "LOG: Unsupported XG variation type: Chorus type 2");
+                        break;
+                    case XGMIDI_CHORUS3:
+                        LOG(99, "LOG: Unsupported XG variation type: Chorus type 3");
+                        break;
+                    case XGMIDI_CHORUS4:
+                        LOG(99, "LOG: Unsupported XG variation type: Chorus type 4");
+                        break;
+                    case XGMIDI_CELESTE1:
+                        LOG(99, "LOG: Unsupported XG variation type: Celeste type 1");
+                        break;
+                    case XGMIDI_CELESTE2:
+                        LOG(99, "LOG: Unsupported XG variation type: Celeste type 2");
+                        break;
+                    case XGMIDI_CELESTE3:
+                        LOG(99, "LOG: Unsupported XG variation type: Celeste type 3");
+                        break;
+                    case XGMIDI_CELESTE4:
+                        LOG(99, "LOG: Unsupported XG variation type: Celeste type 4");
+                        break;
+                    case XGMIDI_FLANGING1:
+                        LOG(99, "LOG: Unsupported XG variation type: Flamger type 1");
+                        break;
+                    case XGMIDI_FLANGING2:
+                        LOG(99, "LOG: Unsupported XG variation type: Flanger type 2");
+                        break;
+                    case XGMIDI_FLANGING3:
+                        LOG(99, "LOG: Unsupported XG variation type: Flanger type 3");
+                        break;
+                    case XGMIDI_SYMPHONIC:
+                        LOG(99, "LOG: Unsupported XG variation type: Symphonic");
                         break;
                     case XGMIDI_THRU:
                         LOG(99, "LOG: Unsupported XG variation type: Thru\n");
@@ -521,11 +604,20 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     case XGMIDI_ROTARY_SPEAKER:
                         LOG(99, "LOG: Unsupported XG variation type: Rotary Speaker\n");
                         break;
+                    case XGMIDI_ROTARY_SPEAKER_2_WAY:
+                        LOG(99, "LOG: Unsupported XG variation type: 2-Way Rotary Speaker\n");
+                        break;
                     case XGMIDI_TREMOLO:
                         LOG(99, "LOG: Unsupported XG variation type: Tremolo\n");
                         break;
                     case XGMIDI_AUTO_PAN:
                         LOG(99, "LOG: Unsupported XG variation type: Auto Pan\n");
+                        break;
+                    case XGMIDI_PHASER1:
+                        LOG(99, "LOG: Unsupported XG variation type: Phaser type 1");
+                        break;
+                    case XGMIDI_PHASER2:
+                        LOG(99, "LOG: Unsupported XG variation type: Phaser type 2");
                         break;
                     case XGMIDI_DISTORTION:
                         LOG(99, "LOG: Unsupported XG variation type: Distortion\n");
@@ -545,17 +637,32 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     case XGMIDI_AUTO_WAH:
                         LOG(99, "LOG: Unsupported XG variation type: Auto Wah\n");
                         break;
-                    case XGMIDI_PITCH_CHANGE:
-                        LOG(99, "LOG: Unsupported XG variation type: Pitch Change\n");
+                    case XGMIDI_AUTO_WAH_DISTORTION:
+                        LOG(99, "LOG: Unsupported XG variation type: Auto Wah and Distortion\n");
+                        break;
+                    case XGMIDI_AUTO_WAH_OVER_DRIVE:
+                        LOG(99, "LOG: Unsupported XG variation type: Auto Wah and Over Drive\n");
+                        break;
+                    case XGMIDI_PITCH_CHANGE1:
+                        LOG(99, "LOG: Unsupported XG variation type: Pitch Change 1\n");
+                        break;
+                    case XGMIDI_PITCH_CHANGE2:
+                        LOG(99, "LOG: Unsupported XG variation type: Pitch Change 2\n");
                         break;
                     case XGMIDI_AURAL_ENHANCER:
                         LOG(99, "LOG: Unsupported XG variation type: Aural Enhancer\n");
                         break;
-                    case XGMIDI_TOUCH_WAH:
-                        LOG(99, "LOG: Unsupported XG variation type: Touch Wah\n");
+                    case XGMIDI_TOUCH_WAH1:
+                        LOG(99, "LOG: Unsupported XG variation type: Touch Wah 1\n");
                         break;
-                    case XGMIDI_TOUCH_WAH_DIST:
+                    case XGMIDI_TOUCH_WAH2:
+                        LOG(99, "LOG: Unsupported XG variation type: Touch Wah 2\n");
+                        break;
+                    case XGMIDI_TOUCH_WAH_DISTORTION:
                         LOG(99, "LOG: Unsupported XG variation type: Touch Wah and Distortion\n");
+                        break;
+                    case XGMIDI_TOUCH_WAH_OVER_DRIVE:
+                        LOG(99, "LOG: Unsupported XG variation type: Touch Wah and over Drive\n");
                         break;
                     case XGMIDI_COMPRESSOR:
                         LOG(99, "LOG: Unsupported XG variation type: Compressor\n");
@@ -566,6 +673,29 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     case XGMIDI_VOICE_CANCEL:
                         LOG(99, "LOG: Unsupported XG variation type: Voice Cancel\n");
                         break;
+                    case XGMIDI_TALKING_SIMULATOR:
+                        LOG(99, "LOG: Unsupported XG variation type: Talking Simulator\n");
+                        break;
+                    case XGMIDI_LO_FI:
+                        LOG(99, "LOG: Unsupported XG variation type: Lo-Fi\n");
+                        break;
+                    case XGMIDI_DISTORTION_DELAY:
+                        LOG(99, "LOG: Unsupported XG variation type: Distortion and Delay\n");
+                        break;
+                    case XGMIDI_OVER_DRIVE_DELAY:
+                        LOG(99, "LOG: Unsupported XG variation type: Over Drive and Delay\n");                        
+                        break;
+                    case XGMIDI_COMPRESSOR_DISTORTION_DELAY:
+                        LOG(99, "LOG: Unsupported XG variation type: Compressor and Distortion and Delay\n");                        
+                        break;
+                    case XGMIDI_COMPRESSOR_OVER_DRIVE_DELAY:
+                        LOG(99, "LOG: Unsupported XG variation type: Compressor and Over Drive and Delay\n");
+                        break;
+                    case XGMIDI_WAH_DISTORTION_DELAY:
+                        LOG(99, "LOG: Unsupported XG variation type: Wah and Distortion and Delay\n");                        
+                        break;
+                    case XGMIDI_WAH_OVER_DRIVE_DELAY:
+                        LOG(99, "LOG: Unsupported XG variation type: Wah and Over Drive and Delay\n");
                     default:
                         LOG(99, "LOG: Unsupported XG variation type: 0x%x (%d)\n",
                                 type, type);

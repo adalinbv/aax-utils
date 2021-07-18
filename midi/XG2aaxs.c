@@ -177,7 +177,7 @@ static XGMIDI_effect_t XGMIDI_chorus_types[XGMIDI_MAX_CHORUS_TYPES] = {
 #define XGMIDI_MAX_PHASING_TYPES        2
 static XGMIDI_effect_t XGMIDI_phasing_types[XGMIDI_MAX_PHASING_TYPES] = {
  { "phaser1",  {  8, 111,  74, 104, 0, 28, 64, 46, 64,  64,  6,  1, 64, 0, 0, 0 } },
- { "phaser2",  {  8, 111,  74, 104, 0, 28, 64, 46, 64,  64,  5,  1,  4, 0, 0, 0 } }
+ { "phaser2",  {  8, 111,  74, 108, 0, 28, 64, 46, 64,  64,  5,  1,  4, 0, 0, 0 } }
 };
 
 #define XGMIDI_MAX_DISTORTION_TYPES     2
@@ -230,7 +230,7 @@ int write_reverb()
          int df = type->param[1];	// Diffusion 0 ~ 10 (0-10)
          int id = type->param[2];	// Initial Delay 0 ~ 63 (0-63 )
          int fc = type->param[4];	// LPF Cutoff 1.0k ~ Thru (34-60)
-         int dw  type->param[9];	// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
+         int dw = type->param[9];	// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
 //       int ds = type->param[11];	// Density 0 ~ 4 (0-4)
          int hd = type->param[13];	// High Damp 0.1 ~ 1.0 (1-10)
 
@@ -330,7 +330,7 @@ int write_chorus()
 
          float lfo_frequency = XGMIDI_LFO_frequency_table_Hz[f];
          float lfo_offset = XGMIDI_delay_offset_table_ms[dt];
-         float lfo_depth = pd/127.0f;
+         float lfo_depth = 0.5f*pd/127.0f;
          float gain = (dw - 1)/127.0f;
          float feedback = _MAX(fb - 64, 0)/127.0f;
 
@@ -444,7 +444,6 @@ int write_phasing()
          int dw = type->param[9];	// Dry/Wet D63>W ~ D=W ~ D<W63 (1-127)
 
          int lg = type->param[6];	// EQ Low Gain -12 ~ +12dB (52-76)
-         int mg = type->param[11];	// EQ Mid Gain -12 ~ +12dB (52-76)
          int hg = type->param[8];	// EQ High Gain -12 ~ +12dB (52-76)
          int lf = type->param[5];	// EQ Low Frequency 32Hz ~ 2.0kHz
          int hf = type->param[7];	// EQ High Frequency 500Hz ~ 16.0kHz
@@ -455,7 +454,7 @@ int write_phasing()
          float gain = (dw - 1)/127.0f;
 
          float low_gain = lg/64.0f;
-         float mid_gain = mg/64.0f;
+         float mid_gain = 1.0f;
          float high_gain = hg/64.0f;
          float low_cutoff = XGMIDI_EQ_frequency_table_Hz[lf];
          float high_cutoff = XGMIDI_EQ_frequency_table_Hz[hf];
