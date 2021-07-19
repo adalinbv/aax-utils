@@ -532,13 +532,6 @@ bool MIDIStream::process_control(uint8_t track_no)
 #endif
         break;
     case MIDI_BALANCE:
-        // If a MultiTimbral device, then each Part usually has its
-        // own Balance. This is generally when Balance becomes
-        // useful, because then you can use Pan, Volume, and Balance
-        // controllers to internally mix all of the Parts to the
-        // device's stereo outputs
-        LOG(99, "LOG: Unsupported control change: MIDI_BALANCE, ch: %u, value: %u\n", track_no, value);
-        break;
     case MIDI_PAN:
         if (!midi.get_mono()) {
             channel.set_pan(((float)value-64.f)/64.f);
