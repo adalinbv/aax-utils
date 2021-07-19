@@ -881,7 +881,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 }
                 case XGMIDI_FILTER_RESONANCE: // -64 - +63
                 {
-                    float val = (float)value/32.0f;
+                    float val = -1.0f+(float)value/16.0f; // relative: 0.0 - 8.0
                     channel.set_filter_resonance(val);
                     break;
                 }
@@ -895,8 +895,11 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                     channel.set_release_time(value);
                     break;
                 case XGMIDI_MW_PITCH_CONTROL: // -24 - +24 semitones
-                    LOG(99, "LOG: Unsupported XG Mod Wheel Pitch Control\n");
+                {
+                    float val = 0.375f*(value-64);
+                    channel.set_semi_tones(val);
                     break;
+                }
                 case XGMIDI_MW_FILTER_CONTROL: // -9600 - +9450 cents
                     LOG(99, "LOG: Unsupported XG Mod Wheel Filter Control\n");
                     break;

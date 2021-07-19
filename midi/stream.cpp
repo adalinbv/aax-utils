@@ -612,7 +612,7 @@ bool MIDIStream::process_control(uint8_t track_no)
     }
     case MIDI_FILTER_RESONANCE:
     {
-        float val = -1.0f+(float)value/64.0f; // relative: 0.0 - 2.0
+        float val = -1.0f+(float)value/16.0f; // relative: 0.0 - 8.0
         channel.set_filter_resonance(val);
         break;
     }
