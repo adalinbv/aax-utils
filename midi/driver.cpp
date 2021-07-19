@@ -256,6 +256,8 @@ MIDIDriver::send_chorus_to_reverb(float val)
         reverb.remove(chorus);
         AeonWave::add(chorus);
     }
+#else
+    LOG(99, "LOG: Unsupported Chorus Send to Reverb\n")
 #endif
 }
 

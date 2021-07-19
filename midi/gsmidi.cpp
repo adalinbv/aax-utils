@@ -254,7 +254,7 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                         break;
                     }
                     case GSMIDI_CHORUS_SEND_LEVEL_TO_REVERB:
-                        LOG(99, "LOG: Unsupported GS Chorus Send Level To Reverb");
+                        midi.send_chorus_to_reverb(value/127.0f);
                         break;
                     default:
                         LOG(99, "LOG: Unsupported GS address: 0x%x 0x%x (%d %d)\n",

@@ -481,7 +481,6 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                 case XGMIDI_CHORUS_SEND_TO_REVERB:
                     // -inf dB...0dB...+6dB(0...64...127)
                     midi.send_chorus_to_reverb(value/64.0f);
-                    LOG(99, "LOG: Unsupported XG Chorus Send to Reverb\n");
                     break;
                 case XGMIDI_VARIATION_TYPE:
                 {
