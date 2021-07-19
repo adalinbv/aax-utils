@@ -236,7 +236,7 @@ bool MIDIStream::process_GS_sysex(uint64_t size)
                         break;
                     }
                     case GSMIDI_CHORUS_FEEDBACK:
-                        LOG(99, "LOG: Unsupported GS Chorus Feedback");
+                        midi.set_chorus_feedback(0.763f*value*1e-2f);
                         break;
                     case GSMIDI_CHORUS_DELAY:
                         LOG(99, "LOG: Unsupported GS Chorus Delay");

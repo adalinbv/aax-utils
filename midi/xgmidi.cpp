@@ -674,7 +674,7 @@ bool MIDIStream::process_XG_sysex(uint64_t size)
                         LOG(99, "LOG: Unsupported XG variation type: Voice Cancel\n");
                         break;
                     case XGMIDI_TALKING_SIMULATOR:
-                        LOG(99, "LOG: Unsupported XG variation type: Talking Simulator\n");
+                        LOG(99, "LOG: Unsupported XG variation type: Talk Box Simulator\n");
                         break;
                     case XGMIDI_LO_FI:
                         LOG(99, "LOG: Unsupported XG variation type: Lo-Fi\n");

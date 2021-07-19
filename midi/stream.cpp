@@ -904,7 +904,7 @@ bool MIDIStream::process_sysex()
                         break;
                     case 3:     // CHORUS_FEEDBACK
                         // the amount of feedback from Chorus output in %
-                        midi.set_chorus_feedback(0.763f*value);
+                        midi.set_chorus_feedback(0.763f*value*1e-2f);
                         break;
                     case 4:     // CHORUS_SEND_TO_REVERB
                         // the send level from Chorus to Reverb in %
