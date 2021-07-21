@@ -983,7 +983,7 @@ bool MIDIStream::process_meta()
         for (int i=0; i<size; ++i) {
            toUTF8(text, pull_byte());
         }
-        MESSAGE("%-9s : %s\n", type_name[meta].c_str(), text.c_str());
+        MESSAGE("%-7s %2i: %s\n", type_name[meta].c_str(), track_no, text.c_str());
         CSV("%s, \"", csv_name[meta].c_str());
         CSV_TEXT("%s", text.c_str());
         CSV("\"\n");
