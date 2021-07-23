@@ -42,6 +42,8 @@
 namespace aax
 {
 
+#define CHORUS_FRAME	0
+
 enum {
     MIDI_POLYPHONIC = 3,
     MIDI_MONOPHONIC
@@ -253,7 +255,7 @@ private:
     std::string effects;
     std::string track_name;
     _channel_map_t channels;
-#if 0
+#if CHORUS_FRAME
     _channel_map_t chorus_channels;
 #else
     std::vector<int> chorus_channels;

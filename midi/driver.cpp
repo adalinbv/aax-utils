@@ -131,7 +131,7 @@ MIDIDriver::rewind()
     channels.clear();
     uSPP = tempo/PPQN;
 
-#if 0
+#if CHORUS_FRAME
     for (const auto& it : chorus_channels)
     {
         chorus.remove(*it.second);
@@ -232,7 +232,7 @@ void
 MIDIDriver::set_chorus(const char *t)
 {
     Buffer& buf = AeonWave::buffer(t);
-#if 0
+#if CHORUS_FRAME
     chorus.add(buf);
 #else
     for(int i=0; i<chorus_channels.size(); ++i) {
@@ -244,7 +244,7 @@ MIDIDriver::set_chorus(const char *t)
 void
 MIDIDriver::send_chorus_to_reverb(float val)
 {
-#if 0
+#if CHORUS_FRAME
     if (val)
     {
         AeonWave::remove(chorus);
@@ -257,14 +257,13 @@ MIDIDriver::send_chorus_to_reverb(float val)
         AeonWave::add(chorus);
     }
 #else
-    LOG(99, "LOG: Unsupported Chorus Send to Reverb\n")
 #endif
 }
 
 void
 MIDIDriver::set_chorus_level(uint16_t part_no, float val)
 {
-#if 0
+#if CHORUS_FRAME
     if (val)
     {
         midi.channel(part_no).set_gain(val);
@@ -304,7 +303,8 @@ MIDIDriver::set_chorus_level(uint16_t part_no, float val)
 void
 MIDIDriver::set_chorus_depth(float ms) {
     chorus_depth = ms*1e-3f;
-#if 1
+#if CHORUS_FRAME
+#else
     for(int i=0; i<chorus_channels.size(); ++i) {
         midi.channel(i).set_chorus_depth(chorus_depth);
     }
@@ -313,7 +313,7 @@ MIDIDriver::set_chorus_depth(float ms) {
 
 void
 MIDIDriver::set_chorus_rate(float rate) {
-#if 0
+#if CHORUS_FRAME
     chorus_rate = rate;
 #else
     for(int i=0; i<chorus_channels.size(); ++i) {
@@ -324,7 +324,7 @@ MIDIDriver::set_chorus_rate(float rate) {
 
 void
 MIDIDriver::set_chorus_feedback(float feedback) {
-#if 0
+#if CHORUS_FRAME
     chorus_feedback = feedback;
 #else
     for(int i=0; i<chorus_channels.size(); ++i) {

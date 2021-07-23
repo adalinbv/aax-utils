@@ -585,7 +585,7 @@ bool MIDIStream::process_control(uint8_t track_no)
         registered_param(track_no, controller, value);
         break;
     case MIDI_SOFT_PEDAL_SWITCH:
-        channel.set_soft(value/127.0f);
+        channel.set_soft((float)value/127.0f);
         break;
     case MIDI_LEGATO_SWITCH:
 #if (AAX_PATCH_LEVEL > 210516)
@@ -599,17 +599,11 @@ bool MIDIStream::process_control(uint8_t track_no)
         channel.set_sustain(value >= 0x40);
         break;
     case MIDI_REVERB_SEND_LEVEL:
-    {
-        float val = (float)value/127.0f;
-        midi.set_reverb_level(track_no, val);
+        midi.set_reverb_level(track_no, (float)value/127.0f);
         break;
-    }
     case MIDI_CHORUS_SEND_LEVEL:
-    {
-        float val = (float)value/127.0f;
-        midi.set_chorus_level(track_no, val);
+        midi.set_chorus_level(track_no, (float)value/127.0f);
         break;
-    }
     case MIDI_FILTER_RESONANCE:
     {
         float val = -1.0f+(float)value/16.0f; // relative: 0.0 - 8.0
@@ -624,23 +618,14 @@ bool MIDIStream::process_control(uint8_t track_no)
         break;
     }
     case MIDI_VIBRATO_RATE:
-    {
-        float val = 0.5f + (float)value/64.0f;
-        channel.set_vibrato_rate(val);
+        channel.set_vibrato_rate(0.5f + (float)value/64.0f);
         break;
-    }
     case MIDI_VIBRATO_DEPTH:
-    {
-        float val = (float)value/64.0f;
-        channel.set_vibrato_depth(val);
+        channel.set_vibrato_depth((float)value/64.0f);
         break;
-    }
     case MIDI_VIBRATO_DELAY:
-    {
-        float val = (float)value/64.0f;
-        channel.set_vibrato_delay(val);
+        channel.set_vibrato_delay((float)value/64.0f);
         break;
-    }
     case MIDI_PORTAMENTO_CONTROL:
     {
         int16_t key = get_key(channel, value);
@@ -808,145 +793,170 @@ bool MIDIStream::process_sysex()
         CSV(", %d", byte);
         switch(byte)
         {
-        case MIDI_DEVICE_CONTROL:
+        case MIDI_BROADCAST:
+        {
             byte = pull_byte();
             CSV(", %d", byte);
-            switch(byte)
-            {
-            case MIDI_DEVICE_VOLUME:
+            case MIDI_DEVICE_CONTROL:
                 byte = pull_byte();
                 CSV(", %d", byte);
-                midi.set_gain((float)byte/127.0f);
-                break;
-            case MIDI_DEVICE_BALANCE:
-                byte = pull_byte();
-                CSV(", %d", byte);
-                midi.set_balance(((float)byte-64.0f)/64.0f);
-                break;
-            case MIDI_DEVICE_FINE_TUNING:
-            {
-                uint16_t tuning;
-                float pitch;
-
-                byte = pull_byte();
-                CSV(", %d", byte);
-                tuning = byte;
-
-                byte = pull_byte();
-                CSV(", %d", byte);
-                tuning |= byte << 7;
-
-                pitch = (float)tuning-8192.0f;
-                if (pitch < 0) pitch /= 8192.0f;
-                else pitch /= 8191.0f;
-                midi.set_tuning(pitch);
-                break;
-            }
-            case MIDI_DEVICE_COARSE_TUNING:
-            {
-                float pitch;
-
-                byte = pull_byte();     // lsb, always zero
-                CSV(", %d", byte);
-
-                byte = pull_byte();     // msb
-                CSV(", %d", byte);
-
-                pitch = (float)byte-64.0f;
-                if (pitch < 0) pitch /= 64.0f;
-                else pitch /= 63.0f;
-                midi.set_tuning(pitch);
-                break;
-            }
-            case MIDI_GLOBAL_PARAMETER_CONTROL:
-            {
-                uint8_t path_len, id_width, val_width;
-                uint8_t param, value;
-                uint16_t slot_path;
-
-                path_len = pull_byte();
-                CSV(", %d", path_len);
-
-                id_width = pull_byte();
-                CSV(", %d", id_width);
-
-                val_width = pull_byte();
-                CSV(", %d", val_width);
-
-                slot_path = pull_byte();
-                CSV(", %d", slot_path);
-
-                byte = pull_byte();
-                slot_path |= byte << 7;
-                CSV(", %d", byte);
-
-                param =  pull_byte();
-                CSV(", %d", param);
-
-                value = pull_byte();
-                CSV(", %d", value);
-
-                switch(slot_path)
+                switch(byte)
                 {
-                case MIDI_CHORUS_PARAMETER:
-                    switch(param)
-                    {
-                    case 0:     // CHORUS_TYPE
-                        midi.set_chorus_type(value);
-                        break;
-                    case 1:     // CHORUS_MOD_RATE
-                        // the modulation frequency in Hz
-                        midi.set_chorus_rate(0.122f*value);
-                        break;
-                    case 2:     // CHORUS_MOD_DEPTH
-                        // the peak-to-peak swing of the modulation in ms
-                        midi.set_chorus_depth(((value+1.0f)/3.2f)*1e-3f);
-                        break;
-                    case 3:     // CHORUS_FEEDBACK
-                        // the amount of feedback from Chorus output in %
-                        midi.set_chorus_feedback(0.763f*value*1e-2f);
-                        break;
-                    case 4:     // CHORUS_SEND_TO_REVERB
-                        // the send level from Chorus to Reverb in %
-                        midi.send_chorus_to_reverb(0.787f*value);
-                        break;
-                    default:
-                        LOG(99, "LOG: Unsupported chorus parameter: %x\n",
-                                 param);
-                        break;
-                    }
-                    break;
-                case MIDI_REVERB_PARAMETER:
-                    switch(param)
-                    {
-                    case 0:     // Reverb Type
-                        midi.set_reverb_type(value);
-                        break;
-                    case 1:     //Reverb Time
-                        midi.set_reverb_time_rt60(expf((value-40)*0.025f));
-                        break;
-                    default:
-                        LOG(99, "LOG: Unsupported reverb parameter: %x\n",
-                                param);
-                        break;
-                    }
-                    break;
-                default:
+                case MIDI_DEVICE_VOLUME:
+                {
+                    float v;
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    v = (float)byte;
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    v += (float)(uint16_t)(byte << 7);
+                    v /= (127.0f*127.0f);
+                    midi.set_gain(v);
                     break;
                 }
-                break;
-            }
-            default:
-                LOG(99, "LOG: Unsupported sysex parameter: %x\n", byte);
-                byte = pull_byte();
-                CSV(", %d", byte);
-                break;
-            }
-            break;
-        default:
+                case MIDI_DEVICE_BALANCE:
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    midi.set_balance(((float)byte-64.0f)/64.0f);
+                    break;
+                case MIDI_DEVICE_FINE_TUNING:
+                {
+                    uint16_t tuning;
+                    float pitch;
+ 
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    tuning = byte;
+
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    tuning |= byte << 7;
+
+                    pitch = (float)tuning-8192.0f;
+                    if (pitch < 0) pitch /= 8192.0f;
+                    else pitch /= 8191.0f;
+                    midi.set_tuning(pitch);
+                    break;
+                }
+                case MIDI_DEVICE_COARSE_TUNING:
+                {
+                    float pitch;
+
+                    byte = pull_byte();     // lsb, always zero
+                    CSV(", %d", byte);
+
+                    byte = pull_byte();     // msb
+                    CSV(", %d", byte);
+
+                    pitch = (float)byte-64.0f;
+                    if (pitch < 0) pitch /= 64.0f;
+                    else pitch /= 63.0f;
+                    midi.set_tuning(pitch);
+                    break;
+                }
+                case MIDI_GLOBAL_PARAMETER_CONTROL:
+                {
+                    uint8_t path_len, id_width, val_width;
+                    uint8_t param, value;
+                    uint16_t slot_path;
+
+                    path_len = pull_byte();
+                    CSV(", %d", path_len);
+
+                    id_width = pull_byte();
+                    CSV(", %d", id_width);
+
+                    val_width = pull_byte();
+                    CSV(", %d", val_width);
+
+                    slot_path = pull_byte();
+                    CSV(", %d", slot_path);
+
+                    byte = pull_byte();
+                    slot_path |= byte << 7;
+                    CSV(", %d", byte);
+
+                    param =  pull_byte();
+                    CSV(", %d", param);
+
+                    value = pull_byte();
+                    CSV(", %d", value);
+
+                    switch(slot_path)
+                    {
+                    case MIDI_CHORUS_PARAMETER:
+                        switch(param)
+                        {
+                        case 0:     // CHORUS_TYPE
+                            midi.set_chorus_type(value);
+                            break;
+                        case 1:     // CHORUS_MOD_RATE
+                            // the modulation frequency in Hz
+                            midi.set_chorus_rate(0.122f*value);
+                            break;
+                        case 2:     // CHORUS_MOD_DEPTH
+                            // the peak-to-peak swing of the modulation in ms
+                            midi.set_chorus_depth(((value+1.0f)/3.2f)*1e-3f);
+                            break;
+                        case 3:     // CHORUS_FEEDBACK
+                            // the amount of feedback from Chorus output in %
+                            midi.set_chorus_feedback(0.763f*value*1e-2f);
+                            break;
+                        case 4:     // CHORUS_SEND_TO_REVERB
+                            // the send level from Chorus to Reverb in %
+                            midi.send_chorus_to_reverb(0.787f*value*1e-2f);
+                            break;
+                        default:
+                            LOG(99, "LOG: Unsupported chorus parameter: %x\n",
+                                     param);
+                            break;
+                        }
+                        break;
+                    case MIDI_REVERB_PARAMETER:
+                        switch(param)
+                        {
+                        case 0:     // Reverb Type
+                            midi.set_reverb_type(value);
+                            break;
+                        case 1:     //Reverb Time
+                            midi.set_reverb_time_rt60(expf((value-40)*0.025f));
+                            break;
+                        default:
+                            LOG(99, "LOG: Unsupported reverb parameter: %x\n",
+                                    param);
+                            break;
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                    break;
+                }
+                default:
+                    LOG(99, "LOG: Unsupported sysex parameter: %x\n", byte);
+                    byte = pull_byte();
+                    CSV(", %d", byte);
+                    break;
+                }
             break;
         }
+        default:
+            LOG(99, "LOG: Unknown sysex device id: %x\n", byte);
+            break;
+        }
+        break;
+    case MIDI_SYSTEM_EXCLUSIVE_E_MU:
+        LOG(99, "Unsupported sysex vendor: E-Mu\n");
+        break;
+    case MIDI_SYSTEM_EXCLUSIVE_KORG:
+        LOG(99, "Unsupported sysex vendor: Korg\n");
+        break;
+    case MIDI_SYSTEM_EXCLUSIVE_CASIO:
+        LOG(99, "Unsupported sysex vendor: Casio\n");
+        break;
     default:
+        LOG(99, "Unknown sysex vendor ID: %x (%i)\n", byte, byte);
         break;
     }
 
