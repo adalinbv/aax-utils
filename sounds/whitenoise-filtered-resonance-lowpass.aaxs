@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<aeonwave>
+ <sound frequency="440">
+  <waveform src="white-noise"/>
+ </sound>
+
+ <emitter looping="true">
+  <filter type="frequency" src="resonance|inverse-sine|24db|logarithmic">
+   <slot n="0">
+    <param n="0">1000</param>
+    <param n="1">1.0</param>
+    <param n="2">0.0</param>
+    <param n="3">10.0</param>
+   </slot>
+   <slot n="1">
+    <param n="0">8000.0</param>
+    <param n="1">0.0</param>
+    <param n="2">0.0</param>
+    <param n="3">0.1</param>
+   </slot>
+  </filter>
+  <filter type="envelope">
+   <slot n="0">
+    <param n="0">1.0</param>
+    <param n="1">5.0</param>
+    <param n="2">1.0</param>
+    <param n="3">0.3</param>
+   </slot>
+  </filter>
+ </emitter>
+
+</aeonwave>
