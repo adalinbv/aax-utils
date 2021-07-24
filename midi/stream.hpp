@@ -136,6 +136,9 @@ private:
     bool process_meta();
     bool process_sysex();
 
+    bool process_GM_sysex_realtime(uint64_t);
+    bool process_GM_sysex_non_realtime(uint64_t);
+
     bool process_GS_sysex(uint64_t);
 
     void display_XG_data(uint32_t, uint8_t, std::string&);

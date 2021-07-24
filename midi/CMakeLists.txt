@@ -4,6 +4,7 @@ set( MIDI_OBJS
      file.cpp
      instrument.cpp
      stream.cpp
+     gmmidi.cpp
      gsmidi.cpp
      xgmidi.cpp
    )
