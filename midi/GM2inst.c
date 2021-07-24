@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <ctype.h>
 
 typedef struct {
   int num;
@@ -80,7 +81,7 @@ _inst_t inst_table[] = {
  { 29, 0x79, 0x02, "Electric Guitar (muted velo, sw)", 40, 86 },
  { 29, 0x79, 0x03, "Jazz Man", 40, 86 },
  { 30, 0x79, 0x00, "Overdriven Guitar", 40, 86 },
- { 20, 0x79, 0x01, "Guitar Pinch", 40, 86 },
+ { 30, 0x79, 0x01, "Guitar Pinch", 40, 86 },
  { 31, 0x79, 0x00, "Distortion Guitar", 40, 86 },
  { 31, 0x79, 0x01, "Distortion Guitar (with feedback)", 40, 86 },
  { 31, 0x79, 0x02, "Distorted Rhythm Guitar", 40, 86 },
