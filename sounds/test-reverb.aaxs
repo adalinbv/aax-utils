@@ -1,6 +1,10 @@
 <?xml version="1.0"?>
 
 <aeonwave>
+ <info>
+  <description text="Generate a looping pulse to hear the reverbs"/>
+ </info>
+
  <sound frequency="220">
   <waveform src="sawtooth"/>
   <waveform src="sawtooth" processing="add" ratio="0.75" pitch="2.0"/>
