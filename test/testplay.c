@@ -150,14 +150,13 @@ int main(int argc, char **argv)
             int q, state, key;
             int paused = AAX_FALSE;
             int playref = AAX_FALSE;
-            aaxFrame frame;
+            aaxFrame frame, frame2;
             aaxFilter filter;
             aaxEffect effect;
             aaxBuffer xbuffer;
             float duration;
             float dt = 0.0f;
 
-            xbuffer = setFiltersEffects(argc, argv, config, config, NULL, NULL, NULL);
             duration = getDuration(argc, argv);
 
             prevgain = gain = getGain(argc, argv);
@@ -307,10 +306,19 @@ int main(int argc, char **argv)
             res = aaxMixerSetState(config, AAX_INITIALIZED);
             testForState(res, "aaxMixerInit");
 
+            frame2 = aaxAudioFrameCreate(config);
+            testForError(frame2, "Unable to create a new audio frame");
+
+            res = aaxMixerRegisterAudioFrame(config, frame2);
+            testForState(res, "aaxMixerRegisterAudioFrame");
+
+            res = aaxAudioFrameSetState(frame2, AAX_PLAYING);
+            testForState(res, "aaxAudioFrameStart");
+
             frame = aaxAudioFrameCreate(config);
             testForError(frame, "Unable to create a new audio frame");
 
-            res = aaxMixerRegisterAudioFrame(config, frame);
+            res = aaxAudioFrameRegisterAudioFrame(frame2, frame);
             testForState(res, "aaxMixerRegisterAudioFrame");
 
             res = aaxAudioFrameSetState(frame, AAX_PLAYING);
@@ -342,12 +350,13 @@ int main(int argc, char **argv)
             res = aaxMixerAddBuffer(config, buffer);
             // testForState(res, "aaxMixerAddBuffer");
 
-            if (xbuffer) {
-                res = aaxMixerAddBuffer(config, xbuffer);
-            }
-
             res = aaxMixerSetState(config, AAX_PLAYING);
             testForState(res, "aaxMixerStart");
+
+            xbuffer = setFiltersEffects(argc, argv, config, NULL, frame, emitter, NULL);
+            if (xbuffer) {
+                res = aaxAudioFrameAddBuffer(frame2, xbuffer);
+            }
 
             /** schedule the emitter for playback */
             if (playref)
