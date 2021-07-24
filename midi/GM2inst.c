@@ -1,5 +1,5 @@
- #include <stdio.h>
- 
+#include <stdio.h>
+#include <string.h>
 
 typedef struct {
   int num;
@@ -12,11 +12,11 @@ _inst_t inst_table[] = {
  {  1, 0x79, 0x00, "Acoustic Grand Piano", 21, 108 },
  {  1, 0x79, 0x01, "Acoustic Grand Piano (wide)", 21, 108 },
  {  1, 0x79, 0x02, "Acoustic Grand Piano (dark)", 21, 108 },
- {  2, 0x79, 0x00, "Bright Acoustic Piano 21, 108", },
+ {  2, 0x79, 0x00, "Bright Acoustic Piano", 21, 108, },
  {  2, 0x79, 0x01, "Bright Acoustic Piano (wide)", 21, 108 },
- {  3, 0x79, 0x00, "Electric Grand Piano 21, 108", },
+ {  3, 0x79, 0x00, "Electric Grand Piano", 21, 108 },
  {  3, 0x79, 0x01, "Electric Grand Piano (wide)", 21, 108 },
- {  4, 0x79, 0x00, "Honky, tonk Piano 21, 108", },
+ {  4, 0x79, 0x00, "Honky, tonk Piano", 21, 108 },
  {  4, 0x79, 0x01, "Honky, tonk Piano (wide)", 21, 108 },
  {  5, 0x79, 0x00, "Electric Piano 1", 28, 103 },
  {  5, 0x79, 0x01, "Detuned Electric Piano 1", 28, 103 },
@@ -67,7 +67,7 @@ _inst_t inst_table[] = {
  { 25, 0x79, 0x02, "Acoustic Guitar (nylon + key off)", 40, 84 },
  { 25, 0x79, 0x03, "Acoustic Guitar (nylon 2)", 40, 84 },
  { 26, 0x79, 0x00, "Acoustic Guitar (steel)", 40, 84 },
- { 26, 0x79, 0x01, "12, Strings Guitar", 40, 84 },
+ { 26, 0x79, 0x01, "12 Strings Guitar", 40, 84 },
  { 26, 0x79, 0x02, "Mandolin", 40, 84 },
  { 26, 0x79, 0x03, "Steel Guitar with Body Sound", 40, 84 },
  { 27, 0x79, 0x00, "Electric Guitar (jazz)", 40, 86 },
@@ -214,73 +214,102 @@ _inst_t inst_table[] = {
  { 113, 0x79, 0x00, "Tinkle Bell", 72, 84 },
  { 114, 0x79, 0x00, "Agogo", 60, 72 },
  { 115, 0x79, 0x00, "Steel Drums", 52, 76 },
- { 116, 0x79, 0x00, "Woodblock", 0, 127 },
- { 116, 0x79, 0x01, "Castanets", 0, 127 },
- { 117, 0x79, 0x00, "Taiko Drum", 0, 127 },
- { 117, 0x79, 0x01, "Concert Bass Drum", 0, 127 },
- { 118, 0x79, 0x00, "Melodic Tom", 0, 127 },
- { 118, 0x79, 0x01, "Melodic Tom 2 (power)", 0, 127 },
- { 119, 0x79, 0x00, "Synth Drum", 0, 127 },
- { 119, 0x79, 0x01, "Rhythm Box Tom", 0, 127 },
- { 119, 0x79, 0x02, "Electric Drum", 0, 127 },
- { 120, 0x79, 0x00, "Reverse Cymbal", 0, 127 },
- { 121, 0x79, 0x00, "Guitar Fret Noise", 0, 127 },
- { 121, 0x79, 0x01, "Guitar Cutting Noise", 0, 127 },
- { 121, 0x79, 0x02, "Acoustic Bass String Slap", 0, 127 },
- { 122, 0x79, 0x00, "Breath Noise", 0, 127 },
- { 122, 0x79, 0x01, "Flute Key Click", 0, 127 },
- { 123, 0x79, 0x00, "Seashore", 0, 127 },
- { 123, 0x79, 0x01, "Rain", 0, 127 },
- { 123, 0x79, 0x02, "Thunder", 0, 127 },
- { 123, 0x79, 0x03, "Wind", 0, 127 },
- { 123, 0x79, 0x04, "Stream", 0, 127 },
- { 123, 0x79, 0x05, "Bubble", 0, 127 },
- { 124, 0x79, 0x00, "Bird Tweet", 0, 127 },
- { 124, 0x79, 0x01, "Dog", 0, 127 },
- { 124, 0x79, 0x02, "Horse Gallop", 0, 127 },
- { 124, 0x79, 0x03, "Bird Tweet 2", 0, 127 },
- { 125, 0x79, 0x00, "Telephone Ring", 0, 127 },
- { 125, 0x79, 0x01, "Telephone Ring 2", 0, 127 },
- { 125, 0x79, 0x02, "Door Creaking", 0, 127 },
- { 125, 0x79, 0x03, "Door", 0, 127 },
- { 125, 0x79, 0x04, "Scratch", 0, 127 },
- { 125, 0x79, 0x05, "Wind Chime", 0, 127 },
- { 126, 0x79, 0x00, "Helicopter", 0, 127 },
- { 126, 0x79, 0x01, "Car Engine", 0, 127 },
- { 126, 0x79, 0x02, "Car Stop", 0, 127 },
- { 126, 0x79, 0x03, "Car Pass", 0, 127 },
- { 126, 0x79, 0x04, "Car Crash", 0, 127 },
- { 126, 0x79, 0x05, "Siren", 0, 127 },
- { 126, 0x79, 0x06, "Train", 0, 127 },
- { 126, 0x79, 0x07, "Jetplane", 0, 127 },
- { 126, 0x79, 0x08, "Starship", 0, 127 },
- { 126, 0x79, 0x09, "Burst Noise", 0, 127 },
- { 127, 0x79, 0x00, "Applause", 0, 127 },
- { 127, 0x79, 0x01, "Laughing", 0, 127 },
- { 127, 0x79, 0x02, "Screaming", 0, 127 },
- { 127, 0x79, 0x03, "Punch", 0, 127 },
- { 127, 0x79, 0x04, "Heart Beat", 0, 127 },
- { 127, 0x79, 0x05, "Footsteps", 0, 127 },
- { 128, 0x79, 0x00, "Gunshot", 0, 127 },
- { 128, 0x79, 0x01, "Machine Gun", 0, 127 },
- { 128, 0x79, 0x02, "Lasergun", 0, 127 },
- { 128, 0x79, 0x03, "Explosion", 0, 127 },
+ { 116, 0x79, 0x00, "Woodblock", 60, 60 },
+ { 116, 0x79, 0x01, "Castanets", 60, 60 },
+ { 117, 0x79, 0x00, "Taiko Drum", 60, 60 },
+ { 117, 0x79, 0x01, "Concert Bass Drum", 60, 60 },
+ { 118, 0x79, 0x00, "Melodic Tom", 60, 60 },
+ { 118, 0x79, 0x01, "Melodic Tom 2 (power)", 60, 60 },
+ { 119, 0x79, 0x00, "Synth Drum", 60, 60 },
+ { 119, 0x79, 0x01, "Rhythm Box Tom", 60, 60 },
+ { 119, 0x79, 0x02, "Electric Drum", 60, 60 },
+ { 120, 0x79, 0x00, "Reverse Cymbal", 60, 60 },
+ { 121, 0x79, 0x00, "Guitar Fret Noise", 60, 60 },
+ { 121, 0x79, 0x01, "Guitar Cutting Noise", 60, 60 },
+ { 121, 0x79, 0x02, "Acoustic Bass String Slap", 60, 60 },
+ { 122, 0x79, 0x00, "Breath Noise", 60, 60 },
+ { 122, 0x79, 0x01, "Flute Key Click", 60, 60 },
+ { 123, 0x79, 0x00, "Seashore", 60, 60 },
+ { 123, 0x79, 0x01, "Rain", 60, 60 },
+ { 123, 0x79, 0x02, "Thunder", 60, 60 },
+ { 123, 0x79, 0x03, "Wind", 60, 60 },
+ { 123, 0x79, 0x04, "Stream", 60, 60 },
+ { 123, 0x79, 0x05, "Bubble", 60, 60 },
+ { 124, 0x79, 0x00, "Bird Tweet", 60, 60 },
+ { 124, 0x79, 0x01, "Dog", 60, 60 },
+ { 124, 0x79, 0x02, "Horse Gallop", 60, 60 },
+ { 124, 0x79, 0x03, "Bird Tweet 2", 60, 60 },
+ { 125, 0x79, 0x00, "Telephone Ring", 60, 60 },
+ { 125, 0x79, 0x01, "Telephone Ring 2", 60, 60 },
+ { 125, 0x79, 0x02, "Door Creaking", 60, 60 },
+ { 125, 0x79, 0x03, "Door", 60, 60 },
+ { 125, 0x79, 0x04, "Scratch", 60, 60 },
+ { 125, 0x79, 0x05, "Wind Chime", 60, 60 },
+ { 126, 0x79, 0x00, "Helicopter", 60, 60 },
+ { 126, 0x79, 0x01, "Car Engine", 60, 60 },
+ { 126, 0x79, 0x02, "Car Stop", 60, 60 },
+ { 126, 0x79, 0x03, "Car Pass", 60, 60 },
+ { 126, 0x79, 0x04, "Car Crash", 60, 60 },
+ { 126, 0x79, 0x05, "Siren", 60, 60 },
+ { 126, 0x79, 0x06, "Train", 60, 60 },
+ { 126, 0x79, 0x07, "Jetplane", 60, 60 },
+ { 126, 0x79, 0x08, "Starship", 60, 60 },
+ { 126, 0x79, 0x09, "Burst Noise", 60, 60 },
+ { 127, 0x79, 0x00, "Applause", 60, 60 },
+ { 127, 0x79, 0x01, "Laughing", 60, 60 },
+ { 127, 0x79, 0x02, "Screaming", 60, 60 },
+ { 127, 0x79, 0x03, "Punch", 60, 60 },
+ { 127, 0x79, 0x04, "Heart Beat", 60, 60 },
+ { 127, 0x79, 0x05, "Footsteps", 60, 60 },
+ { 128, 0x79, 0x00, "Gunshot", 60, 60 },
+ { 128, 0x79, 0x01, "Machine Gun", 60, 60 },
+ { 128, 0x79, 0x02, "Lasergun", 60, 60 },
+ { 128, 0x79, 0x03, "Explosion", 60, 60 },
  { 0, 0, 0, "", 0, 0}
 };
+
+
+static char filename[256];
+char *lowercase(const char *name)
+{
+   int i, j ,len = strlen(name);
+   if (len > 256) len = 255;
+
+   j = 1;
+   filename[0] = tolower(name[0]);
+   for (i=1; i<len; ++i)
+   {
+      if (name[i] != '(' && name[i] != ')')
+      {
+         if (name[i] == ' ') filename[j] = '-';
+         else filename[j] = tolower(name[i]);
+         j++;
+      }
+   }
+   filename[j] = 0;
+   return filename;
+}
 
 int main()
 {
    int b;
-   for (b=0; b<16; ++b)
+   for (b=0; b<10; ++b)
    {
       int i = 0;
-      printf("  <bank n=\"0x70\" l=\"%i\">\n", b);
+      printf("  <bank n=\"0x79\" l=\"%i\">\n", b);
       do
       {
-         if (inst_table[i].lsb == b )
+         if (inst_table[i].msb == 0x79 && inst_table[i].lsb == b )
          {
-             printf("   <instrument n=\"%i\" name=\"%s\" file=\"\"/>\n",
-                    inst_table[i].num-1, inst_table[i].name);
+             printf("   <instrument n=\"%i\" name=\"%s\"",
+                             inst_table[i].num-1, inst_table[i].name);
+
+             printf(" file=\"instruments/%s\"", lowercase(inst_table[i].name));
+
+             if (strstr(inst_table[i].name, "(wide)")) {
+                 printf(" wide=\"true\"");
+             }
+             printf("/>\n");
          }
       } while (inst_table[++i].num);
       printf("  </bank>\n\n");
