@@ -1643,7 +1643,7 @@ int main(int argc, char **argv)
     outfile = getOutputFile(argc, argv, NULL);
     if (infile)
     {
-        float env_fact_fm;
+        float env_fact_fm = 1.0f;
         float fval, db, gain, env_fact;
         struct aax_t aax;
 
