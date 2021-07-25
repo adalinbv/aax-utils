@@ -3,7 +3,7 @@
 #include <ctype.h>
 
 typedef struct {
-  int num;
+  int program;
   int msb, lsb;
   const char *name;
   int low, high;
@@ -303,7 +303,7 @@ int main()
          if (inst_table[i].msb == 0x79 && inst_table[i].lsb == b )
          {
              printf("   <instrument n=\"%i\" name=\"%s\"",
-                             inst_table[i].num-1, inst_table[i].name);
+                             inst_table[i].program-1, inst_table[i].name);
 
              printf(" file=\"instruments/%s\"", lowercase(inst_table[i].name));
 
@@ -312,7 +312,7 @@ int main()
              }
              printf("/>\n");
          }
-      } while (inst_table[++i].num);
+      } while (inst_table[++i].program);
       printf("  </bank>\n\n");
    }
 
