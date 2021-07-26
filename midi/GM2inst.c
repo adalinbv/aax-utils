@@ -180,7 +180,7 @@ _inst_t inst_table[] = {
  { 86, 0x79, 0x00, "Lead 6 (voice)", 36, 96 },
  { 87, 0x79, 0x00, "Lead 7 (fifths)", 36, 96 },
  { 88, 0x79, 0x00, "Lead 8 (bass + lead)", 21, 108 },
- { 88, 0x79, 0x01, "Lead 8a (soft wrl)", 21, 108 },
+ { 88, 0x79, 0x01, "Lead 8a (soft wire lead)", 21, 108 },
  { 89, 0x79, 0x00, "Pad 1 (new age)", 36, 96 },
  { 90, 0x79, 0x00, "Pad 2 (warm)", 36, 96 },
  { 90, 0x79, 0x01, "Pad 2a (sine pad)", 36, 96 },
@@ -302,15 +302,15 @@ int main()
       {
          if (inst_table[i].msb == 0x79 && inst_table[i].lsb == b )
          {
-             printf("   <instrument n=\"%i\" name=\"%s\"",
-                             inst_table[i].program-1, inst_table[i].name);
+            printf("   <instrument n=\"%i\" name=\"%s\"",
+                            inst_table[i].program-1, inst_table[i].name);
 
-             printf(" file=\"instruments/%s\"", lowercase(inst_table[i].name));
+            printf(" file=\"instruments/%s\"", lowercase(inst_table[i].name));
 
-             if (strstr(inst_table[i].name, "(wide)")) {
-                 printf(" wide=\"true\"");
-             }
-             printf("/>\n");
+            if (strstr(inst_table[i].name, "(wide)")) {
+               printf(" wide=\"true\"");
+            }
+            printf("/>\n");
          }
       } while (inst_table[++i].program);
       printf("  </bank>\n\n");
