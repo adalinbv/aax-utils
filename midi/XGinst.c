@@ -200,7 +200,7 @@ _inst_t inst_table[] = {
  { 40, 65, "Attack Pulse", 1 },
  { 40, 66, "CS Light", 1 },
  { 40, 67, "Metal Bass", 1 },
- { 40,112, "Smooth Bass"", 2 },
+ { 40,112, "Smooth Bass", 2 },
  { 40,113, "Octavedved Bass", 1 },
  { 40,114, "Power Bass", 4 },
  { 41,  0, "Violin", 1 },
