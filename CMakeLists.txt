@@ -201,8 +201,8 @@ link_directories(
 )
 
 add_subdirectory(base)
-add_subdirectory(midi)
 add_subdirectory(src)
+add_subdirectory(midi)
 add_subdirectory(3rdparty)
 add_subdirectory(test)
 add_subdirectory(test++)
