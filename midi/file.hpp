@@ -34,8 +34,6 @@
 
 #include <map>
 
-#include <aax/midi.h>
-
 #include <aax/byte_stream.hpp>
 
 #include <midi/shared.hpp>

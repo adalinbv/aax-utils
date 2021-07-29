@@ -29,8 +29,6 @@
  * policies, either expressed or implied, of Adalin B.V.
  */
 
-#include <aax/midi.h>
-
 #include <midi/instrument.hpp>
 #include <midi/stream.hpp>
 #include <midi/driver.hpp>

@@ -33,6 +33,7 @@
 #define __AAX_MIDISHARED
 
 #include <aax/aeonwave.hpp>
+#include <aax/midi.h>
 
 # define CSV_TEXT(...) if(midi.get_csv()) { \
   char s[256]; snprintf(s, 256, __VA_ARGS__); \

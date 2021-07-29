@@ -33,8 +33,6 @@
 
 #include <string>
 
-#include <aax/midi.h>
-
 #include <midi/instrument.hpp>
 #include <midi/stream.hpp>
 #include <midi/driver.hpp>
