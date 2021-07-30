@@ -483,7 +483,7 @@ _inst_t inst_table[] = {
  {  82,  45, "Rhythmic Sawtooth", 2, "", 0 },
  {  83,   0, "Synth Calliope", 2, "Syn Calliope", 2, "Syn Calliope", 2 },
  {  83,   1, "Vent Synth", 2, "Vent Synth", 2, "", 0 },
- {  82,   2, "Pure Pan Lead", 2, "Pure Pan Lead", 2, "", 0 },
+ {  83,   2, "Pure Pan Lead", 2, "Pure Pan Lead", 2, "", 0 },
  {  84,   0, "Chiffer Lead", 2, "Chiffer Lead", 2, "Chiffer Lead", 2 },
  {  84,   1, "TB Lead", 2, "", 0 },
  {  84,   8, "Mad Lead", 2, "", 0 },
