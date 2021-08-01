@@ -439,7 +439,7 @@ _inst_t inst_table[] = {
  { 104,  0, "Sci-Fi", 2 },
  { 104, 64, "Starz", 2 },
  { 105,  0, "Sitar", 1 },
- { 105, 32, "DetSitar", 2 },
+ { 105, 32, "Detuned Sitar", 2 },
  { 105, 35, "Sitar 2", 2 },
  { 105, 96, "Tambra", 2 },
  { 105, 97, "Tamboura", 2 },
@@ -547,12 +547,18 @@ int main()
    int b;
    for (b=0; b<128; ++b)
    {
+      char f = 0;
       int i = 0;
-      printf("  <bank n=\"0\"l=\"%i\">\n", b);
       do
       {
          if (inst_table[i].lsb == b )
          {
+            if (!f)
+            {
+               printf("  <bank n=\"0\" l=\"%i\">\n", b);
+               f = 1;
+            }
+
             printf("   <instrument n=\"%i\" name=\"%s\"",
                     inst_table[i].program-1, inst_table[i].name);
  
@@ -565,7 +571,7 @@ int main()
             printf("/>\n");
          }
       } while (inst_table[++i].program);
-      printf("  </bank>\n\n");
+      if (f) printf("  </bank>\n\n");
    }
 
   return 0;

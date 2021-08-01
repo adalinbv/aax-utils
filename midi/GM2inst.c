@@ -117,9 +117,9 @@ _inst_t inst_table[] = {
  { 49, 0x79, 0x01, "Strings and Brass", 28, 96 },
  { 49, 0x79, 0x02, "60s Strings", 28, 96 },
  { 50, 0x79, 0x00, "String Ensembles 2", 28, 96 },
- { 51, 0x79, 0x00, "SynthStrings 1", 36, 96 },
- { 51, 0x79, 0x01, "SynthStrings 3", 36, 96 },
- { 52, 0x79, 0x00, "SynthStrings 2", 36, 96 },
+ { 51, 0x79, 0x00, "Synth Strings 1", 36, 96 },
+ { 51, 0x79, 0x01, "Synth Strings 3", 36, 96 },
+ { 52, 0x79, 0x00, "Synth Strings 2", 36, 96 },
  { 53, 0x79, 0x00, "Choir Aahs", 48, 79 },
  { 53, 0x79, 0x01, "Choir Aahs 2", 48, 79 },
  { 54, 0x79, 0x00, "Voice Oohs", 48, 79 },
@@ -296,10 +296,16 @@ int main()
    int b;
    for (b=0; b<10; ++b)
    {
+      char f = 0;
       int i = 0;
-      printf("  <bank n=\"0x79\" l=\"%i\">\n", b);
       do
       {
+         if (!f)
+         {  
+            printf("  <bank n=\"0x79\" l=\"%i\">\n", b);
+            f = 1;
+         }
+
          if (inst_table[i].msb == 0x79 && inst_table[i].lsb == b )
          {
             printf("   <instrument n=\"%i\" name=\"%s\"",
@@ -313,7 +319,7 @@ int main()
             printf("/>\n");
          }
       } while (inst_table[++i].program);
-      printf("  </bank>\n\n");
+      if (f) printf("  </bank>\n\n");
    }
 
    return 0;
