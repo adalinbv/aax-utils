@@ -717,23 +717,22 @@ MIDIDriver::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
         case MIDI_EXTENDED_GENERAL_MIDI:
             if (bank_no & 0x7F) {          // switch to MSB only
                 bank_no &= ~0x7F;
-            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDIDriver 1)
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
                 bank_no = 0;
             }
         case MIDI_GENERAL_STANDARD:
-            // Some sequencers mistakenly set the LSB for GS-MIDIDriver
-            if (bank_no & 0x7F) {
-                 bank_no = (bank_no & 0x7F) << 7;
-            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDIDriver 1)
+            if (bank_no & 0x7F) {          // Remove Model-ID
+                 bank_no &= ~0x7F;
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
                 bank_no = 0;
             }
             break;
         default: // General MIDIDriver or unspecified
-            if (bank_no & 0x7F) {          // LSB (XG-MIDIDriver)
+            if (bank_no & 0x7F) {          // LSB (XG-MIDI)
                 bank_no &= ~0x7F;
-            } else if (bank_no & 0x3F80) { // MSB (GS-MIDIDriver / GM-MIDIDriver 2)
+            } else if (bank_no & 0x3F80) { // MSB (GS-MIDI / GM-MIDIr 2)
                 bank_no &= ~0x3F80;
-            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDIDriver 1)
+            } else if (bank_no > 0) {      // fall back to bank-0, (GM-MIDI 1)
                 bank_no = 0;
             }
             break;
