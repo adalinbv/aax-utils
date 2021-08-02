@@ -42,8 +42,6 @@
 namespace aax
 {
 
-#define CHORUS_FRAME	0
-
 enum {
     MIDI_POLYPHONIC = 3,
     MIDI_MONOPHONIC
@@ -51,8 +49,13 @@ enum {
 
 struct wide_t
 {
-    int wide;
-    float spread;
+    wide_t() = default;
+    wide_t(int w, float s) : wide(w), spread(s) {};
+
+    ~wide_t() = default;
+
+    int wide = 0;
+    float spread = 1.0f;
 };
 
 using inst_t = std::pair<std::string,struct wide_t>;
@@ -63,7 +66,7 @@ class MIDIInstrument;
 class MIDIDriver : public AeonWave
 {
 private:
-    using _patch_t = std::map<uint8_t,std::pair<uint8_t,std::string>>;
+    using _patch_map_t = std::map<uint8_t,std::pair<uint8_t,std::string>>;
     using _channel_map_t = std::map<uint16_t,std::shared_ptr<MIDIInstrument>>;
 
 public:
@@ -144,7 +147,7 @@ public:
 
     const inst_t get_drum(uint16_t program, uint8_t key, bool all=false);
     const inst_t get_instrument(uint16_t bank, uint8_t program, bool all=false);
-    std::map<std::string,_patch_t>& get_patches() { return patches; }
+    std::map<std::string,_patch_map_t>& get_patches() { return patches; }
 
     inline void set_initialize(bool i) { initialize = i; };
     inline bool get_initialize() { return initialize; }
@@ -255,17 +258,13 @@ private:
     std::string effects;
     std::string track_name;
     _channel_map_t channels;
-#if CHORUS_FRAME
-    _channel_map_t chorus_channels;
-#else
     std::vector<int> chorus_channels;
-#endif
     _channel_map_t reverb_channels;
     std::map<uint16_t,std::string> frames;
 
     std::map<uint16_t,std::map<uint16_t,inst_t>> drums;
     std::map<uint16_t,std::map<uint16_t,inst_t>> instruments;
-    std::map<std::string,_patch_t> patches;
+    std::map<std::string,_patch_map_t> patches;
 
     std::vector<uint16_t> missing_drum_bank;
     std::vector<uint16_t> missing_instrument_bank;
@@ -283,7 +282,6 @@ private:
     std::vector<std::string> selection;
     std::vector<uint16_t> active_track;
 
-    inst_t empty_map = {"",{0,1.0f}};
     std::string instr = "gmmidi.xml";
     std::string drum = "gmdrums.xml";
     std::string path;

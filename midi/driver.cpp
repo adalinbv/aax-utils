@@ -131,13 +131,6 @@ MIDIDriver::rewind()
     channels.clear();
     uSPP = tempo/PPQN;
 
-#if CHORUS_FRAME
-    for (const auto& it : chorus_channels)
-    {
-        chorus.remove(*it.second);
-        AeonWave::add(*it.second);
-    }
-#endif
     chorus_channels.clear();
 
     for (const auto& it : reverb_channels)
@@ -232,64 +225,19 @@ void
 MIDIDriver::set_chorus(const char *t)
 {
     Buffer& buf = AeonWave::buffer(t);
-#if CHORUS_FRAME
-    chorus.add(buf);
-#else
     for(int i=0; i<chorus_channels.size(); ++i) {
         midi.channel(i).add(buf);
     }
-#endif
 }
 
 void
 MIDIDriver::send_chorus_to_reverb(float val)
 {
-#if CHORUS_FRAME
-    if (val)
-    {
-        AeonWave::remove(chorus);
-        chorus_level = val;
-        reverb.add(chorus);
-    }
-    else
-    {
-        reverb.remove(chorus);
-        AeonWave::add(chorus);
-    }
-#else
-#endif
 }
 
 void
 MIDIDriver::set_chorus_level(uint16_t part_no, float val)
 {
-#if CHORUS_FRAME
-    if (val)
-    {
-        midi.channel(part_no).set_gain(val);
-
-        auto it = chorus_channels.find(part_no);
-        if (it == chorus_channels.end())
-        {
-            it = channels.find(part_no);
-            if (it != channels.end() && it->second)
-            {
-                AeonWave::remove(*it->second);
-                chorus.add(*it->second);
-                chorus_channels[it->first] = it->second;
-            }
-        }
-    }
-    else
-    {
-        auto it = chorus_channels.find(part_no);
-        if (it != chorus_channels.end() && it->second)
-        {
-            chorus.remove(*it->second);
-            AeonWave::add(*it->second);
-        }
-    }
-#else
     auto it = std::find(chorus_channels.begin(),chorus_channels.end(), part_no);
     if (val && it == chorus_channels.end()) {
         chorus_channels.push_back(part_no);
@@ -297,40 +245,28 @@ MIDIDriver::set_chorus_level(uint16_t part_no, float val)
         chorus_channels.erase(it);
     }
     midi.channel(part_no).set_chorus_level(val);
-#endif
 }
 
 void
 MIDIDriver::set_chorus_depth(float ms) {
     chorus_depth = ms*1e-3f;
-#if CHORUS_FRAME
-#else
     for(int i=0; i<chorus_channels.size(); ++i) {
         midi.channel(i).set_chorus_depth(chorus_depth);
     }
-#endif
 }
 
 void
 MIDIDriver::set_chorus_rate(float rate) {
-#if CHORUS_FRAME
-    chorus_rate = rate;
-#else
     for(int i=0; i<chorus_channels.size(); ++i) {
         midi.channel(i).set_chorus_rate(rate);
     }
-#endif
 }
 
 void
 MIDIDriver::set_chorus_feedback(float feedback) {
-#if CHORUS_FRAME
-    chorus_feedback = feedback;
-#else
     for(int i=0; i<chorus_channels.size(); ++i) {
         midi.channel(i).set_chorus_feedback(feedback);
     }
-#endif
 }
 
 void
@@ -571,7 +507,7 @@ MIDIDriver::read_instruments(std::string gmmidi, std::string gmdrums)
                                     file[slen] = 0;
                                     bank.insert({n,{file,{wide,spread}}});
 
-                                    _patch_t p;
+                                    _patch_map_t p;
                                     p.insert({0,{i,file}});
 
                                     patches.insert({file,p});
@@ -657,7 +593,7 @@ MIDIDriver::add_patch(const char *file)
         {
             unsigned int pnum = xmlNodeGetNum(xlid, "patch");
             void *xpid = xmlMarkId(xlid);
-            _patch_t p;
+            _patch_map_t p;
             for (unsigned int i=0; i<pnum; i++)
             {
                 if (xmlNodeGetPos(xlid, xpid, "patch", i) != 0)
@@ -691,6 +627,7 @@ MIDIDriver::add_patch(const char *file)
 const inst_t
 MIDIDriver::get_drum(uint16_t program_no, uint8_t key_no, bool all)
 {
+    inst_t empty_map;
     uint16_t prev_program_no = program_no;
     uint16_t req_program_no = program_no;
     do
@@ -725,8 +662,12 @@ MIDIDriver::get_drum(uint16_t program_no, uint8_t key_no, bool all)
         }
 
         if (bank_found) {
-            DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
-                    key_no,  prev_program_no, program_no);
+            if (prev_program_no != program_no) {
+                DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
+                        key_no, prev_program_no, program_no);
+            } else {
+                DISPLAY(4, "Drum %i not found\n", key_no);
+            }
         } else if (!is_avail(missing_drum_bank, prev_program_no)) {
             DISPLAY(4, "Drum bank %i not found, trying %i\n",
                         prev_program_no, program_no);
@@ -735,16 +676,16 @@ MIDIDriver::get_drum(uint16_t program_no, uint8_t key_no, bool all)
     }
     while (true);
 
-    auto itb = drums.find(req_program_no << 7);
+    auto itb = drums.find(program_no);
     auto& bank = itb->second;
-    bank.insert({key_no,empty_map});
-
-    return empty_map;
+    auto iti = bank.insert({key_no,empty_map});
+    return iti.first->second;
 }
 
 const inst_t
 MIDIDriver::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
 {
+    inst_t empty_map;
     uint16_t prev_bank_no = bank_no;
     uint16_t req_bank_no = bank_no;
 
@@ -811,11 +752,10 @@ MIDIDriver::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
     }
     while (true);
 
-    auto itb = instruments.find(req_bank_no);
+    auto itb = instruments.find(bank_no);
     auto& bank = itb->second;
-    bank.insert({program_no,empty_map});
-
-    return empty_map;
+    auto iti = bank.insert({program_no,empty_map});
+    return iti.first->second;
 }
 
 void
