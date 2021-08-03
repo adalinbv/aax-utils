@@ -303,9 +303,22 @@ MIDIFile::process(uint64_t time_parts, uint32_t& next)
     {
         wait_parts = next;
 
-        try {
-            bool res = streams[t]->process(time_parts, elapsed_parts, wait_parts);
+        try
+        {
+            std::shared_ptr<MIDIStream> s = streams[t];
+            bool res = !s->eof();
+            if (s->eof())
+            {
+                if (!midi.get_format() || s->get_track_no()) {
+                   res = !midi.finished(s->get_channel_no());
+                }
+            }
+            else {
+                res = s->process(time_parts, elapsed_parts, wait_parts);
+            }
+
             if (t || !midi.get_format()) rv |= res;
+
         } catch (const std::runtime_error &e) {
             throw(e);
             break;

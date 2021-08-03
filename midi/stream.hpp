@@ -74,6 +74,9 @@ public:
     void rewind();
     bool process(uint64_t, uint32_t&, uint32_t&);
 
+    inline uint8_t get_track_no() { return track_no; }
+    inline uint16_t get_channel_no() { return channel_no; }
+
     MIDIDriver& midi;
 private:
     float _lin2log(float v) { return log10f(v); }

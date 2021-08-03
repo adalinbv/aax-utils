@@ -653,12 +653,17 @@ MIDIDriver::get_drum(uint16_t program_no, uint8_t key_no, bool all)
         }
         prev_program_no = program_no;
 
-        if ((program_no % 10) == 0) {
-            program_no = 0;
-        } else if ((program_no & 0xF8) == program_no) {
-            program_no -= (program_no % 10);
-        } else {
-            program_no &= 0xF8;
+        switch (midi.get_mode())
+        {
+        default: // General MIDI or unspecified
+            if ((program_no % 10) == 0) {
+                program_no = 0;
+            } else if ((program_no & 0xF8) == program_no) {
+                program_no -= (program_no % 10);
+            } else {
+                program_no &= 0xF8;
+            }
+            break;
         }
 
         if (bank_found) {
@@ -666,7 +671,7 @@ MIDIDriver::get_drum(uint16_t program_no, uint8_t key_no, bool all)
                 DISPLAY(4, "Drum %i not found in bank %i, trying bank: %i\n",
                         key_no, prev_program_no, program_no);
             } else {
-                DISPLAY(4, "Drum %i not found\n", key_no);
+                DISPLAY(4, "Drum %i not found.\n", key_no);
             }
         } else if (!is_avail(missing_drum_bank, prev_program_no)) {
             DISPLAY(4, "Drum bank %i not found, trying %i\n",
@@ -727,7 +732,7 @@ MIDIDriver::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
                 bank_no = 0;
             }
             break;
-        default: // General MIDIDriver or unspecified
+        default: // General MIDI or unspecified
             if (bank_no & 0x7F) {          // LSB (XG-MIDI)
                 bank_no &= ~0x7F;
             } else if (bank_no & 0x3F80) { // MSB (GS-MIDI / GM-MIDIr 2)
@@ -739,9 +744,13 @@ MIDIDriver::get_instrument(uint16_t bank_no, uint8_t program_no, bool all)
         }
 
         if (bank_found) {
-            DISPLAY(4, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
-                     program_no, prev_bank_no >> 7, prev_bank_no & 0x7F,
-                     bank_no >> 7, bank_no & 0x7F);
+            if (prev_bank_no != bank_no) {
+                DISPLAY(4, "Instrument %i not found in bank %i/%i, trying: %i/%i\n",
+                         program_no, prev_bank_no >> 7, prev_bank_no & 0x7F,
+                         bank_no >> 7, bank_no & 0x7F);
+            } else {
+                DISPLAY(4, "Instrument %i not found.\n", program_no);
+            }
         } else if (!is_avail(missing_instrument_bank, prev_bank_no)) {
             DISPLAY(4, "Instrument bank %i/%i not found, trying %i/%i\n",
                         prev_bank_no >> 7, prev_bank_no & 0x7F,
@@ -880,7 +889,7 @@ MIDIDriver::channel(uint16_t track_no)
 bool
 MIDIDriver::process(uint8_t track_no, uint8_t message, uint8_t key, uint8_t velocity, bool omni, float pitch)
 {
-    // Omni mode: Device responds to MIDIDriver data regardless of channel
+    // Omni mode: Device responds to MIDI data regardless of channel
     if (message == MIDI_NOTE_ON && velocity) {
         if (is_track_active(track_no)) {
             try {

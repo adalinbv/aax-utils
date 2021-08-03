@@ -264,12 +264,6 @@ MIDIStream::process(uint64_t time_offs_parts, uint32_t& elapsed_parts, uint32_t&
 {
     bool rv = !eof();
 
-    if (eof())
-    {
-        if (midi.get_format() && !track_no) return rv;
-        return !midi.finished(channel_no);
-    }
-
     if (elapsed_parts < wait_parts)
     {
         wait_parts -= elapsed_parts;
