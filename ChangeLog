@@ -1,3 +1,9 @@
+* Wed Aug 4 2021 - <tech@adalin.org>
+- Move the MIDI code to it's own aax-midi repository
+
+ -- Erik Hofman <info@adalin.org>  Wed, 4 Aug 2021 09:53:00 +0100
+
+
 * Tue Feb 19 2019 - <tech@adalin.org>
 - Add aaxplaymidi - play back midi files using AeonWave
 - Add aaxsstandardize - standardize AAXS configuration files
@@ -6,10 +12,12 @@
 
  -- Erik Hofman <info@adalin.org>  Mon, 24 Dec 2018 10:04:00 +0100
 
+
 * Thu Aug 04 2016 - <tech@adalin.org>
 - Add test programs for the new C++ API
 
  -- Erik Hofman <info@adalin.org>  Tue, 04 Aug 2016 15:01:00 +0200
+
 
 * Sat Jul 21 2012 - <tech@adalin.org>
 - AeonWave-utils (0.2.0) stable; urgency=low

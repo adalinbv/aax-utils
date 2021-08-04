@@ -163,15 +163,11 @@ IF (UNIX AND NOT WIN32)
       "${CMAKE_CURRENT_SOURCE_DIR}/admin/aaxplay.1.in"
       "${CMAKE_CURRENT_BINARY_DIR}/aaxplay.1")
   CONFIGURE_FILE(
-      "${CMAKE_CURRENT_SOURCE_DIR}/admin/aaxplaymidi.1.in"
-      "${CMAKE_CURRENT_BINARY_DIR}/aaxplaymidi.1")
-  CONFIGURE_FILE(
       "${CMAKE_CURRENT_SOURCE_DIR}/admin/aaxinfo.1.in"
       "${CMAKE_CURRENT_BINARY_DIR}/aaxinfo.1")
 
   INSTALL(FILES ${CMAKE_CURRENT_BINARY_DIR}/aaxcvt.1
                 ${CMAKE_CURRENT_BINARY_DIR}/aaxplay.1
-                ${CMAKE_CURRENT_BINARY_DIR}/aaxplaymidi.1
                 ${CMAKE_CURRENT_BINARY_DIR}/aaxinfo.1
           DESTINATION "${CMAKE_INSTALL_PREFIX}/man/man1"
           COMPONENT Applications)
@@ -197,12 +193,10 @@ include_DIRECTORIES(
 link_directories(
   ${PROJECT_BINARY_DIR}/base
   ${PROJECT_BINARY_DIR}/src
-  ${PROJECT_BINARY_DIR}/midi
 )
 
 add_subdirectory(base)
 add_subdirectory(src)
-add_subdirectory(midi)
 add_subdirectory(3rdparty)
 add_subdirectory(test)
 add_subdirectory(test++)
@@ -210,14 +204,6 @@ add_subdirectory(test++)
 IF(NOT SINGLE_PACKAGE)
   include (CPack)
 ENDIF(NOT SINGLE_PACKAGE)
-
-add_custom_target(midi_package
-  WORKING_DIRECTORY ${aax-utils_SOURCE_DIR}
-  COMMAND ${CMAKE_COMMAND} -E tar "cf" "${aax-utils_BINARY_DIR}/midi_source.zip" --format=zip
-  midi/*.[ch]pp
-  src/aaxplaymidi.cpp
-  base/timer.[ch]
-)
 
 message("Build type: ${CMAKE_BUILD_TYPE}")
 message("C flags: ${CMAKE_C_FLAGS}")
