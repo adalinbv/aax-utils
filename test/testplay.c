@@ -60,6 +60,7 @@ int main(int argc, char **argv)
     char *devname, *infile, *reffile;
     aaxConfig config;
     float velocity;
+    float fraction;
     int base_freq[2];
     char verbose = 0;
     char repeat = 0;
@@ -119,6 +120,7 @@ int main(int argc, char **argv)
         }
 
         base_freq[0] = aaxBufferGetSetup(buffer, AAX_UPDATE_RATE);
+        fraction = 1e-6f*aaxBufferGetSetup(buffer, AAX_REFRESH_RATE);
         if (reffile) {
             base_freq[1] = aaxBufferGetSetup(refbuf, AAX_UPDATE_RATE);
         } else {
@@ -138,6 +140,7 @@ int main(int argc, char **argv)
             printf(" Buffer sample frequency: %5i Hz\n",
                     aaxBufferGetSetup(buffer, AAX_FREQUENCY));
             printf(" Buffer base frequency  : %5i Hz\n", base_freq[0]);
+                printf(" Buffer pitch fraction  : %4.3f\n", fraction);
         }
 
         ofile = getOutputFile(argc, argv, NULL);
@@ -176,6 +179,8 @@ int main(int argc, char **argv)
             }
             else
             {
+                freq = fraction*(freq - base_freq[0]) + base_freq[0];
+printf("freq: %f, fraction: %f, base: %i\n", freq, fraction, base_freq[0]);
                 if (base_freq[0]) pitch[0] = freq/base_freq[0];
                 if (base_freq[1]) pitch[1] = freq/base_freq[1];
                 pitch2 = 0.0f;
