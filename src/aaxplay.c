@@ -361,19 +361,22 @@ int main(int argc, char **argv)
         if (record && verbose)
         {
             unsigned int samples = aaxMixerGetSetup(record, AAX_SAMPLES_MAX);
+            int rate = aaxMixerGetSetup(record, AAX_FREQUENCY);
+            int bps = aaxGetBitsPerSample(aaxMixerGetSetup(record, AAX_FORMAT));
+            int bitrate = aaxMixerGetSetup(record, AAX_BITRATE);
+            int tracks = aaxMixerGetSetup(record, AAX_TRACKS);
+            int vbr = (bitrate < 0) ? AAX_TRUE : AAX_FALSE;
             const char *s;
 
+            bitrate = abs(bitrate);
             if (samples) {
-              printf(" Audio format: %i Hz, %i bits/sample, %i tracks, %i samples\n",
-                     aaxMixerGetSetup(record, AAX_FREQUENCY),
-                     aaxGetBitsPerSample(aaxMixerGetSetup(record, AAX_FORMAT)),
-                     aaxMixerGetSetup(record, AAX_TRACKS), samples);
-           } else {
-              printf(" Audio format: %i Hz, %i bits/sample, %i tracks\n",
-                     aaxMixerGetSetup(record, AAX_FREQUENCY),
-                     aaxGetBitsPerSample(aaxMixerGetSetup(record, AAX_FORMAT)),
-                     aaxMixerGetSetup(record, AAX_TRACKS));
-           }
+                printf(" Audio format: %i Hz, %i bits/sample, %s%i kbps, "
+                       "%i tracks, %i samples\n", rate, bps, vbr ? "~" : "",
+                        bitrate, tracks, samples);
+            } else {
+                printf(" Audio format: %i Hz, %i bits/sample, %s%i kbps, "
+                     "%i tracks\n", rate, bps, vbr ? "~" : "", bitrate, tracks);
+            }
 
             s = aaxDriverGetSetup(record, AAX_MUSIC_PERFORMER_STRING);
             if (s) printf(" Performer: %s\n", s);
