@@ -180,7 +180,6 @@ int main(int argc, char **argv)
             else
             {
                 freq = fraction*(freq - base_freq[0]) + base_freq[0];
-printf("freq: %f, fraction: %f, base: %i\n", freq, fraction, base_freq[0]);
                 if (base_freq[0]) pitch[0] = freq/base_freq[0];
                 if (base_freq[1]) pitch[1] = freq/base_freq[1];
                 pitch2 = 0.0f;
@@ -528,21 +527,52 @@ printf("freq: %f, fraction: %f, base: %i\n", freq, fraction, base_freq[0]);
             }
             while (state != AAX_PROCESSED);
 
-            res = aaxAudioFrameSetState(frame, AAX_STOPPED);
+            res = aaxEmitterSetState(emitter, AAX_PROCESSED);
+            testForState(res, "aaxEmitterSetState");
+
+            res = aaxAudioFrameDeregisterEmitter(frame, emitter);
+            testForState(res, "aaxAudioFrameDeregisterEmitter");
+
+            res = aaxEmitterDestroy(emitter);
+            testForState(res, "aaxEmitterDestroy");
+
+            res = aaxBufferDestroy(buffer);
+            testForState(res, "aaxBufferDestroy");
 
             if (reffile)
             {
+                res = aaxEmitterSetState(refem, AAX_PROCESSED);
+                testForState(res, "aaxEmitterSetState");
+
                 res = aaxAudioFrameDeregisterEmitter(frame, refem);
+                testForState(res, "aaxAudioFrameDeregisterEmitter");
+
                 res = aaxEmitterDestroy(refem);
+                testForState(res, "aaxEmitterDestroy");
+
                 res = aaxBufferDestroy(refbuf);
+                testForState(res, "aaxBufferDestroy");
             }
 
-            res = aaxAudioFrameDeregisterEmitter(frame, emitter);
-            res = aaxMixerDeregisterAudioFrame(config, frame);
-            res = aaxMixerSetState(config, AAX_STOPPED);
+            res = aaxAudioFrameSetState(frame, AAX_STOPPED);
+            testForState(res, "aaxAudioFrameSetState");
+
+            res = aaxAudioFrameDeregisterAudioFrame(frame2, frame);
+            testForState(res, "aaxAudioFrameDeregisterAudioFrame");
+
             res = aaxAudioFrameDestroy(frame);
-            res = aaxEmitterDestroy(emitter);
-            res = aaxBufferDestroy(buffer);
+            testForState(res, "aaxAudioFrameDestroy");
+
+            res = aaxAudioFrameSetState(frame2, AAX_STOPPED);
+            testForState(res, "aaxAudioFrameSetState");
+
+            res = aaxMixerDeregisterAudioFrame(config, frame2);
+            testForState(res, "aaxAudioFrameDeregisterAudioFrame");
+
+            res = aaxAudioFrameDestroy(frame2);
+            testForState(res, "aaxAudioFrameDestroy");
+
+            res = aaxMixerSetState(config, AAX_STOPPED);
 
             if (xbuffer) {
                 res = aaxBufferDestroy(xbuffer);
