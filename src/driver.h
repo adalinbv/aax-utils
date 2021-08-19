@@ -115,8 +115,10 @@ aaxBuffer setFiltersEffects(int, char**, aaxConfig, aaxConfig, aaxFrame, aaxEmit
 int printCopyright(int, char**);
 char*strDup(const char*);
 
+#define testForState(a,b)	testForState_int((a),(b),__LINE__)
+
 void testForError(void *, char const *);
-void testForState(int, const char*);
+void testForState_int(int, const char*, int);
 void testForALCError(void *);
 void testForALError();
 

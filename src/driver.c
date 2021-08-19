@@ -410,12 +410,12 @@ testForError(void *p, char const *s)
 }
 
 void
-testForState(int res, const char *func)
+testForState_int(int res, const char *func, int line)
 {
     if (res != AAX_TRUE)
     {
         int err = aaxGetErrorNo();
-        printf("%s:\t\t%i\n", func, res);
+        printf("%s:\t\t%i   at line: %i\n", func, res, line);
         printf("(%i) %s\n\n", err, aaxGetErrorString(err));
         exit(-1);
     }
