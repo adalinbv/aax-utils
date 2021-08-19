@@ -525,6 +525,7 @@ setFiltersEffects(int argc, char **argv, aaxConfig c, aaxConfig m, aaxFrame f, a
         buffer = aaxBufferCreate(c, 1, 1, AAX_AAXS16S);
         if (buffer && !aaxBufferSetData(buffer, aaxs))
         {
+            printf("Error: %s\n", aaxGetErrorString(aaxGetErrorNo()));
             aaxBufferDestroy(buffer);
             buffer = NULL;
         }
@@ -536,7 +537,6 @@ setFiltersEffects(int argc, char **argv, aaxConfig c, aaxConfig m, aaxFrame f, a
        if (f) aaxAudioFrameAddBuffer(f, buffer);
        if (e) aaxEmitterAddBuffer(e, buffer);
     }
-    else printf("Error: %s\n", aaxGetErrorString(aaxGetErrorNo()));
 
     return buffer;
 }
