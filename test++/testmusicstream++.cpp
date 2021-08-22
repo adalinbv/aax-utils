@@ -48,7 +48,7 @@ int main(int argc, char **argv)
     aax.set(AAX_INITIALIZED);
     aax.set(AAX_PLAYING);
 
-    aax.playback("http://streamnl.atinet.nl:8004/;stream.mp3");
+    aax.playback("http://stream-dc1.radioparadise.com/rp_192m.ogg");
     set_mode(1);
     do
     {
