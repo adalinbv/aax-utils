@@ -42,58 +42,23 @@
 #include "driver.h"
 #include "wavfile.h"
 
-#define SAX	1
-#define ENABLE_TIMED_GAIN_FILTER	1
-#define ENABLE_TIMED_PITCH_EFFECT	SAX
-#define ENABLE_EMITTER_DYNAMIC_GAIN	0
-#define ENABLE_EMITTER_DYNAMIC_PITCH	0
-#define ENABLE_MIXER_DYNAMIC_GAIN	0
 #define SAMPLE_FREQUENCY		22050
 
 static const char* aaxs_data_sax =   // A2, 200Hz
-#if SAX
-#if 1
-"    <sound frequency=\"220\">			\
-       <waveform src=\"sawtooth\"/>		\
-       <waveform src=\"sine\">			\
-         <processing>mix</processing>		\
-         <pitch>3.535</pitch>			\
-         <ratio>-0.4</ratio>			\
-       </waveform>				\
-     </sound>";
-#else
-"    <sound frequency=\"23\">                    \
-       <waveform src=\"brownian-noise\">        \
-         <pitch>0.3</pitch>                    \
-         <ratio>0.73</ratio>                    \
-         <staticity>0.1</staticity> 		\
-       </waveform>                              \
-       <waveform src=\"sawtooth\">		\
-         <processing>mix</processing>		\
-         <ratio>0.73</ratio>			\
-       </waveform>				\
-       <waveform src=\"sine\">                  \
-         <processing>modulate</processing>      \
-         <pitch>2.9</pitch>			\
-         <ratio>1.0</ratio>			\
-       </waveform>                              \
-     </sound>";
-#endif
-#else
-"    <sound frequency=\"110\">			\
-      <waveform src=\"triangle\"/>		\
-      <waveform src=\"sine\">			\
-        <processing>mix</processing>		\
-        <pitch>4.0</pitch>			\
-        <ratio>-0.2</ratio>			\
-      </waveform>				\
-      <waveform src=\"triangle\">		\
-        <processing>mix</processing>		\
-        <pitch>2.0</pitch>			\
-        <ratio>0.333</ratio>>			\
-      </waveform>				\
-    </sound>";
-#endif
+" <aeonwave>"
+"  <sound frequency=\"220\">"
+"   <waveform src=\"sawtooth\"/>"
+"   <waveform src=\"sine\" processing=\"mix\" pitch=\"3.0\" ratio=\"-0.4\"/>"
+"  </sound>"
+"  <emitter>"
+"   <filter type=\"envelope\">"
+"    <slot n=\"0\">"
+"     <param n=\"0\">1.2</param>"
+"     <param n=\"1\">1.2</param>"
+"    </slot>"
+"   </filter>"
+"  </emitter>"
+" </aeonwave>";
 
 int main(int argc, char **argv)
 {
@@ -143,35 +108,23 @@ int main(int argc, char **argv)
         res = emitter.set(AAX_LOOPING, AAX_TRUE);
         testForState(res, "aaxEmitterSetLooping");
 
-#if ENABLE_TIMED_GAIN_FILTER
 	/* time dsp for emitter */
         dsp = aax::dsp(config, AAX_TIMED_GAIN_FILTER);
         testForState(res, "aaxFilterCreate");
 
-#if SAX
         res = dsp.set(0, 0.0f, 0.05f, 1.0f, 0.05f);
         testForState(res, "aaxFilterSetSlot 0");
         res = dsp.set(1, 0.9f, 1.0f, 0.8f, 0.2f);
         testForState(res, "aaxFilterSetSlot 1");
         res = dsp.set(2, 0.0f, 0.0f, 0.0f, 0.0f);
         testForState(res, "aaxFilterSetSlot 2");
-#else
-        res = dsp.set(0, 0.0f, 0.01f, 1.0f, 0.05f);
-        testForState(res, "aaxFilterSetSlot 0");
-        res = dsp.set(1, 0.7f, 0.1f, 0.6f, 0.05f);
-        testForState(res, "aaxFilterSetSlot 1");
-        res = dsp.set(2, 0.45f, 1.5f, 0.0f, 0.0f);
-        testForState(res, "aaxFilterSetSlot 2");
-#endif
 
         res = emitter.set(dsp);
         testForState(res, "aaxEmitterSetFilter");
 
         aax::Status status = AAX_TRUE;
         emitter.tie(status,  AAX_TIMED_GAIN_FILTER);
-#endif
 
-#if ENABLE_TIMED_PITCH_EFFECT
 	/* time dsp for emitter */
         dsp = aax::dsp(config, AAX_TIMED_PITCH_EFFECT);
         testForState(res, "aaxFilterCreate");
@@ -180,47 +133,12 @@ int main(int argc, char **argv)
         testForState(res, "aaxFilterSetSlot 0");
         res = dsp.set(1, 1.0f, 0.1f, 0.99f, 0.0f);
         testForState(res, "aaxFilterSetSlot 1");
-#if 0
-        res = dsp.set(2, 1.05f, 0.0f, 1.0f, 0.0f);
-        testForState(res, "aaxFilterSetSlot 2");
-#endif
 
         res = dsp.set(AAX_TRUE);
         testForState(res, "aaxFilterSetState");
 
         res = emitter.set(dsp);
         testForState(res, "aaxEmitterSetFilter");
-#endif
-
-#if ENABLE_EMITTER_DYNAMIC_GAIN
-	/* tremolo dsp for emitter */
-        dsp = aax::dsp(config, AAX_TREMOLO_FILTER);
-        testForState(res, "aaxFilterCreate");
-
-        res = dsp.set(0, 0.0f, 15.0f, 0.15f, 0.0f);
-        testForState(res, "aaxFilterSetSlot");
-
-        res = dsp.set(AAX_SINE_WAVE);
-        testForState(res, "aaxFilterSetState");
-
-        res = emitter.set(dsp);
-        testForState(res, "aaxEmitterSetFilter");
-#endif
-
-#if ENABLE_EMITTER_DYNAMIC_PITCH
-	/* vibrato dsp for emitter */
-        dsp = aax::dsp(config, AAX_VIBRATO_EFFECT);
-        testForState(res, "aaxEffectCreate");
-
-        res = dsp.set(0, 0.0f, 15.0f, 0.03f, 0.0f);
-        testForState(res, "aaxEffectSetSlot");
-
-        res = dsp.set(AAX_SINE_WAVE);
-        testForState(res, "aaxEffectSetState");
-
-        res = emitter.set(dsp);
-        testForState(res, "aaxEmitterSetEffect");
-#endif
 
         /** mixer */
         res = config.set(AAX_INITIALIZED);
@@ -231,21 +149,6 @@ int main(int argc, char **argv)
 
         res = config.set(AAX_PLAYING);
         testForState(res, "aaxMixerStart");
-
-#if ENABLE_MIXER_DYNAMIC_GAIN
-        /* tremolo dsp for mixer */
-        dsp = aax::dsp(config, AAX_TREMOLO_FILTER);
-        testForState(res, "aaxFilterCreate");
-
-        res = dsp.set(0, 0.0f, 0.9f, 0.2f, 0.0f);
-        testForState(res, "aaxFilterSetSlot");
-
-        res = dsp.set(AAX_TRIANGLE_WAVE);
-        testForState(res, "aaxFilterSetState");
-
-        res = config.set(dsp);
-        testForState(res, "aaxMixerSetFilter");
-#endif
 
         /** schedule the emitter for playback */
         res = emitter.set(AAX_PLAYING);
