@@ -1589,7 +1589,8 @@ void help()
     printf(" -i, --input <file>\t\tthe .aaxs configuration file to standardize.\n");
     printf(" -o, --output <file>\t\twrite the new .aaxs configuration to this file.\n");
     printf("     --debug\t\t\tAdd some debug information to the AAXS file.\n");
-    printf("     --no-layers\t\t\tDo not add layers.\n");
+    printf("     --auto-gain\t\tApply auto gain changes.\n");
+    printf("     --no-layers\t\tDo not add layers.\n");
     printf("     --omit-cc-by\t\tDo not add the CC-BY license reference.\n");
     printf("     --force-cc-by\t\tForce the CC-BY license reference.\n");
     printf("     --force-simplify\t\tForce simplification of the configuration file.\n");
@@ -1604,6 +1605,7 @@ void help()
 int main(int argc, char **argv)
 {
     char *infile, *outfile;
+    char agc = 0;
     char simplify = 0;
     char commons = 1;
     char *arg;
@@ -1626,6 +1628,10 @@ int main(int argc, char **argv)
         commons = 0;
     } else if (getCommandLineOption(argc, argv, "--force-cc-by")) {
         commons |= 0x80;
+    }
+
+    if (getCommandLineOption(argc, argv, "--auto-gain")) {
+        agc = 1;
     }
 
     if (getCommandLineOption(argc, argv, "--no-layers")) {
@@ -1661,7 +1667,6 @@ int main(int argc, char **argv)
         env_fact_fm *= getGain(argc, argv);
 #endif
 
-
         get_info(&aax, infile);
         if (aax.info.note.min && aax.info.note.max)
         {
@@ -1679,7 +1684,7 @@ int main(int argc, char **argv)
         }
 
         env_fact = 1.0f;
-        if (gain > 0.0f && fabsf(gain-fval) > 0.1f)
+        if (agc && gain > 0.0f && fabsf(gain-fval) > 0.1f)
         {
             env_fact = gain/fval;
             gain = fval;
