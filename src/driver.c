@@ -376,6 +376,8 @@ getAudioFormat(int argc, char **argv, enum aaxFormat format)
          rv = AAX_ALAW;
       } else if (!strcasecmp(fn, "AAX_IMA4_ADPCM")) {
          rv = AAX_IMA4_ADPCM; 
+      } else if (!strcasecmp(fn, "AAX_PCM24S_PACKED")) {
+         rv = AAX_PCM24S_PACKED;
 
       } else if (!strcasecmp(fn, "AAX_PCM8U")) {
          rv = AAX_PCM8U;
