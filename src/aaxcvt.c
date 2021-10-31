@@ -59,7 +59,7 @@ static int _mask_t[MAX_LOOPS] = {
     AAX_FORMAT_BE_UNSIGNED
 };
 
-static const char* _format_s[][2] = {
+static const char* _format_s[AAX_FORMAT_MAX][2] = {
     { " AAX_PCM8S", "\tsigned, 8-bits per sample" },
     { " AAX_PCM16S", "\tsigned, 16-bits per sample" },
     { " AAX_PCM24S", "\tsigned, 24-bits per sample, 32-bit encoded" },
@@ -68,7 +68,8 @@ static const char* _format_s[][2] = {
     { " AAX_DOUBLE", "\t64-bit floating point, range: -1.0 to 1.0" },
     { " AAX_MULAW", "\tmulaw, 16-bit with 2:1 compression" },
     { " AAX_ALAW", "\talaw, 16-bit with 2:1 compression" },
-    { " AAX_IMA4_ADPCM", "IMA4 ADPCM, 16-bit with 4:1 compression" }
+    { " AAX_IMA4_ADPCM", "IMA4 ADPCM, 16-bit with 4:1 compression" },
+    { " AAX_PCM24S_PACKED", "signed, 24-bits per sample, 24-bit encoded" }
 };
 
 static const char* _format_us[][2] = {
