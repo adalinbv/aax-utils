@@ -42,6 +42,7 @@
 #include <aax/aax.h>
 
 #include "base/types.h"
+#include "playlist.h"
 #include "driver.h"
 #include "wavfile.h"
 
@@ -162,6 +163,8 @@ int main(int argc, char **argv)
     {
         if (idevname)
         {
+            // treat as a playlist
+            idevname = getURLFromPlaylist(config, idevname);
             record = aaxDriverOpenByName(idevname, AAX_MODE_READ);
             if (!record)
             {

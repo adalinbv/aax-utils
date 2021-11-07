@@ -5,6 +5,7 @@ set(LIBTHIRDPARTY thirdparty)
 set( DRIVER_OBJS
      driver.c
      wavfile.c
+     playlist.c
    )
 
 set(LIBDRIVER driver)
