@@ -49,12 +49,13 @@ getURLFromPlaylist(aaxConfig config, const char *playlist)
    static const int buf_offs = strlen("AeonWave on Audio Files: ");
    static char buf[1025] = "AeonWave on Audio Files: ";
    const char *ext = strrchr(playlist, '.');
-   char *rv = strchr(playlist, ':');
+   char *ptr = strchr(playlist, ':');
+   char *rv = playlist;
 
-   if (rv)
+   if (ptr)
    {
-      if (*(++rv) == ' ') ++rv;
-      playlist = rv;
+      if (*(++ptr) == ' ') ++ptr;
+      playlist = ptr;
    }
 
    if (ext && (!strcasecmp(ext, ".m3u") || !strcasecmp(ext, ".m3u8") ||
