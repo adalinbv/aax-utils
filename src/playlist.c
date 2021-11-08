@@ -52,7 +52,7 @@ getURLFromPlaylist(aaxConfig config, const char *playlist)
    static char buf[1025] = AAX_STREAM_DRIVER;
    const char *ext = strrchr(playlist, '.');
    char *ptr = strchr(playlist, ':');
-   char *rv = playlist;
+   char *rv = (char*)playlist;
 
    if (ptr)
    {
@@ -70,7 +70,7 @@ getURLFromPlaylist(aaxConfig config, const char *playlist)
          if (data)
          {
             struct entry_t entries[MAX_ENTRIES];
-            int no_entries;
+            int no_entries = 0;
 
             if (!strcasecmp(ext, ".m3u") || !strcasecmp(ext, ".m3u8")) {
                no_entries = readM3U(data[0], entries);
@@ -119,7 +119,7 @@ readM3U(const char *pls, struct entry_t entries[MAX_ENTRIES])
 
          if (*pls != '#')
          {
-            entries[no_urls].url = pls;
+            entries[no_urls].url = (char*)pls;
             entries[no_urls++].len = next - pls;
          }
 
