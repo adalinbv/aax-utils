@@ -43,7 +43,7 @@ struct entry_t {
 };
 
 char* getURLFromPlaylist(aaxConfig, const char*);
-int readM3U(const char*, int, struct entry_t[MAX_ENTRIES]);
+int readM3U(const char*, struct entry_t[MAX_ENTRIES]);
 int readPLS(const char*, struct entry_t[MAX_ENTRIES]);
 
 #if defined(__cplusplus)

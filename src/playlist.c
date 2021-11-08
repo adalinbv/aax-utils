@@ -43,11 +43,13 @@
 
 #include "playlist.h"
 
+#define AAX_STREAM_DRIVER	"AeonWave on Audio Files: "
+
 char*
 getURLFromPlaylist(aaxConfig config, const char *playlist)
 {
-   static const int buf_offs = strlen("AeonWave on Audio Files: ");
-   static char buf[1025] = "AeonWave on Audio Files: ";
+   static const int buf_offs = strlen(AAX_STREAM_DRIVER);
+   static char buf[1025] = AAX_STREAM_DRIVER;
    const char *ext = strrchr(playlist, '.');
    char *ptr = strchr(playlist, ':');
    char *rv = playlist;
@@ -70,11 +72,9 @@ getURLFromPlaylist(aaxConfig config, const char *playlist)
             struct entry_t entries[MAX_ENTRIES];
             int no_entries;
 
-            if (!strcasecmp(ext, ".m3u")) {
-               no_entries = readM3U(data[0], AAX_FALSE, entries);
-            } else if (!strcasecmp(ext, ".m3u8")) {
-               no_entries = readM3U(data[0], AAX_TRUE, entries);
-            } else { // ".pls"
+            if (!strcasecmp(ext, ".m3u") || !strcasecmp(ext, ".m3u8")) {
+               no_entries = readM3U(data[0], entries);
+            } else if (!strcasecmp(ext, ".pls")) {
                no_entries = readPLS(data[0], entries);
             }
 
@@ -98,29 +98,40 @@ getURLFromPlaylist(aaxConfig config, const char *playlist)
          }
       }
    }
+
    return rv;
 }
 
 int
-readM3U(const char *data, int utf8, struct entry_t entries[MAX_ENTRIES])
+readM3U(const char *pls, struct entry_t entries[MAX_ENTRIES])
 {
    int rv = 0;
-#if 0
-   if (utf8) {
-        tstream.setCodec("UTF-8");
-    }
-    while(!tstream.atEnd())
-    {
-        QString line = tstream.readLine();
-        if (line.at(0) != '#')
-        {
-            infile = line;
-            if (setFileOrPlaylist(list) == false) {
-                list.append(line);
-            }
-        }
-    }
-#endif
+   if (pls)
+   {
+      size_t len = strlen(pls);
+      int no_urls = 0;
+
+      while (len > 1 && no_urls < MAX_ENTRIES)
+      {
+         const char *next = strstr(pls+1, "\r\n");
+         if (!next) next = strchr(pls+1, '\n');
+         if (!next) next = pls+strlen(pls);
+
+         if (*pls != '#')
+         {
+            entries[no_urls].url = pls;
+            entries[no_urls++].len = next - pls;
+         }
+
+         if (*next == '\r') ++next;
+         if (*next == '\n') ++next;
+
+         len -= next-pls;
+         pls = next;
+      }
+      rv = no_urls;
+   }
+
    return rv;
 }
 
