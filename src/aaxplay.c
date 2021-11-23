@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2018 by Erik Hofman.
- * Copyright (C) 2009-2018 by Adalin B.V.
+ * Copyright (C) 2008-2021 by Erik Hofman.
+ * Copyright (C) 2009-2021 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -134,25 +134,34 @@ int main(int argc, char **argv)
     if (getCommandLineOption(argc, argv, "-v") || 
         getCommandLineOption(argc, argv, "--verbose"))
     {
-       verbose = 1;
+        verbose = 1;
     }
 
     gain = getGain(argc, argv);
     idevname = getCaptureName(argc, argv);
     infile = getInputFile(argc, argv, IFILE_PATH);
+    if (verbose)
+    {
+        if (idevname) {
+            printf("Streaming: %s\n", idevname);
+        } else if (infile) {
+            printf("Playing: %s\n", infile);
+        }
+    }
+
     if (!idevname)
     {
-       if (infile)
-       {
-           if (!strstr(infile+strlen(infile)-5, ".aaxs"))
-           {
-               snprintf(ibuf, 256, "AeonWave on Audio Files: %s", infile);
-               idevname = ibuf;
-           }
-       }
-       else {
-          help();
-       }
+        if (infile)
+        {
+            if (!strstr(infile+strlen(infile)-5, ".aaxs"))
+            {
+                snprintf(ibuf, 256, "AeonWave on Audio Files: %s", infile);
+                idevname = ibuf;
+            }
+        }
+        else {
+            help();
+        }
     }
 
     devname = getDeviceName(argc, argv);
@@ -219,11 +228,10 @@ int main(int argc, char **argv)
         res = aaxMixerSetState(config, AAX_PLAYING);
         testForState(res, "aaxMixerStart");
 
-        if (fparam)
+        if (fparam) /** audio frame */
         {
             printf("  using audio-frames\n");
 
-            /** audio frame */
             frame = aaxAudioFrameCreate(config);
             testForError(frame, "Unable to create a new audio frame\n");   
 
@@ -236,12 +244,6 @@ int main(int argc, char **argv)
 
             if (pitch != 1.0f)
             {
-#if 0
-                effect = aaxAudioFrameGetEffect(frame, AAX_PITCH_EFFECT);
-                testForError(effect, "aaxEffectCreate");
-
-                aaxEffectSetParam(effect, AAX_PITCH, AAX_LINEAR, pitch);
-#else
                 effect = aaxAudioFrameGetEffect(frame,AAX_DYNAMIC_PITCH_EFFECT);
                 testForError(effect, "aaxEffectCreate");
 
@@ -251,7 +253,7 @@ int main(int argc, char **argv)
 
                 res = aaxEffectSetState(effect, AAX_SINE_WAVE);
                 testForState(res, "aaxEffectSetState");
-#endif
+
                 res = aaxAudioFrameSetEffect(frame, effect);
                 testForState(res, " aaxAudioFrameSetEffect");
 
@@ -263,22 +265,8 @@ int main(int argc, char **argv)
             res = aaxAudioFrameRegisterSensor(frame, record);
             testForState(res, "aaxAudioFrameRegisterSensor");
         }
-        else
+        else /** sensor */
         {
-#if 0
-            effect = aaxMixerGetEffect(config, AAX_PITCH_EFFECT);
-            testForError(effect, "aaxEffectCreate");
-
-            aaxEffectSetParam(effect, AAX_PITCH, AAX_LINEAR, pitch);
-
-            res = aaxMixerSetEffect(record, effect);
-            testForState(res, "aaxEmitterSetEffect");
-
-            res = aaxEffectDestroy(effect);
-            testForState(res, "aaxEffectDestroy");
-#endif
-
-            /** sensor */
             if (record)
             {
                 res = aaxMixerRegisterSensor(config, record);
@@ -347,9 +335,12 @@ int main(int argc, char **argv)
         if (record)
         {
             res = aaxMixerSetState(record, AAX_INITIALIZED);
-            testForState(res, "aaxMixerSetInitialize");
+            if (!res) {
+               printf("%s\n", aaxGetErrorString(aaxGetErrorNo()));
+               exit(-1);
+            }
 
-#if (AAX_PATCH_LEVEL > 210516)
+#if AAX_MAJOR_VERSION > 3 && AAX_MINOR_VERSION > 5
             if (aaxMixerGetSetup(record, AAX_SEEKABLE_SUPPORT))
             {
                 float time_offs = getTime(argc, argv);
