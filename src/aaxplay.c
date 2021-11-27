@@ -142,8 +142,14 @@ int main(int argc, char **argv)
     infile = getInputFile(argc, argv, IFILE_PATH);
     if (verbose)
     {
-        if (idevname) {
-            printf("Streaming: %s\n", idevname);
+        if (idevname)
+        {
+            char *ptr = strchr(idevname, ':');
+            if (ptr) {
+               printf("Streaming: %s\n", ptr+2);
+            } else {
+               printf("Streaming: %s\n", idevname);
+            }
         } else if (infile) {
             printf("Playing: %s\n", infile);
         }
