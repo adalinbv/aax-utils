@@ -129,6 +129,8 @@ int main(int argc, char **argv)
 
         if (verbose)
         {
+            unsigned int start, end, tracks;
+
             if (reffile) {
                 printf("Reference file: %s\n", reffile);
                 printf(" Buffer sample frequency: %5i Hz\n",
@@ -140,7 +142,15 @@ int main(int argc, char **argv)
             printf(" Buffer sample frequency: %5i Hz\n",
                     aaxBufferGetSetup(buffer, AAX_FREQUENCY));
             printf(" Buffer base frequency  : %5i Hz\n", base_freq[0]);
-                printf(" Buffer pitch fraction  : %4.3f\n", fraction);
+            printf(" Buffer pitch fraction  : %4.3f\n", fraction);
+
+            tracks = aaxBufferGetSetup(buffer, AAX_TRACKS);
+            printf(" Buffer no. tracks      : %i\n", tracks);
+
+            start = aaxBufferGetSetup(buffer, AAX_LOOP_START);
+            end = aaxBufferGetSetup(buffer, AAX_LOOP_END);
+            printf(" Buffer loop start:     : %i\n", start);
+            printf(" Buffer loop end:       : %i\n", end);
         }
 
         ofile = getOutputFile(argc, argv, NULL);
