@@ -239,19 +239,22 @@ int main(int argc, char **argv)
                     min/1000.0f, max/1000.0f);
 
             x = aaxMixerGetSetup(cfg, AAX_FREQUENCY);
-            printf("Mixer frequency: %i Hz\n", x);
+            printf("Mixer frequency: %6u Hz\n", x);
+
+            x = aaxMixerGetSetup(cfg, AAX_BITRATE);
+            printf("Mixer bitrate: %8.1f kbps\n", 1e-3f*x);
 
             x = aaxMixerGetSetup(cfg, AAX_REFRESHRATE);
-            printf("Mixer refresh rate: %u Hz\n", x);
+            printf("Mixer refresh rate: %3u Hz\n", x);
 
             x = aaxMixerGetSetup(cfg, AAX_UPDATERATE);
             if (x) {
-                printf("Mixer update rate:  %u Hz\n", x);
+                printf("Mixer update rate:  %3u Hz\n", x);
             }
 
             x = aaxMixerGetSetup(cfg, AAX_LATENCY);
             if (x) {
-               printf("Mixer latency: %7.2f ms\n", (float)x*1e-3f);
+               printf("Mixer latency: %8.2f ms\n", (float)x*1e-3f);
             }
 
             x = aaxMixerGetSetup(cfg, AAX_MONO_EMITTERS);

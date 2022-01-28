@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018-2021 by Erik Hofman.
- * Copyright (C) 2018-2021 by Adalin B.V.
+ * Copyright (C) 2018-2022 by Erik Hofman.
+ * Copyright (C) 2018-2022 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -1653,9 +1653,8 @@ int main(int argc, char **argv)
         float fval, db, gain, env_fact;
         struct aax_t aax;
 
-#if 0
         setenv("AAX_RENDER_MODE", "synthesizer", 1);
-        fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain);
+        fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain, 0.0f);
         unsetenv("AAX_RENDER_MODE");
 
         if (fval == 0.0f) exit(-1);
@@ -1665,7 +1664,6 @@ int main(int argc, char **argv)
             env_fact_fm = gain/fval;
         }
         env_fact_fm *= getGain(argc, argv);
-#endif
 
         get_info(&aax, infile);
         if (aax.info.note.min && aax.info.note.max)
@@ -1684,11 +1682,13 @@ int main(int argc, char **argv)
         }
 
         env_fact = 1.0f;
+
         if (agc && gain > 0.0f && fabsf(gain-fval) > 0.1f)
         {
             env_fact = gain/fval;
             gain = fval;
         }
+env_fact = 1.0f;
         env_fact *= getGain(argc, argv);
 
         fill_aax(&aax, infile, simplify, gain, db, env_fact, 1);
