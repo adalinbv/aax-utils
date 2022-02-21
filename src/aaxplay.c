@@ -438,17 +438,19 @@ int main(int argc, char **argv)
             if (dhour) {
                snprintf(tstr, 80, "%s  %02.0f:%02.0f:%02.0f %s\r",
                                   "pos: % 5.1f (%02.0f:%02.0f:%04.1f) of ",
-                                  dhour, minutes, seconds, " % 3.0f%");
+                                  dhour, minutes, seconds, " % 3.0f%, "
+                                  "buffer: %i%%");
             } else {
                snprintf(tstr, 80, "%s  %02.0f:%02.0f %s\r",
                                   "pos: % 5.1f (%02.0f:%04.1f) of ",
-                                  minutes, seconds, " % 3.0f%");
+                                  minutes, seconds, " % 3.0f%, "
+                                  "buffer: %i%%");
            }
         }
         else
         {
            dhour = duration = AAX_FPINFINITE;
-           snprintf(tstr, 80, "%s\r", "pos: % 5.1f (%02.0f:%02.0f:%04.1f)");
+           snprintf(tstr, 80, "%s\r", "pos: % 5.1f (%02.0f:%02.0f:%04.1f), buffer: %i%%");
         }
 
         dt = 0.0f;
@@ -458,6 +460,7 @@ int main(int argc, char **argv)
         {
             if (verbose)
             {
+                int fill = aaxMixerGetSetup(record, AAX_BUFFER_FILL);
                 float pos;
 
                 if (record)
@@ -488,9 +491,9 @@ int main(int argc, char **argv)
                     minutes = floorf(seconds/60.0f);
                     seconds -= minutes*60.0f;
                     if (dhour) {
-                       printf(tstr, pos, hour, minutes, seconds, 100*pos/duration);
+                       printf(tstr, pos, hour, minutes, seconds, 100*pos/duration, fill);
                     } else {
-                       printf(tstr, pos, minutes, seconds, 100*pos/duration);
+                       printf(tstr, pos, minutes, seconds, 100*pos/duration, fill);
                     }
                 }
                 else
@@ -500,7 +503,7 @@ int main(int argc, char **argv)
                     seconds -= hour*60.0f*60.0f;
                     minutes = floorf(seconds/60.0f);
                     seconds -= minutes*60.0f;
-                    printf(tstr, pos, hour, minutes, seconds);
+                    printf(tstr, pos, hour, minutes, seconds, fill);
                 }
                 fflush(stdout);
             }
