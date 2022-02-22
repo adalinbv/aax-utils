@@ -136,7 +136,7 @@ endif((GCC OR CLANG) AND RMALLOC)
 # Add definitions, compiler switches, etc.
 include_directories("${aax-utils_SOURCE_DIR}"
     include
-    ${AAX_include_DIR}
+    ${AAX_INCLUDE_DIR}
     "${aax-utils_BINARY_DIR}/include"
 )
 
