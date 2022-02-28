@@ -370,9 +370,9 @@ int main(int argc, char **argv)
 
             bitrate = abs(bitrate);
             if (samples) {
-                printf(" Audio format: %i Hz, %i bits/sample, %s%i kbps, "
+                printf(" Audio format: %i Hz, %i bits/sample, %s%.1f kbps, "
                        "%i tracks, %i samples\n", rate, bps, vbr ? "~" : "",
-                        bitrate, tracks, samples);
+                        1e-3f*bitrate, tracks, samples);
             } else {
                 printf(" Audio format: %i Hz, %i bits/sample, %s%i kbps, "
                      "%i tracks\n", rate, bps, vbr ? "~" : "", bitrate, tracks);
@@ -439,18 +439,18 @@ int main(int argc, char **argv)
                snprintf(tstr, 80, "%s  %02.0f:%02.0f:%02.0f %s\r",
                                   "pos: % 5.1f (%02.0f:%02.0f:%04.1f) of ",
                                   dhour, minutes, seconds, " % 3.0f%, "
-                                  "buffer: %i%%");
+                                  "buffer: %3i%%");
             } else {
                snprintf(tstr, 80, "%s  %02.0f:%02.0f %s\r",
                                   "pos: % 5.1f (%02.0f:%04.1f) of ",
                                   minutes, seconds, " % 3.0f%, "
-                                  "buffer: %i%%");
+                                  "buffer: %3i%%");
            }
         }
         else
         {
            dhour = duration = AAX_FPINFINITE;
-           snprintf(tstr, 80, "%s\r", "pos: % 5.1f (%02.0f:%02.0f:%04.1f), buffer: %i%%");
+           snprintf(tstr, 80, "%s\r", "pos: % 5.1f (%02.0f:%02.0f:%04.1f), buffer: %3i%%");
         }
 
         dt = 0.0f;
