@@ -2,11 +2,13 @@
 set(THIRDPARTY_HEADERS
   gain_analysis.h
   MurmurHash3.h
+  ebur128.h
 )
 
 set(THIRDPARTY_OBJS
   gain_analysis.c
   MurmurHash3.c
+  ebur128.c
 )
 
 set(LIBTYPE STATIC)
