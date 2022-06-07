@@ -386,7 +386,14 @@ int main(int argc, char **argv)
                 testForState(res, "aaxEmitterStart");
             }
 
-            printf("Playing sound for %3.1f seconds or until a key is pressed\n", duration);
+            dt = (float)aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
+            dt /= (float)aaxBufferGetSetup(buffer, AAX_FREQUENCY);
+            if (duration > dt && !aaxBufferGetSetup(buffer, AAX_LOOPING)) {
+               duration = dt;
+            }
+
+            printf("Playing sound for %3.1f seconds of %3.1f seconds, "
+                   "or until a key is pressed\n", duration, dt);
             q = 0;
             set_mode(1);
             if (gain2 == 1.0f) {
@@ -395,6 +402,7 @@ int main(int argc, char **argv)
                 gain_step = (gain2-gain)/(gain_time/SLEEP_TIME);
             }
 
+            dt = 0.0f;
             do
             {
                 e = (!playref || !reffile) ? emitter : refem;
@@ -519,6 +527,7 @@ int main(int argc, char **argv)
             res = aaxEmitterSetState(e, AAX_STOPPED);
             testForState(res, "aaxEmitterStop");
 
+#if 0
             do
             {
                 unsigned long offs, offs_bytes;
@@ -527,7 +536,7 @@ int main(int argc, char **argv)
                 off_s = aaxEmitterGetOffsetSec(e);
                 offs = aaxEmitterGetOffset(e, AAX_SAMPLES);
                 offs_bytes = aaxEmitterGetOffset(e, AAX_BYTES);
-                printf("playing time: %5.2f, buffer position: %5.2f "
+                printf("2. playing time: %5.2f, buffer position: %5.2f "
                        "(%li samples/ %li bytes)\n", dt, off_s,
                        offs, offs_bytes);
 
@@ -536,6 +545,7 @@ int main(int argc, char **argv)
                 dt += 0.05f;
             }
             while (state != AAX_PROCESSED);
+#endif
 
             res = aaxEmitterSetState(emitter, AAX_PROCESSED);
             testForState(res, "aaxEmitterSetState");
