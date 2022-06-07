@@ -188,6 +188,7 @@ struct info_t
     {
         uint8_t polyphony;
         uint8_t min, max, step;
+        float pitch_fraction;
     } note;
 
     int aftertouch_mode;
@@ -245,6 +246,7 @@ void fill_info(struct info_t *info, void *xid, const char *filename)
         info->note.min = _MINMAX(xmlAttributeGetInt(xtid, "min"), 0, 127);
         info->note.max = _MINMAX(xmlAttributeGetInt(xtid, "max"), 0, 127);
         info->note.step = _MAX(xmlAttributeGetInt(xtid, "step"), 0);
+        info->note.pitch_fraction = xmlAttributeGetDouble(xtid, "pitch-fraction");
         xmlFree(xtid);
     }
     if (info->note.polyphony == 0) info->note.polyphony = 1;
@@ -332,6 +334,7 @@ void print_info(struct info_t *info, FILE *output, char commons)
         if (info->note.min) fprintf(output, " min=\"%i\"", info->note.min);
         if (info->note.max) fprintf(output, " max=\"%i\"", info->note.max);
         if (info->note.step) fprintf(output, " step=\"%i\"", info->note.step);
+        if (info->note.pitch_fraction) fprintf(output, " pitch-fraction=\"%.2g\"", info->note.pitch_fraction);
         fprintf(output, "/>\n");
     }
 
@@ -1682,14 +1685,16 @@ int main(int argc, char **argv)
         }
 
         env_fact = 1.0f;
-
+#if 0
         if (agc && gain > 0.0f && fabsf(gain-fval) > 0.1f)
         {
             env_fact = gain/fval;
             gain = fval;
         }
-env_fact = 1.0f;
         env_fact *= getGain(argc, argv);
+#else
+        gain *= getGain(argc, argv);
+#endif
 
         fill_aax(&aax, infile, simplify, gain, db, env_fact, 1);
         aax.fm.db = _lin2db(gain/env_fact_fm);
