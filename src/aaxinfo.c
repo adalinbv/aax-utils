@@ -167,6 +167,7 @@ int main(int argc, char **argv)
         cfg = aaxDriverOpen(cfg);
         if (cfg)
         {
+            const char *mode_str;
             char filename[256];
             int res, min, max;
             void *xid;
@@ -226,6 +227,30 @@ int main(int argc, char **argv)
             x = aaxMixerGetSetup(cfg, AAX_SEEKABLE_SUPPORT);
             printf ("Mixer seekable support: %s\n", x ? "yes" : "no");
 
+            x = aaxMixerGetMode(cfg, 0);
+            switch(x)
+            {
+            case AAX_MODE_READ:
+               mode_str = "Read";
+               break;
+            case AAX_MODE_WRITE_STEREO:
+               mode_str = "Stereo";
+               break;
+            case AAX_MODE_WRITE_SPATIAL:
+               mode_str = "Spatial";
+               break;
+            case AAX_MODE_WRITE_SURROUND:
+               mode_str = "Surround";
+               break;
+            case AAX_MODE_WRITE_HRTF:
+               mode_str = "HRTF";
+               break;
+            }
+            printf("Mixer mode: %s\n", mode_str);
+
+            x = aaxMixerGetSetup(cfg, AAX_TRACKS);
+            printf("Mixer setup: %i tracks\n", x);
+
             x = aaxMixerGetSetup(cfg, AAX_FORMAT);
             printf("Mixer format: %2i-bit per sample\n",aaxGetBitsPerSample(x));
 
@@ -241,9 +266,6 @@ int main(int argc, char **argv)
             x = aaxMixerGetSetup(cfg, AAX_FREQUENCY);
             printf("Mixer frequency: %6u Hz\n", x);
 
-            x = aaxMixerGetSetup(cfg, AAX_BITRATE);
-            printf("Mixer bitrate: %8.1f kbps\n", 1e-3f*x);
-
             x = aaxMixerGetSetup(cfg, AAX_REFRESHRATE);
             printf("Mixer refresh rate: %3u Hz\n", x);
 
@@ -251,6 +273,9 @@ int main(int argc, char **argv)
             if (x) {
                 printf("Mixer update rate:  %3u Hz\n", x);
             }
+
+            x = aaxMixerGetSetup(cfg, AAX_BITRATE);
+            printf("Mixer bitrate: %8.1f kbps\n", 1e-3f*x);
 
             x = aaxMixerGetSetup(cfg, AAX_LATENCY);
             if (x) {
