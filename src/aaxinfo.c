@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2018 by Erik Hofman.
- * Copyright (C) 2009-2018 by Adalin B.V.
+ * Copyright (C) 2008-2022 by Erik Hofman.
+ * Copyright (C) 2009-2022 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -167,7 +167,9 @@ int main(int argc, char **argv)
         cfg = aaxDriverOpen(cfg);
         if (cfg)
         {
-            const char *mode_str;
+            const char *mode_str[AAX_MODE_WRITE_MAX] = {
+              "Read", "Stereo", "Spatial", "Surround", "HRTF"
+            };
             char filename[256];
             int res, min, max;
             void *xid;
@@ -201,67 +203,28 @@ int main(int argc, char **argv)
             res = aaxMixerSetState(cfg, AAX_INITIALIZED);
             testForState(res, "aaxMixerInit");
 
-            s = aaxDriverGetSetup(cfg, AAX_DRIVER_STRING);
-            printf("Driver   : %s\n", s);
-
-            s = aaxDriverGetSetup(cfg, AAX_RENDERER_STRING);
-            printf("Renderer : %s\n", s);
+            s = aaxDriverGetSetup(cfg, AAX_VENDOR_STRING);
+            printf("Vendor string: %s\n", s);
 
             x = aaxGetMajorVersion();
             y = aaxGetMinorVersion();
             s = (char *)aaxGetVersionString(cfg);
-            printf("Version  : %s (%i.%i)\n", s, x, y);
+            printf("Version string: %i.%i %s\n", x, y, s);
 
-            s = aaxDriverGetSetup(cfg, AAX_VENDOR_STRING);
-            printf("Vendor   : %s\n", s);
+            s = aaxDriverGetSetup(cfg, AAX_DRIVER_STRING);
+            printf("Driver string: %s\n", s);
 
-            x = aaxMixerGetSetup(cfg, AAX_TIMER_MODE);
-            printf ("Mixer timed mode support:   %s\n", x ? "yes" : "no");
-
-            x = aaxMixerGetSetup(cfg, AAX_SHARED_MODE);
-            printf ("Mixer shared mode support:  %s\n", x ? "yes" : "no");
-
-            x = aaxMixerGetSetup(cfg, AAX_BATCHED_MODE);
-            printf ("Mixer batched mode support: %s\n", x ? "yes" : "no");
-
-            x = aaxMixerGetSetup(cfg, AAX_SEEKABLE_SUPPORT);
-            printf ("Mixer seekable support: %s\n", x ? "yes" : "no");
+            s = aaxDriverGetSetup(cfg, AAX_RENDERER_STRING);
+            printf("Renderer string: %s\n", s);
 
             x = aaxMixerGetMode(cfg, 0);
-            switch(x)
-            {
-            case AAX_MODE_READ:
-               mode_str = "Read";
-               break;
-            case AAX_MODE_WRITE_STEREO:
-               mode_str = "Stereo";
-               break;
-            case AAX_MODE_WRITE_SPATIAL:
-               mode_str = "Spatial";
-               break;
-            case AAX_MODE_WRITE_SURROUND:
-               mode_str = "Surround";
-               break;
-            case AAX_MODE_WRITE_HRTF:
-               mode_str = "HRTF";
-               break;
-            }
-            printf("Mixer mode: %s\n", mode_str);
+            printf("Mixer mode: %s\n", mode_str[x]);
 
             x = aaxMixerGetSetup(cfg, AAX_TRACKS);
             printf("Mixer setup: %i tracks\n", x);
 
             x = aaxMixerGetSetup(cfg, AAX_FORMAT);
             printf("Mixer format: %2i-bit per sample\n",aaxGetBitsPerSample(x));
-
-            min = aaxMixerGetSetup(cfg, AAX_TRACKS_MIN);
-            max = aaxMixerGetSetup(cfg, AAX_TRACKS_MAX);
-            printf("Mixer supported track range: %i - %i tracks\n", min, max);
-
-            min = aaxMixerGetSetup(cfg, AAX_FREQUENCY_MIN);
-            max = aaxMixerGetSetup(cfg, AAX_FREQUENCY_MAX);
-            printf("Mixer frequency range: %4.1fkHz - %4.1fkHz\n",
-                    min/1000.0f, max/1000.0f);
 
             x = aaxMixerGetSetup(cfg, AAX_FREQUENCY);
             printf("Mixer frequency: %6u Hz\n", x);
@@ -281,6 +244,27 @@ int main(int argc, char **argv)
             if (x) {
                printf("Mixer latency: %8.2f ms\n", (float)x*1e-3f);
             }
+
+            min = aaxMixerGetSetup(cfg, AAX_TRACKS_MIN);
+            max = aaxMixerGetSetup(cfg, AAX_TRACKS_MAX);
+            printf("Mixer supported track range: %i - %i tracks\n", min, max);
+
+            min = aaxMixerGetSetup(cfg, AAX_FREQUENCY_MIN);
+            max = aaxMixerGetSetup(cfg, AAX_FREQUENCY_MAX);
+            printf("Mixer frequency range: %4.1fkHz - %4.1fkHz\n",
+                    min/1000.0f, max/1000.0f);
+
+            x = aaxMixerGetSetup(cfg, AAX_TIMER_MODE);
+            printf ("Mixer timed mode support: %s\n", x ? "yes" : "no");
+
+            x = aaxMixerGetSetup(cfg, AAX_SHARED_MODE);
+            printf ("Mixer shared mode support: %s\n", x ? "yes" : "no");
+
+            x = aaxMixerGetSetup(cfg, AAX_BATCHED_MODE);
+            printf ("Mixer batched mode support: %s\n", x ? "yes" : "no");
+
+            x = aaxMixerGetSetup(cfg, AAX_SEEKABLE_SUPPORT);
+            printf ("Mixer seekable support: %s\n", x ? "yes" : "no");
 
             x = aaxMixerGetSetup(cfg, AAX_MONO_EMITTERS);
             y = aaxMixerGetSetup(cfg, AAX_STEREO_EMITTERS);
