@@ -59,33 +59,33 @@ static int _mask_t[MAX_LOOPS] = {
     AAX_FORMAT_BE_UNSIGNED
 };
 
-static const char* _format_s[AAX_FORMAT_MAX][2] = {
-    { " AAX_PCM8S", "\tsigned, 8-bits per sample" },
-    { " AAX_PCM16S", "\tsigned, 16-bits per sample" },
-    { " AAX_PCM24S", "\tsigned, 24-bits per sample, 32-bit encoded" },
-    { " AAX_PCM32S", "\tsigned, 32-bits per sample" },
-    { " AAX_FLOAT", "\t32-bit floating point, range: -1.0 to 1.0" },
-    { " AAX_DOUBLE", "\t64-bit floating point, range: -1.0 to 1.0" },
-    { " AAX_MULAW", "\tmulaw, 16-bit with 2:1 compression" },
-    { " AAX_ALAW", "\talaw, 16-bit with 2:1 compression" },
-    { " AAX_IMA4_ADPCM", "IMA4 ADPCM, 16-bit with 4:1 compression" },
-    { " AAX_PCM24S_PACKED", "signed, 24-bits per sample, 24-bit encoded" }
+static const char* _format_s[AAX_FORMAT_MAX] = {
+    "AAX_PCM8S",
+    "AAX_PCM16S",
+    "AAX_PCM24S",
+    "AAX_PCM32S",
+    "AAX_FLOAT",
+    "AAX_DOUBLE",
+    "AAX_MULAW",
+    "AAX_ALAW",
+    "AAX_IMA4_ADPCM",
+    "AAX_PCM24S_PACKED",
 };
 
-static const char* _format_us[][2] = {
-    { " AAX_PCM8U", "\tunsigned, 8-bits per sample" },
-    { " AAX_PCM16U", "\tunsigned, 16-bits per sample" },
-    { " AAX_PCM24U", "\tunsigned, 24-bits per sample, 32-bit encoded" },
-    { " AAX_PCM32U", "\tunsigned, 32-bits per sample" }
+static const char* _format_us[] = {
+    "AAX_PCM8U",
+    "AAX_PCM16U",
+    "AAX_PCM24U",
+    "AAX_PCM32U"
 };
 
 static const char* _mask_s[MAX_LOOPS][2] = {
-    { "Native format", ":\t" },
-    { "Unsigned format", ":\t" },
-    { "Little endian, signed", "_LE:" },
-    { "Little endian, unsigned", "_LE:" },
-    { "Big endian, signed", "_BE:" },
-    { "Big endian, unsigned", "_BE:" }
+    { "Native format", "" },
+    { "Unsigned format", "" },
+    { "Little endian, signed", "_LE" },
+    { "Little endian, unsigned", "_LE" },
+    { "Big endian, signed", "_BE" },
+    { "Big endian, unsigned", "_BE" }
 };
 
 void
@@ -121,43 +121,32 @@ list()
     for (q=0; q<MAX_LOOPS; q++)
     {
         int fmt = 0;
+
         printf("%s\n", _mask_s[q][0]);
         do
         {
-            int nfmt = fmt + _mask_t[q];
+            int pos = fmt & AAX_FORMAT_NATIVE;
+            int nfmt = fmt | _mask_t[q];
+            char name[80];
  
             if (q)
             {
-                if (q > 1 && fmt == 0) {
-                    continue;
-                }
-
-                if (fmt >= AAX_FLOAT && nfmt & AAX_FORMAT_UNSIGNED) {
-                    break;
-                }
-                if (fmt >= AAX_MULAW) {
-                    break;
-                }
+                if (pos == 0) continue;
+                if (pos > AAX_PCM32S) break;
             }
 
-            if (nfmt & AAX_FORMAT_UNSIGNED)
-            {
-                printf("  %s%s%s\n", _format_us[fmt & AAX_FORMAT_NATIVE][0],
-                                       _mask_s[q][1],
-                                       _format_us[fmt & AAX_FORMAT_NATIVE][1]);
+            if (nfmt & AAX_FORMAT_UNSIGNED) {
+                snprintf(name, 79, "%s%s:", _format_us[pos], _mask_s[q][1]);
+            } else {
+                snprintf(name, 79, "%s%s:", _format_s[pos], _mask_s[q][1]);
             }
-            else
-            {
-                printf("  %s%s%s\n", _format_s[fmt & AAX_FORMAT_NATIVE][0],
-                                       _mask_s[q][1],
-                                       _format_s[fmt & AAX_FORMAT_NATIVE][1]);
-            }
+            printf("  %-32s%s\n", name, aaxGetFormatString(nfmt));
         }
         while (++fmt < AAX_FORMAT_MAX);
     }
     exit(-1);
 }
-
+//
 int main(int argc, char **argv)
 {
     enum aaxFormat format;
