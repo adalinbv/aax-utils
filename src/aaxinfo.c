@@ -39,6 +39,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <termios.h>
 #if HAVE_UNISTD_H
 # include <unistd.h>
 #endif
@@ -223,8 +224,13 @@ int main(int argc, char **argv)
             x = aaxMixerGetSetup(cfg, AAX_TRACKS);
             printf("Mixer setup: %i tracks\n", x);
 
-            x = aaxMixerGetSetup(cfg, AAX_FORMAT);
-            printf("Mixer format: %2i-bit per sample\n",aaxGetBitsPerSample(x));
+            x = aaxMixerGetSetup(cfg, AAX_FORMAT) & AAX_FORMAT_NATIVE;
+            printf("Mixer format: ");
+            if (x == AAX_FLOAT || x == AAX_DOUBLE) {
+            printf("%2i-bit per sample floating point\n",aaxGetBitsPerSample(x));
+            } else {
+               printf("%2i-bit per sample\n",aaxGetBitsPerSample(x));
+            }
 
             x = aaxMixerGetSetup(cfg, AAX_FREQUENCY);
             printf("Mixer frequency: %6u Hz\n", x);
@@ -251,8 +257,12 @@ int main(int argc, char **argv)
 
             min = aaxMixerGetSetup(cfg, AAX_FREQUENCY_MIN);
             max = aaxMixerGetSetup(cfg, AAX_FREQUENCY_MAX);
-            printf("Mixer frequency range: %4.1fkHz - %4.1fkHz\n",
+            printf("Mixer supportted frequency range: %4.1fkHz - %4.1fkHz\n",
                     min/1000.0f, max/1000.0f);
+
+            min = aaxMixerGetSetup(cfg, AAX_PERIODS_MIN);
+            max = aaxMixerGetSetup(cfg, AAX_PERIODS_MAX);
+            printf("Mixer supportted buffer period range: %i - %i\n", min, max);
 
             x = aaxMixerGetSetup(cfg, AAX_TIMER_MODE);
             printf ("Mixer timed mode support: %s\n", x ? "yes" : "no");
