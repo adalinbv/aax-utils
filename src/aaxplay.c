@@ -216,6 +216,7 @@ int main(int argc, char **argv)
         aaxFrame frame = NULL;
         aaxEffect effect;
         aaxFilter filter;
+        const char *s;
         char tstr[80];
         int state;
         float dt;
@@ -358,6 +359,12 @@ int main(int argc, char **argv)
             testForState(res, "aaxSensorCaptureStart");
         }
 
+        s = aaxDriverGetSetup(record, AAX_MUSIC_PERFORMER_UPDATE);
+        if (s) aaxDriverSetSetup(config, AAX_MUSIC_PERFORMER_UPDATE, s);
+
+        s = aaxDriverGetSetup(record, AAX_TRACK_TITLE_UPDATE);
+        if (s) aaxDriverSetSetup(config, AAX_TRACK_TITLE_UPDATE, s);
+
         if (record && verbose)
         {
             unsigned int samples = aaxMixerGetSetup(record, AAX_SAMPLES_MAX);
@@ -366,7 +373,9 @@ int main(int argc, char **argv)
             int bitrate = aaxMixerGetSetup(record, AAX_BITRATE);
             int tracks = aaxMixerGetSetup(record, AAX_TRACKS);
             int vbr = (bitrate < 0) ? AAX_TRUE : AAX_FALSE;
-            const char *s;
+
+            s = aaxDriverGetSetup(config, AAX_DRIVER_STRING);
+            printf(" Playback driver: %s\n", s);
 
             bitrate = abs(bitrate);
             if (samples) {
