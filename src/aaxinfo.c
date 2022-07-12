@@ -196,6 +196,7 @@ int main(int argc, char **argv)
                             patches, version);
                     xmlFree(version);
                     xmlFree(patches);
+                    xmlFree(xnid);
                 }
                 xmlFree(xid);
             }
