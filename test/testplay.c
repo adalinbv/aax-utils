@@ -110,7 +110,7 @@ int main(int argc, char **argv)
             res = aaxMixerSetSetup(config, AAX_CAPABILITIES, AAX_RENDER_SYNTHESIZER);
          }
 
-        buffer = bufferFromFile(config, infile);
+        buffer = aaxBufferReadFromStream(config, infile);
         testForError(buffer, "Unable to create a buffer");
 
         if (reffile)
@@ -130,6 +130,39 @@ int main(int argc, char **argv)
         if (verbose)
         {
             unsigned int start, end, tracks;
+            const char *s;
+
+            s = aaxDriverGetSetup(config, AAX_MUSIC_PERFORMER_STRING);
+            if (s) printf(" Performer: %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_TRACK_TITLE_STRING);
+            if (s) printf(" Title    : %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_ALBUM_NAME_STRING);
+            if (s) printf(" Album    : %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_SONG_COMPOSER_STRING);
+            if (s) printf(" Composer : %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_ORIGINAL_PERFORMER_STRING);
+            if (s) printf(" Original : %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_MUSIC_GENRE_STRING);
+            if (s) printf(" Genre    : %s\n", s);
+            s = aaxDriverGetSetup(config, AAX_RELEASE_DATE_STRING);
+            if (s) printf(" Release date: %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_TRACK_NUMBER_STRING);
+            if (s) printf(" Track number: %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_SONG_COPYRIGHT_STRING);
+            if (s) printf(" Copyright:  %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_WEBSITE_STRING);
+            if (s) printf(" Website  : %s\n", s);
+
+            s = aaxDriverGetSetup(config, AAX_SONG_COMMENT_STRING);
+            if (s) printf(" Comment  : %s\n", s);
 
             if (reffile) {
                 printf("Reference file: %s\n", reffile);
