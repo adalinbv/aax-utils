@@ -113,23 +113,8 @@ int main(int argc, char **argv)
         buffer = aaxBufferReadFromStream(config, infile);
         testForError(buffer, "Unable to create a buffer");
 
-        if (reffile)
-        {
-            refbuf = bufferFromFile(config, reffile);
-            testForError(refbuf, "Unable to create the refbuf buffer");
-        }
-
-        base_freq[0] = aaxBufferGetSetup(buffer, AAX_UPDATE_RATE);
-        fraction = 1e-6f*aaxBufferGetSetup(buffer, AAX_REFRESH_RATE);
-        if (reffile) {
-            base_freq[1] = aaxBufferGetSetup(refbuf, AAX_UPDATE_RATE);
-        } else {
-            base_freq[1] = 0.0f;
-        }
-
         if (verbose)
         {
-            unsigned int start, end, tracks;
             const char *s;
 
             s = aaxDriverGetSetup(config, AAX_MUSIC_PERFORMER_STRING);
@@ -156,13 +141,32 @@ int main(int argc, char **argv)
             if (s) printf(" Track number: %s\n", s);
 
             s = aaxDriverGetSetup(config, AAX_SONG_COPYRIGHT_STRING);
-            if (s) printf(" Copyright:  %s\n", s);
+            if (s) printf(" Copyright: %s\n", s);
 
-            s = aaxDriverGetSetup(config, AAX_WEBSITE_STRING);
+            s = aaxDriverGetSetup(config, AAX_CONTACT_STRING);
             if (s) printf(" Website  : %s\n", s);
 
             s = aaxDriverGetSetup(config, AAX_SONG_COMMENT_STRING);
             if (s) printf(" Comment  : %s\n", s);
+        }
+
+        if (reffile)
+        {
+            refbuf = bufferFromFile(config, reffile);
+            testForError(refbuf, "Unable to create the refbuf buffer");
+        }
+
+        base_freq[0] = aaxBufferGetSetup(buffer, AAX_UPDATE_RATE);
+        fraction = 1e-6f*aaxBufferGetSetup(buffer, AAX_REFRESH_RATE);
+        if (reffile) {
+            base_freq[1] = aaxBufferGetSetup(refbuf, AAX_UPDATE_RATE);
+        } else {
+            base_freq[1] = 0.0f;
+        }
+
+        if (verbose)
+        {
+            unsigned int start, end, tracks;
 
             if (reffile) {
                 printf("Reference file: %s\n", reffile);
