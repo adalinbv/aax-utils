@@ -178,11 +178,17 @@ struct info_t
 
     char *license;
     char *description;
+    char copyright_swap;
     struct copyright_t
     {
         unsigned from, until;
         char *by;
     } copyright[2];
+    struct contact_t
+    {
+       char *author;
+       char *website;
+    } contact;
 
     struct note_t
     {
@@ -265,11 +271,22 @@ void fill_info(struct info_t *info, void *xid, const char *filename)
                 info->copyright[c].from = xmlAttributeGetInt(xcid, "from");
                 info->copyright[c].until = xmlAttributeGetInt(xcid, "until");
                 info->copyright[c].by = xmlAttributeGetString(xcid, "by");
+                if (c && !strcmp(info->copyright[c].by, "Adalin B.V.")) {
+                   info->copyright_swap = 1;
+                }
             }
         }
         info->license = xmlAttributeGetString(xtid, "type");
         xmlFree(xcid);
         xmlFree(xtid);
+    }
+
+    xtid = xmlNodeGet(xid, "contact");
+    if (xtid)
+    {
+       info->contact.author = xmlAttributeGetString(xtid, "author");
+       info->contact.website = xmlAttributeGetString(xtid, "website");
+       xmlFree(xtid);
     }
 
     xtid = xmlNodeGet(xid, "description");
@@ -312,16 +329,33 @@ void print_info(struct info_t *info, FILE *output, char commons)
     c = 0;
     for (i=0; i<2; ++i)
     {
-       if (info->copyright[i].by)
+       int p = (info->copyright_swap) ? 1-i : i;
+       if (info->copyright[p].by)
        {
-           fprintf(output, "  <copyright from=\"%i\" until=\"%s\" by=\"%s\"/>\n", info->copyright[i].from, year, info->copyright[i].by);
+           fprintf(output, "  <copyright from=\"%i\" until=\"%s\" by=\"%s\"/>\n", info->copyright[p].from, year, info->copyright[p].by);
            c++;
        }
     }
     if (c == 0)
     {
-        fprintf(output, "  <copyright from=\"2017\" until=\"%s\" by=\"Erik Hofman\"/>\n", year);
         fprintf(output, "  <copyright from=\"2017\" until=\"%s\" by=\"Adalin B.V.\"/>\n", year);
+        fprintf(output, "  <copyright from=\"2017\" until=\"%s\" by=\"Erik Hofman\"/>\n", year);
+    }
+
+    if (info->contact.author || info->contact.website)
+    {
+       fprintf(output, "  <contact ");
+       if (info->contact.author) {
+          fprintf(output, "author=\"%s\"", info->contact.author);
+          if (info->contact.website) fprintf(output, " ");
+       }
+       if (info->contact.website) {
+          fprintf(output, "website=\"%s\"", info->contact.website);
+       }
+       fprintf(output, "/>\n");
+    }
+    else {
+       fprintf(output, "  <contact author=\"Erik Hofman\" website=\"aeonwave.xyz\"/>\n");
     }
 
     if (info->description) {
