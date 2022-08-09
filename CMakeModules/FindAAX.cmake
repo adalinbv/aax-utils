@@ -45,6 +45,8 @@ FIND_LIBRARY(AAX_LIBRARY
 
 IF(AAX_LIBRARY AND AAX_INCLUDE_DIR)
   SET(AAX_FOUND "YES")
+  message("Found AAX: ${AAX_LIBRARY}")
+  message("AAX include dir: ${AAX_INCLUDE_DIR}")
 ELSE(AAX_LIBRARY AND AAX_INCLUDE_DIR)
   IF(NOT AAX_INCLUDE_DIR)
     MESSAGE(FATAL_ERROR "Unable to find the AAX library development files.")

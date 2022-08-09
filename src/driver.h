@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2018 by Erik Hofman.
- * Copyright (C) 2009-2018 by Adalin B.V.
+ * Copyright (C) 2008-2022 by Erik Hofman.
+ * Copyright (C) 2009-2022 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -99,6 +99,7 @@ char* getInputFile(int, char**, const char*);
 char* getInputFileExt(int, char**, const char*, const char*);
 char* getOutputFile(int, char**, const char*);
 enum aaxFormat getAudioFormat(int, char**, enum aaxFormat);
+const char* getFormatString(enum aaxFormat format);
 int getNumEmitters(int, char**);
 float getFrequency(int, char**);
 float getPitch(int, char**);

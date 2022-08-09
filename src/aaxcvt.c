@@ -140,7 +140,7 @@ list()
             } else {
                 snprintf(name, 79, "%s%s:", _format_s[pos], _mask_s[q][1]);
             }
-            printf("  %-32s%s\n", name, aaxGetFormatString(nfmt));
+            printf("  %-32s%s\n", name, getFormatString(nfmt));
         }
         while (++fmt < AAX_FORMAT_MAX);
     }
