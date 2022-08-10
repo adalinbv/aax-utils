@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2018 by Erik Hofman.
- * Copyright (C) 2009-2018 by Adalin B.V.
+ * Copyright (C) 2008-2022 by Erik Hofman.
+ * Copyright (C) 2009-2022 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -41,6 +41,7 @@
 #include <aax/aax.h>
 
 #include "base/timer.h"
+#include "driver.h"
 
 #define	SAMPLE_FREQ		48000
 #define FILTER_FREQUENCY	1000
@@ -53,32 +54,6 @@
 #define FILTER_ORDER		AAX_48DB_OCT
 #define FILTER_TYPE		AAX_BUTTERWORTH
 #define FILTER_STATE		(FILTER_TYPE|FILTER_ORDER)
-
-void
-testForError(void *p, char *s)
-{
-    if (p == NULL)
-    {
-        int err = aaxGetErrorNo();
-        printf("\nError: %s\n", s);
-        if (err) {
-            printf("%s\n\n", aaxGetErrorString(err));
-        }
-        exit(-1);
-    }
-}
-
-void
-testForState(int res, const char *func)
-{
-    if (res != AAX_TRUE)
-    {
-        int err = aaxGetErrorNo();
-        printf("%s:\t\t%i\n", func, res);
-        printf("(%i) %s\n\n", err, aaxGetErrorString(err));
-        exit(-1);
-    }
-}
 
 int main()
 {
@@ -121,9 +96,8 @@ int main()
         res = aaxBufferSetSetup(buffer, AAX_FREQUENCY, SAMPLE_FREQ);
         testForState(res, "aaxBufferSetFrequency");
 
-        res = aaxBufferProcessWaveform(buffer, 0.0f, AAX_WHITE_NOISE, 1.0f,
-                                       AAX_OVERWRITE);
-        testForState(res, "aaxBufferProcessWaveform");
+        res = bufferProcessWaveform(buffer, 0.0f, AAX_WHITE_NOISE);
+        testForState(res, "bufferProcessWaveform");
 
         /** mixer */
         res = aaxMixerSetState(config, AAX_INITIALIZED);

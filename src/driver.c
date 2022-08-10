@@ -631,3 +631,46 @@ getFormatString(enum aaxFormat format)
 
    return rv;
 }
+
+
+static unsigned
+log2i(uint32_t x)
+{
+   int y = 0;
+   while (x > 0)
+   {
+      x >>= 1;
+      ++y;
+   }
+   return y;
+}
+
+int
+bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxWaveformType wtype)
+{
+    static const char *waveform[AAX_MAX_WAVE_NOISE] = {
+        "none", "true", "triangle", "sine", "square", "sawtooth", "impulse",
+        "white-noise", "pink-noise", "brownian-noise"
+    };
+    static const char aax_fmt[] = "<?xml version=\"1.0\"?> \
+        <aeonwave> \
+         <sound frequency=\"%.0f\"> \
+          <waveform src=\"%s%s\" staticity=\"%f\"/> \
+         </sound> \
+        </aeonwave>";
+    int pos = log2i(wtype & AAX_WAVEFORM_MASK);
+    int rv = AAX_FALSE;
+
+    if (pos < AAX_MAX_WAVE_NOISE)
+    {
+        char *inverse = (wtype & AAX_INVERSE) ? "inverse-" : "";
+        char aaxs[1024];
+
+        snprintf(aaxs, 1024, aax_fmt, rate, inverse, waveform[pos], rate);
+
+        aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_AAXS16S);
+        rv = aaxBufferSetData(buffer, aaxs);
+    }
+
+    return rv;
+}

@@ -45,13 +45,13 @@
 #define	SAMPLE_FREQ		22050
 #define SAMPLE_FORMAT		AAX_PCM16S
 #define FILE_PATH		SRC_PATH"/stereo.wav"
-#define MAX_WAVES		AAX_MAX_WAVE
+#define MAX_WAVES		(AAX_MAX_WAVE_NOISE-1)
 
 static struct {
     char* name;
     float rate;
     enum aaxWaveformType type;
-} buf_info[] =
+} buf_info[AAX_MAX_WAVE_NOISE-1] =
 {
   { "triangle wave",    440.0f, AAX_TRIANGLE_WAVE  },
   { "sine wave",        440.0f, AAX_SINE_WAVE      },
@@ -107,9 +107,8 @@ int main(int argc, char **argv)
             res = aaxBufferSetSetup(buffer[i], AAX_FREQUENCY, SAMPLE_FREQ);
             testForState(res, "aaxBufferSetFrequency");
 
-            res = aaxBufferProcessWaveform(buffer[i], pitch*rate, type, 1.0f,
-                                           AAX_OVERWRITE);
-            testForState(res, "aaxBufferProcessWaveform");
+            res = bufferProcessWaveform(buffer[i], pitch*rate, type);
+            testForState(res, "bufferProcessWaveform");
 
 #if 0
             snprintf(fname, 1024, "%s/%s.wav", tmp, buf_info[i].name);

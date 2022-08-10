@@ -112,6 +112,7 @@ float getTime(int, char**);
 float getDuration(int, char**);
 int getMode(int, char**);
 char* getRenderer(int, char**);
+int bufferProcessWaveform(aaxBuffer, float, enum aaxWaveformType);
 aaxBuffer setFiltersEffects(int, char**, aaxConfig, aaxConfig, aaxFrame, aaxEmitter, const char*);
 int printCopyright(int, char**);
 char* strDup(const char*);
