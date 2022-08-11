@@ -89,9 +89,9 @@ int main(int argc, char **argv)
         velocity = 1.0f/1.27f;
     }
 
-    reffile = getCommandLineOption(argc, argv, "--reference");
-    if (!reffile) reffile = getCommandLineOption(argc, argv, "-r");
-    if (!reffile) reffile = getenv("AAX_REFERENCE_FILE");
+//  reffile = getCommandLineOption(argc, argv, "--reference");
+//  if (!reffile) reffile = getCommandLineOption(argc, argv, "-r");
+//  if (!reffile) reffile = getenv("AAX_REFERENCE_FILE");
 
     devname = getDeviceName(argc, argv);
     infile = getInputFile(argc, argv, FILE_PATH);
@@ -195,7 +195,7 @@ int main(int argc, char **argv)
         {
             float prevgain, gain, gain2, gain_step, gain_time;
             float freq, pitch[2], pitch2, pitch_time;
-            aaxEmitter e, emitter, refem;
+            aaxEmitter e, emitter, refem = NULL;
             aaxMtx4d mtx64;
             int q, state, key;
             int paused = AAX_FALSE;

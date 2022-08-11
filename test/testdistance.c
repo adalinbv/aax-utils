@@ -178,6 +178,7 @@ int main(int argc, char **argv)
             testForState(res, "aaxScenerySetDistanceModel");
             aaxFilterDestroy(filter);
 
+            /* position and orientation */
             res = aaxMatrix64SetDirection(mtx64, EmitterPos, EmitterDir);
             testForState(res, "aaxMatrix64SetDirection");
 

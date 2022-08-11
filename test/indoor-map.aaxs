@@ -1,0 +1,114 @@
+<?xml version='1.0'?>
+
+<aeonwave>
+ <scenery type="indoor">
+  <audioframe name="Exit" x="0.0" y="1.1" z="-6.0">
+   <audioframe name="Hallway" x="0.0" y="1.1" z="-5.0" src="HallReverb">
+
+    <!-- West wing -->
+    <audioframe name="Intersection12" x="9.0" y="1.0" z="-5.0">
+     <audioframe name="Room1" x="9.0" y="1.1" z="-6.0" src="RoomReverb"/>
+     <audioframe name="Room2" x="9.0" y="1.1" z="-4.0" src="RoomReverb"/>
+    </audioframe>
+    <audioframe name="Intersection34" x="12.0" y="1.0" z="-5.0">
+     <audioframe name="Room3" x="12.0" y="1.1" z="-6.0" src="RoomReverb"/>
+     <audioframe name="Room4" x="12.0" y="1.1" z="-4.0" src="RoomReverb"/>
+    </audioframe>
+    <audioframe name="Intersection56" x="15.0" y="1.0" z="-5.0">
+     <audioframe name="Room5" x="15.0" y="1.1" z="-6.0" src="RoomReverb"/>
+     <audioframe name="Room6" x="15.0" y="1.1" z="-4.0" src="RoomReverb">
+      <emitter src="Telephone" x="17.0" y="2.0" z="-2.0"/>
+     </audioframe>
+    </audioframe>
+
+    <!-- East Wing -->
+    <audioframe name="Intersection78" x="-9.0" y="1.0" z="-5.0">
+     <audioframe name="Room7" x="-9.0" y="1.1" z="-6.0" src="RoomReverb"/>
+     <audioframe name="Room8" x="-9.0" y="1.1" z="-4.0" src="RoomReverb"/>
+    </audioframe>
+    <audioframe name="Intersection910" x="-12.0" y="1.0" z="-5.0">
+     <audioframe name="Room9" x="-12.0" y="1.1" z="-6.0" src="RoomReverb"/>
+     <audioframe name="Room10" x="-12.0" y="1.1" z="-4.0" src="RoomReverb"/>
+    </audioframe>
+    <audioframe name="Intersection1112" x="-15.0" y="1.0" z="-5.0">
+     <audioframe name="Room11" x="-15.0" y="1.1" z="-6.0" src="RoomReverb"/>
+     <audioframe name="Room12" x="-15.0" y="1.1" z="-4.0" src="RoomReverb"/>
+     </audioframe>
+    </audioframe>
+   </audioframe>
+   <audioframe name="Diner" x="0.0" y="1.1" z="-4.0" src="DinerReverb"/>
+  </audioframe>
+ </scenery>
+
+ <sound name="Telephone Ring"  program="125" bank="0" frequency="1250" duration="0.10">
+  <waveform src="square" pitch="0.985"/>
+  <waveform src="sawtooth" processing="mix" pitch="2.9"/>
+  <waveform src="sine" processing="modulate" ratio="1.0" pitch="6.3"/>
+ </sound>
+
+ <emitter name="Telephone" src="Telephone Ring">
+  <filter type="dynamic-gain" src="sawtooth">
+   <slot n="0">
+    <param n="1">15.0</param>
+    <param n="2">1.0</param>
+   </slot>
+  </filter>
+  <filter type="timed-gain" repeat="1">
+   <slot n="0">
+    <param n="0">0.0</param>
+    <param n="1">0.01</param>
+    <param n="2">2.0</param>
+    <param n="3">1.2</param>
+   </slot>
+   <slot n="1">
+    <param n="0">2.0</param>
+    <param n="1">0.1</param>
+    <param n="2">0.04</param>
+    <param n="3">1.8</param>
+   </slot>
+  </filter>
+ </emitter>
+
+ <audioframe name="RoomReverb">
+  <effect type="reverb" src="inverse">
+   <slot n="0">
+    <param n="0">8500.0</param>
+    <param n="1">0.007</param>
+    <param n="2">0.93</param>
+    <param n="3">0.049</param>
+   </slot>
+   <slot n="1">
+    <param n="0">0.8</param>
+    <param n="1">2.1</param>
+    <param n="2">0.1</param>
+   </slot>
+  </effect>
+ </audioframe>
+
+ <audioframe name="HallReverb">
+  <effect type="reverb">  
+   <slot n="0">
+    <param n="0">790.0</param>
+    <param n="1">0.035</param>
+    <param n="2">0.89</param>
+    <param n="3">0.150</param>
+   </slot>
+  </effect>
+ </audioframe>
+
+ <audioframe name="DinerReverb">
+  <effect type="reverb" src="inverse">
+   <slot n="0">
+    <param n="0">2790.0</param>
+    <param n="1">0.021</param>
+    <param n="2">0.89</param>
+    <param n="3">0.069</param>
+   </slot>
+   <slot n="1">
+    <param n="0">2.0</param>
+    <param n="1">2.1</param>
+    <param n="2">0.1</param>
+   </slot>
+  </effect>
+ </audioframe>
+</aeonwave>
