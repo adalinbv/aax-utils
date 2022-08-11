@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+
+<aeonwave>
+ <info>
+  <description text="Generate a looping pulse to hear the reverbs"/>
+ </info>
+
+ <sound frequency="220">
+  <waveform src="sawtooth"/>
+  <waveform src="sawtooth" processing="add" ratio="0.75" pitch="2.0"/>
+ </sound>
+
+ <emitter looping="true">
+  <filter type="envelope">
+   <slot n="0">
+    <param n="0">1.0</param>
+    <param n="1">10.0</param>
+    <param n="2">1.0</param>
+    <param n="3">1.0</param>
+   </slot>
+  </filter>
+  <filter type="dynamic-gain" src="impulse">
+   <slot n="0">
+    <param n="0">0.0</param>
+    <param n="1">10.0</param>
+    <param n="2">1.0</param>
+    <param n="3">0.0</param>
+   </slot>
+  </filter>
+ </emitter>
+
+ <audioframe>
+  <effect type="chorus" src="sine|exponential">
+   <slot n="0">
+    <param n="0">0.7</param>
+    <param n="1">0.1</param>
+    <param n="2">1.0</param>
+    <param n="3">0.0</param>
+   </slot>
+   <slot n="1">
+    <param n="0">2500.0</param>
+    <param n="1">22000.0</param>
+    <param n="2">0.4</param>
+    <param n="3">1.0</param>
+   </slot>
+  </effect>
+ </audioframe>
+
+</aeonwave>
