@@ -1675,7 +1675,7 @@ int main(int argc, char **argv)
         simplify |= NO_LAYER_SUPPORT;
     }
     if (getCommandLineOption(argc, argv, "--force-simplify")) {
-        simplify |= (SIMPLIFY | NO_LAYER_SUPPORT);
+        simplify |= SIMPLIFY;
     }
 
     if (getCommandLineOption(argc, argv, "--debug")) {
