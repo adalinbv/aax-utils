@@ -57,7 +57,7 @@ aaxVec3f SensorUp = {  0.0f, 1.0f, 0.0f };
 
 int main(int argc, char **argv)
 {
-    char *devname, *infile, *reffile;
+    char *devname, *infile, *reffile = NULL;
     aaxConfig config;
     float velocity;
     float fraction;
