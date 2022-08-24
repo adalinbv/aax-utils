@@ -1,10 +1,11 @@
 cmake_minimum_required(VERSION 2.8.8)
 set(cmake_verbose_makefile TRUE)
 
-IF(COMMAND CMAKE_POLICY)
+if (COMMAND CMAKE_POLICY)
   CMAKE_POLICY(SET CMP0003 NEW)
-ENDIF(COMMAND CMAKE_POLICY)
+endif (COMMAND CMAKE_POLICY)
 
+include(CheckFunctionExists)
 include(CheckLibraryExists)
 include(CheckIncludeFile)
 include (CheckIncludeFiles)
@@ -16,11 +17,11 @@ set(PACKAGE "aaxutils")
 option(WERROR "Treat compile warnings as errors"   OFF)
 option(RMALLOC "Enable memory debugging functions" OFF)
 
-IF(CMAKE_SIZEOF_VOID_P EQUAL 8)
+if (CMAKE_SIZEOF_VOID_P EQUAL 8)
   set(SIZEOF_SIZE_T 8)
-ELSE ()
+else ()
   set(SIZEOF_SIZE_T 4)
-ENDIF ()
+endif ()
 
 # read 'version' file into a variable (stripping any newlines or spaces)
 FILE(READ version versionFile)
@@ -47,9 +48,9 @@ set(CMAKE_MODULE_PATH "${aax-utils_SOURCE_DIR}/CMakeModules;${CMAKE_MODULE_PATH}
 include(CPack_Modules)
 include(CPack_Defaults)
 
-IF(WIN32)
+if (WIN32)
 
-ELSE(WIN32)
+else(WIN32)
   ADD_DEFINITIONS(-D_REENTRANT -D_XOPEN_SOURCE=600 -D_POSIX_C_SOURCE=199309L)
 
   # DEBIAN
@@ -60,18 +61,18 @@ ELSE(WIN32)
   set(CPACK_RPM_PACKAGE_LICENSE "BSD")
   set(CPACK_RPM_PACKAGE_GROUP "System/System/GUI/KDE")
   set(CPACK_RPM_PACKAGE_REQUIRES "libaax3-bin >= 3.0.0, libaax3-data >= 3.4.0")
-ENDIF(WIN32)
+endif (WIN32)
 
 # ZIP
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "${CMAKE_PROJECT_NAME}-${AAXUTILS_VERSION}" CACHE INTERNAL "tarball basename")
 
 # Add definitions, compiler switches, etc.
 ADD_DEFINITIONS(-DHAVE_CONFIG_H=1)
-IF(WERROR)
+if (WERROR)
   ADD_DEFINITIONS(-Werror)
-ENDIF()
+endif ()
 
-IF(MSVC)
+if (MSVC)
     set(CMAKE_C_FLAGS_RELWITHDEBINFO "${CMAKE_C_FLAGS_RELWITHDEBINFO} -D_DEBUG /LD")
     set(CMAKE_C_FLAGS_MINSIZEREL "${CMAKE_C_FLAGS_MINSIZEREL} -DNDEBUG /LD")
     set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -DNDEBUG /LD")
@@ -80,17 +81,17 @@ IF(MSVC)
     ADD_DEFINITIONS(-D_CRT_NONSTDC_NO_DEPRECATE)
 
     OPTION(FORCE_STATIC_VCRT "Force /MT for static VC runtimes" ON)
-    IF(FORCE_STATIC_VCRT)
+    if (FORCE_STATIC_VCRT)
         FOREACH(flag_var
                 CMAKE_C_FLAGS CMAKE_C_FLAGS_DEBUG CMAKE_C_FLAGS_RELEASE
                 CMAKE_C_FLAGS_MINSIZEREL CMAKE_C_FLAGS_RELWITHDEBINFO)
-            IF(${flag_var} MATCHES "/MD")
+            if (${flag_var} MATCHES "/MD")
                 STRING(REGEX REPLACE "/MD" "/MT" ${flag_var} "${${flag_var}}")
-            ENDIF()
+            endif ()
         ENDFOREACH(flag_var)
-    ENDIF()
-ELSE(MSVC)
-    IF(MINGW)
+    endif ()
+else(MSVC)
+    if (MINGW)
        ADD_DEFINITIONS(-U__STRICT_ANSI__)
        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libstdc++" CACHE STRING
           "Flags used by MingW."
@@ -98,7 +99,7 @@ ELSE(MSVC)
        set(CMAKE_C_FLAGS "${C_FLAGS} -static -static-libgcc" CACHE STRING
           "Flags used by MingW."
           FORCE)
-    ENDIF(MINGW)
+    endif (MINGW)
  
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11" CACHE STRING
           "Flags used by al build types."
@@ -118,7 +119,7 @@ ELSE(MSVC)
     set(CMAKE_C_FLAGS_DEBUG "${C_FLAGS} -g3 -D_DEBUG" CACHE STRING
         "Flags used by the compiler during debug builds."
         FORCE)
-ENDIF(MSVC)
+endif (MSVC)
 
 # Required libraries
 find_package(AAX COMPONENTS aax REQUIRED)
@@ -140,22 +141,23 @@ include_directories("${aax-utils_SOURCE_DIR}"
     "${aax-utils_BINARY_DIR}/include"
 )
 
-CHECK_include_FILE(inttypes.h HAVE_INTTYPES_H)
-CHECK_include_FILE(stdint.h HAVE_STDINT_H)
-CHECK_include_FILE(strings.h HAVE_STRINGS_H)
-CHECK_include_FILE(limits.h HAVE_LIMITS_H)
-CHECK_include_FILE(unistd.h HAVE_UNISTD_H)
-CHECK_include_FILE(sys/types.h HAVE_SYS_TYPES_H)
-CHECK_include_FILE(sys/time.h HAVE_SYS_TIME_H)
-CHECK_include_FILE(sys/ioctl.h HAVE_SYS_IOCTL_H)
-CHECK_include_FILE(time.h HAVE_TIME_H)
+check_function_exists(strlcpy HAVE_STRLCPY)
+check_include_FILE(inttypes.h HAVE_INTTYPES_H)
+check_include_FILE(stdint.h HAVE_STDINT_H)
+check_include_FILE(strings.h HAVE_STRINGS_H)
+check_include_FILE(limits.h HAVE_LIMITS_H)
+check_include_FILE(unistd.h HAVE_UNISTD_H)
+check_include_FILE(sys/types.h HAVE_SYS_TYPES_H)
+check_include_FILE(sys/time.h HAVE_SYS_TIME_H)
+check_include_FILE(sys/ioctl.h HAVE_SYS_IOCTL_H)
+check_include_FILE(time.h HAVE_TIME_H)
 
-CONFIGURE_FILE(
+configure_file(
     "${CMAKE_CURRENT_SOURCE_DIR}/include/cmake_config.h.in"
     "${CMAKE_CURRENT_BINARY_DIR}/include/config.h")
 
 # Man pages
-IF (UNIX AND NOT WIN32)
+if (UNIX AND NOT WIN32)
   CONFIGURE_FILE(
       "${CMAKE_CURRENT_SOURCE_DIR}/admin/aaxcvt.1.in"
       "${CMAKE_CURRENT_BINARY_DIR}/aaxcvt.1")
@@ -171,7 +173,7 @@ IF (UNIX AND NOT WIN32)
                 ${CMAKE_CURRENT_BINARY_DIR}/aaxinfo.1
           DESTINATION "${CMAKE_INSTALL_PREFIX}/man/man1"
           COMPONENT Applications)
-ENDIF()
+endif()
 
 set(BASE_OBJS
      base/logging.c
@@ -179,13 +181,13 @@ set(BASE_OBJS
      base/types.c
 )
 
-IF(WIN32)
+if (WIN32)
   set(KERNEL_LIBRARY Kernel32)
   set(EXTRA_LIBS "-ldriver -lwinmm")
   include_directories(base)
-ELSE(WIN32)
+else(WIN32)
   set(EXTRA_LIBS "-ldriver -lm")
-ENDIF(WIN32)
+endif (WIN32)
 
 include_DIRECTORIES(
   ${PROJECT_SOURCE_DIR}/src
@@ -201,9 +203,9 @@ add_subdirectory(3rdparty)
 add_subdirectory(test)
 add_subdirectory(test++)
 
-IF(NOT SINGLE_PACKAGE)
+if (NOT SINGLE_PACKAGE)
   include (CPack)
-ENDIF(NOT SINGLE_PACKAGE)
+endif (NOT SINGLE_PACKAGE)
 
 message("Build type: ${CMAKE_BUILD_TYPE}")
 message("C flags: ${CMAKE_C_FLAGS}")

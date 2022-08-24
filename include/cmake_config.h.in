@@ -33,6 +33,10 @@
    specified by the ISO C99 standard. */
 #undef HAVE_C99_SNPRINTF
 
+/* Define to 1 if you have the `strlcpy' function. */
+#undef HAVE_STRLCPY
+#cmakedefine HAVE_STRLCPY @HAVE_STRLCPYP@
+
 /* Define if you have a version of the vsnprintf function with semantics as
    specified by the ISO C99 standard. */
 #undef HAVE_C99_VSNPRINTF
