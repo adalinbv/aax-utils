@@ -546,8 +546,10 @@ int main(int argc, char **argv)
                         }
                         dt = 0.0f;
                     }
-                    else {
-                       break;
+                    else if (key == ESCAPE_KEY) {
+                        break;
+                    } else {
+                        aaxEmitterSetState(emitter, AAX_STOPPED);
                     }
                 }
 
@@ -557,7 +559,7 @@ int main(int argc, char **argv)
                     state = aaxEmitterGetState(emitter);
                 }
             }
-            while ((dt < duration) && (state == AAX_PLAYING));
+            while ((dt < duration) && (state != AAX_PROCESSED));
             set_mode(0);
 
             e = (!playref || !reffile) ? emitter : refem;

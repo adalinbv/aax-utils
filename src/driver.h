@@ -51,6 +51,7 @@ extern "C" {
 #include <base/timer.h>
 
 #define TAB_KEY		0x09
+#define ESCAPE_KEY	0x1b
 #define SPACE_KEY	0x20
 
 
