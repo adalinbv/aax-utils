@@ -186,17 +186,30 @@ getGain(int argc, char **argv)
 }
 
 float
+getEnvelopeStage(int argc, char **argv, int stage)
+{
+    float rv = getGain(argc, argv);
+    if (stage > 0)
+    {
+        char *ret = getCommandLineOption(argc, argv, "-g");
+        if (!ret) ret = getCommandLineOption(argc, argv, "--gain");
+        if (ret)
+        {
+            rv = 0.0f;
+            do {
+                ret = strchr(ret, '-');
+                if (ret) ret++;
+            } while (ret && --stage);
+        }
+        if (ret) rv = (float)atof(ret);
+    }
+    return rv;
+}
+
+float
 getGainRange(int argc, char **argv)
 {
-    float num = 1.0f;
-    char *ret = getCommandLineOption(argc, argv, "-g");
-    if (!ret) ret = getCommandLineOption(argc, argv, "--gain");
-    if (ret) {
-       ret = strchr(ret, '-');
-       if (ret) ret++;
-    }
-    if (ret) num = (float)atof(ret);
-    return num;
+    return getEnvelopeStage(argc, argv, 1);
 }
 
 float

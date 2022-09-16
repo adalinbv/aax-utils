@@ -175,12 +175,6 @@ if (UNIX AND NOT WIN32)
           COMPONENT Applications)
 endif()
 
-set(BASE_OBJS
-     base/logging.c
-     base/geometry.c
-     base/types.c
-)
-
 if (WIN32)
   set(KERNEL_LIBRARY Kernel32)
   set(EXTRA_LIBS "-ldriver -lwinmm")

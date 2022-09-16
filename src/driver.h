@@ -108,6 +108,7 @@ float getPitchRange(int, char**);
 float getPitchTime(int, char**);
 float getGain(int, char**);
 float getGainRange(int, char**);
+float getEnvelopeStage(int, char**, int);
 float getGainTime(int, char**);
 float getTime(int, char**);
 float getDuration(int, char**);

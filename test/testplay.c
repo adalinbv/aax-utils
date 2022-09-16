@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2021 by Erik Hofman.
- * Copyright (C) 2009-2021 by Adalin B.V.
+ * Copyright (C) 2008-2022 by Erik Hofman.
+ * Copyright (C) 2009-2022 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,7 @@
 #include "wavfile.h"
 
 
+#define MAX_STAGES			4
 #define SLEEP_TIME			10e-3f
 #define SLIDE_TIME			7.0f
 #define FILE_PATH			SRC_PATH"/tictac.wav"
@@ -193,27 +194,42 @@ int main(int argc, char **argv)
         ofile = getOutputFile(argc, argv, NULL);
         if (!ofile && buffer)
         {
-            float prevgain, gain, gain2, gain_step, gain_time;
+            float envelope[MAX_STAGES+1], envelope_step, envelope_time;
+            float prevgain, gain;
             float freq, pitch[2], pitch2, pitch_time;
             aaxEmitter e, emitter, refem = NULL;
-            aaxMtx4d mtx64;
-            int q, state, key;
+            int i, stage, max_stages, state, key;
             int paused = AAX_FALSE;
             int playref = AAX_FALSE;
             aaxFrame frame, frame2;
             aaxFilter filter;
             aaxEffect effect;
             aaxBuffer xbuffer;
+            aaxMtx4d mtx64;
             float duration;
             float dt = 0.0f;
 
             duration = getDuration(argc, argv);
 
-            prevgain = gain = getGain(argc, argv);
-            gain2 = getGainRange(argc, argv);
-            gain_time = getGainTime(argc, argv);
-            if (gain_time == 0.0f) gain_time = SLIDE_TIME;
+            /* envelope */
+            stage = 0;
+            max_stages = 0;
+            for (i=0; i<MAX_STAGES+1; ++i) {
+               envelope[i] = getEnvelopeStage(argc, argv, i);
+               if (envelope[i] > 0.0f) max_stages++;
+            }
+            gain = prevgain = (envelope[0] > 0.0f) ? envelope[0] : 1.0f;
 
+            envelope_time = getGainTime(argc, argv);
+            if (envelope_time == 0.0f) envelope_time = SLIDE_TIME;
+
+            if (envelope[stage+1] == 0.0f) {
+                envelope_step = 0.0f;
+            } else {
+                envelope_step = (envelope[1]-envelope[0])/(envelope_time/SLEEP_TIME);
+            }
+
+            /* pitch */
             pitch_time = SLIDE_TIME;
             pitch[0] = pitch[1] = 1.0f;
             freq = getFrequency(argc, argv);
@@ -234,11 +250,24 @@ int main(int argc, char **argv)
 
             if (verbose)
             {
-                printf("Playback gain     : %5.1f", gain);
-                if (gain2 != gain) {
-                    printf("    to % .1f,    duration: %3.1f sec.\n",
-                              gain2, gain_time);
-                } else printf("\n");
+                if (max_stages > 1)
+                {
+                    printf("Playback envelope:\n");
+                    printf("\tstage duration: %3.1f sec.\n", envelope_time);
+                    printf("\tstage:");
+                    for(i=0; i<max_stages; ++i) {
+                        printf("\t%5i", i);
+                    }
+                    printf("\n");
+                    printf("\tenvelope:");
+                    for(i=0; i<max_stages; ++i) {
+                        printf("\t%5.1f", envelope[i]);
+                    }
+                    printf("\n");
+                }
+                else {
+                    printf("Playback envelope     : %5.1f\n", gain);
+                }
 
                 printf("Playback pitch    : %5.1f", pitch[0]);
                 if (pitch2) {
@@ -293,7 +322,7 @@ int main(int argc, char **argv)
                 }
             }
 
-            /* gain */
+            /* envelope */
             filter = aaxEmitterGetFilter(emitter, AAX_VOLUME_FILTER);
             testForError(filter, "Unable to create the volume filter");
 
@@ -431,15 +460,9 @@ int main(int argc, char **argv)
 
             printf("Playing sound for %3.1f seconds of %3.1f seconds, "
                    "or until a key is pressed\n", duration, dt);
-            q = 0;
-            set_mode(1);
-            if (gain2 == 1.0f) {
-                gain_step = 0.0f;
-            } else {
-                gain_step = (gain2-gain)/(gain_time/SLEEP_TIME);
-            }
-
+            i = 0;
             dt = 0.0f;
+            set_mode(1);
             do
             {
                 e = (!playref || !reffile) ? emitter : refem;
@@ -447,11 +470,11 @@ int main(int argc, char **argv)
                 msecSleep(SLEEP_TIME*1000);
                 dt += SLEEP_TIME;
 
-                if (!paused && ++q > 10)
+                if (!paused && ++i > 10)
                 {
                     unsigned long offs, offs_bytes;
                     float off_s;
-                    q = 0;
+                    i = 0;
 
                     off_s = aaxEmitterGetOffsetSec(e);
                     offs = aaxEmitterGetOffset(e, AAX_SAMPLES);
@@ -461,12 +484,13 @@ int main(int argc, char **argv)
                            offs, offs_bytes);
                 }
 
-                /* gain */
-                if (gain_step > 0.0f) {
-                    gain = _MIN(gain+gain_step, gain2);
-                } else if (gain_step < 0.0f) {
-                    gain = _MAX(gain+gain_step, gain2);
+                /* envelope */
+                if (envelope_step > 0.0f) {
+                    gain = _MIN(gain+envelope_step, envelope[stage+1]);
+                } else if (envelope_step < 0.0f) {
+                    gain = _MAX(gain+envelope_step, envelope[stage+1]);
                 }
+
                 if (gain != prevgain)
                 {
                     filter = aaxEmitterGetFilter(emitter, AAX_VOLUME_FILTER);
@@ -492,6 +516,16 @@ int main(int argc, char **argv)
                     }
 #endif
                     prevgain = gain;
+                }
+                else if (stage < max_stages)
+                {
+                    stage++;
+                    if (envelope[stage+1] == 0.0f) {
+                        envelope_step = 0.0f;
+                    } else {
+                        envelope_step = (envelope[stage+1]-envelope[stage])/(envelope_time/SLEEP_TIME);
+                        gain = envelope[stage];
+                    }
                 }
 
                 if (repeat && dt > 0.1f)
