@@ -191,7 +191,10 @@ getEnvelopeStage(int argc, char **argv, int stage)
     float rv = getGain(argc, argv);
     if (stage > 0)
     {
-        char *ret = getCommandLineOption(argc, argv, "-g");
+        char *ret;
+        rv = 0.0f;
+
+        ret = getCommandLineOption(argc, argv, "-g");
         if (!ret) ret = getCommandLineOption(argc, argv, "--gain");
         if (ret)
         {
