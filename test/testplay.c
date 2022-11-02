@@ -56,6 +56,30 @@ aaxVec3d SensorPos = { 0.0,  0.0,  0.0  };
 aaxVec3f SensorAt = {  0.0f, 0.0f, 1.0f };
 aaxVec3f SensorUp = {  0.0f, 1.0f, 0.0f };
 
+void help()
+{
+    printf("Usage: testplay [options]\n");
+    printf("Plays audio from a file.\n");
+    printf("Optionally writes the audio to an output file.\n");
+
+    printf("\nOptions:\n");
+    printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
+    printf("  -f, --frequency <freq>\tplayback frequency\n");
+    printf("      --fm\t\t\tuse FM playback mode\n");
+    printf("  -g, --gain <v>[:<dt>[-<v>..]\tchange the gain setting\n");
+    printf("  -i, --input <file>\t\tplayback audio from a file\n");
+    printf("  -o, --output <file>\t\talso write to an audio file (optional)\n");
+    printf("      --repeat <num>\t\tset the number of repeats\n");
+    printf("      --velocity <value>\tset the note velocity\n");
+    printf("  -p, --pitch <pitch>\t\tSet the playback pitch\n");
+    printf("  -v, --verbose\t\t\tshow extra playback information\n");
+    printf("  -h, --help\t\t\tprint this message and exit\n");
+
+    printf("\n");
+
+    exit(-1);
+}
+
 int main(int argc, char **argv)
 {
     char *devname, *infile, *reffile = NULL;
@@ -68,6 +92,12 @@ int main(int argc, char **argv)
     char fm = 0;
     char *env;
     int res;
+
+    if (argc == 1 || getCommandLineOption(argc, argv, "-h") ||
+                     getCommandLineOption(argc, argv, "--help"))
+    {
+        help();
+    }
 
     if (getCommandLineOption(argc, argv, "-v") ||
         getCommandLineOption(argc, argv, "--verbose"))
