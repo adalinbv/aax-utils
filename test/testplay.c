@@ -39,6 +39,7 @@
 
 #include <aax/aax.h>
 
+#include "3rdparty/pffft.h"
 #include "base/types.h"
 #include "driver.h"
 #include "wavfile.h"
@@ -47,6 +48,7 @@
 #define MAX_STAGES			4
 #define SLEEP_TIME			10e-3f
 #define SLIDE_TIME			7.0f
+#define	BLOCK_SIZE			4096
 #define FILE_PATH			SRC_PATH"/tictac.wav"
 
 aaxVec3d EmitterPos = { 0.0,  0.0,  0.0  };
@@ -65,6 +67,7 @@ void help()
     printf("\nOptions:\n");
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
     printf("  -f, --frequency <freq>\tplayback frequency\n");
+    printf("      --fft\t\tdo FFT analysis\n");
     printf("      --fm\t\t\tuse FM playback mode\n");
     printf("  -g, --gain <v>[:<dt>[-<v>..]\tchange the gain setting\n");
     printf("  -i, --input <file>\t\tplayback audio from a file\n");
@@ -72,12 +75,88 @@ void help()
     printf("      --repeat <num>\t\tset the number of repeats\n");
     printf("      --velocity <value>\tset the note velocity\n");
     printf("  -p, --pitch <pitch>\t\tSet the playback pitch\n");
-    printf("  -v, --verbose\t\t\tshow extra playback information\n");
+    printf("  -v, --verbose [<level>]\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
 
     printf("\n");
 
     exit(-1);
+}
+
+unsigned
+get_pow2(uint32_t n)
+{
+#if defined(__GNUC__)
+    return 1 << (32 -__builtin_clz(n-1));
+#else
+   unsigned y, x = n;
+
+   --x;
+   x |= x >> 16;
+   x |= x >> 8;
+   x |= x >> 4;
+   x |= x >> 2;
+   x |= x >> 1;
+   ++x;
+
+   y = n >> 1;
+   if (y < (x-n)) x >>= 1;
+
+   return x;
+#endif
+}
+
+void do_fft(aaxBuffer buffer, char verbose)
+{
+    float **data;
+
+    aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_FLOAT);
+    data = (float**)aaxBufferGetData(buffer);
+    if (data)
+    {
+        int bnum, num = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
+        int fs = aaxBufferGetSetup(buffer, AAX_FREQUENCY);
+        float *fftout, *realin;
+        size_t size;
+
+        // block length
+        bnum = num;
+        bnum = get_pow2(bnum);
+
+        size = sizeof(float)*2*(bnum/2+1);
+        realin = pffft_aligned_malloc(size);
+        fftout = pffft_aligned_malloc(size);
+        if (realin && fftout)
+        {
+            PFFFT_Setup *fft = pffft_new_setup(bnum, PFFFT_REAL);
+
+            memset(fftout, 0, size);
+            memset(realin, 0, size);
+
+            memcpy(realin, *data, sizeof(float)*num);
+            pffft_transform_ordered(fft, realin, fftout, NULL, PFFFT_FORWARD);
+
+            if (verbose > 1)
+            {
+                int i;
+                printf("\tFrequency\tSignal Level\n");
+                printf("---------\t------------\n");
+                for (i=0; i<bnum; i += 2)
+                {
+                    float v = fabsf(fftout[i+1]/num); // sine
+                    v *= 50.0f;
+                    if (v > 0.5 || v < -0.5f) {
+                        printf("% 6.0f Hz:\t% 7.2f\n", 0.5f*fs*i/bnum, v);
+                    }
+                }
+            }
+            pffft_aligned_free(fftout);
+            pffft_aligned_free(realin);
+            pffft_destroy_setup(fft);
+        }
+
+        aaxFree(data);
+    }
 }
 
 int main(int argc, char **argv)
@@ -89,6 +168,7 @@ int main(int argc, char **argv)
     int base_freq[2];
     char verbose = 0;
     char repeat = 0;
+    char fft = 0;
     char fm = 0;
     char *env;
     int res;
@@ -99,14 +179,19 @@ int main(int argc, char **argv)
         help();
     }
 
-    if (getCommandLineOption(argc, argv, "-v") ||
-        getCommandLineOption(argc, argv, "--verbose"))
-    {
-        verbose = 1;
+    env = getCommandLineOption(argc, argv, "-v");
+    if (!env) env = getCommandLineOption(argc, argv, "--verbose");
+    if (env) {
+        verbose = atoi(env);
+        if (!verbose) verbose = 1;
     }
 
     if (getCommandLineOption(argc, argv, "--repeat")) {
         repeat = 5;
+    }
+
+    if (getCommandLineOption(argc, argv, "--fft")) {
+        fft = 1;
     }
 
     if (getCommandLineOption(argc, argv, "--fm")) {
@@ -219,6 +304,12 @@ int main(int argc, char **argv)
             end = aaxBufferGetSetup(buffer, AAX_LOOP_END);
             printf(" Buffer loop start:     : %i\n", start);
             printf(" Buffer loop end:       : %i\n", end);
+        }
+
+        if (fft)
+        {
+            do_fft(buffer, verbose);
+            goto done;
         }
 
         ofile = getOutputFile(argc, argv, NULL);
@@ -659,9 +750,6 @@ int main(int argc, char **argv)
             res = aaxEmitterDestroy(emitter);
             testForState(res, "aaxEmitterDestroy");
 
-            res = aaxBufferDestroy(buffer);
-            testForState(res, "aaxBufferDestroy");
-
             if (reffile)
             {
                 res = aaxEmitterSetState(refem, AAX_PROCESSED);
@@ -700,6 +788,10 @@ int main(int argc, char **argv)
             if (xbuffer) {
                 res = aaxBufferDestroy(xbuffer);
             }
+
+done:
+            res = aaxBufferDestroy(buffer);
+            testForState(res, "aaxBufferDestroy");
         }
         else if (buffer)
         {
