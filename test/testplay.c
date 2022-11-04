@@ -83,8 +83,12 @@ void help()
     exit(-1);
 }
 
-unsigned
-get_pow2(uint32_t n)
+inline float _lin2log(float v) { return log10f(v); }
+inline float _log2lin(float v) { return powf(10.0f,v); }
+inline float _lin2db(float v) { return 20.0f*log10f(v); }
+inline float _db2lin(float v) { return _MINMAX(powf(10.0f,v/20.0f),0.0f,10.0f); }
+
+inline unsigned get_pow2(uint32_t n)
 {
 #if defined(__GNUC__)
     return 1 << (32 -__builtin_clz(n-1));
@@ -114,47 +118,58 @@ void do_fft(aaxBuffer buffer, char verbose)
     data = (float**)aaxBufferGetData(buffer);
     if (data)
     {
-        int bnum, num = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
+        int bnum, cnum, num = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
         int fs = aaxBufferGetSetup(buffer, AAX_FREQUENCY);
         float *fftout, *realin;
         size_t size;
 
         // block length
-        bnum = get_pow2(num);
+        bnum = BLOCK_SIZE;
+        cnum = _MIN(num, bnum);
 
         size = sizeof(float)*2*(bnum/2+1);
         realin = pffft_aligned_malloc(size);
         fftout = pffft_aligned_malloc(size);
         if (realin && fftout)
         {
-            PFFFT_Setup *fft = pffft_new_setup(bnum/2, PFFFT_REAL);
+            PFFFT_Setup *fft = pffft_new_setup(bnum, PFFFT_REAL);
             float f;
             int i;
 
             memset(fftout, 0, size);
             memset(realin, 0, size);
 
-            memcpy(realin, *data, sizeof(float)*num);
+            memcpy(realin, *data + (num-cnum), sizeof(float)*cnum);
             pffft_transform_ordered(fft, realin, fftout, NULL, PFFFT_FORWARD);
 
-            // normalize
-            f = 0;
-            for (i=0; i<bnum/2; i += 2) {
-                if (f < fabsf(fftout[i+1])) f = fabsf(fftout[i+1]);
+            // copy the real values to the front of the buffer
+            // and discart the imaginary values.0
+            for (i=1; i<bnum; ++i) {
+               realin[i] = realin[2*i+1];
             }
 
-            f = 1.0f/f;
-            for (i=0; i<bnum/2; i += 2) {
-                fftout[i+1] *= f;
+            // start normalization
+            f = 0.0f;
+            for (i=0; i<bnum; ++i) {
+                if (f < fabsf(fftout[i])) f = fabsf(fftout[i]);
             }
+
+            if (f > 0.0f)
+            {
+                f = 1.0f/f;
+                for (i=0; i<bnum; ++i) {
+                    fftout[i] *= f;
+                }
+            }
+            // end normalization
 
             printf("Frequency\tSignal Level\n");
             printf("---------\t------------\n");
-            for (i=0; i<bnum/2; i += 2)
+            for (i=0; i<bnum; ++i)
             {
-                float v = fabsf(fftout[i+1]); // sine
-                if (v > 0.15f) {
-                    printf("% 6.0f Hz:\t% 7.2f\n", (float)fs*i/bnum, v);
+                float v = fabsf(fftout[i]); // sine
+                if (v*v > 0.02f) {
+                    printf("% 6.1f Hz:\t% 7.2f\n", 0.5f*fs*i/bnum, v);
                 }
             }
 
