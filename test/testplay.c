@@ -120,15 +120,16 @@ void do_fft(aaxBuffer buffer, char verbose)
         size_t size;
 
         // block length
-        bnum = num;
-        bnum = get_pow2(bnum);
+        bnum = get_pow2(num);
 
         size = sizeof(float)*2*(bnum/2+1);
         realin = pffft_aligned_malloc(size);
         fftout = pffft_aligned_malloc(size);
         if (realin && fftout)
         {
-            PFFFT_Setup *fft = pffft_new_setup(bnum, PFFFT_REAL);
+            PFFFT_Setup *fft = pffft_new_setup(bnum/2, PFFFT_REAL);
+            float f;
+            int i;
 
             memset(fftout, 0, size);
             memset(realin, 0, size);
@@ -136,20 +137,27 @@ void do_fft(aaxBuffer buffer, char verbose)
             memcpy(realin, *data, sizeof(float)*num);
             pffft_transform_ordered(fft, realin, fftout, NULL, PFFFT_FORWARD);
 
-            if (verbose > 1)
+            // normalize
+            f = 0;
+            for (i=0; i<bnum/2; i += 2) {
+                if (f < fabsf(fftout[i+1])) f = fabsf(fftout[i+1]);
+            }
+
+            f = 1.0f/f;
+            for (i=0; i<bnum/2; i += 2) {
+                fftout[i+1] *= f;
+            }
+
+            printf("Frequency\tSignal Level\n");
+            printf("---------\t------------\n");
+            for (i=0; i<bnum/2; i += 2)
             {
-                int i;
-                printf("\tFrequency\tSignal Level\n");
-                printf("---------\t------------\n");
-                for (i=0; i<bnum; i += 2)
-                {
-                    float v = fabsf(fftout[i+1]/num); // sine
-                    v *= 50.0f;
-                    if (v > 0.5 || v < -0.5f) {
-                        printf("% 6.0f Hz:\t% 7.2f\n", 0.5f*fs*i/bnum, v);
-                    }
+                float v = fabsf(fftout[i+1]); // sine
+                if (v > 0.15f) {
+                    printf("% 6.0f Hz:\t% 7.2f\n", (float)fs*i/bnum, v);
                 }
             }
+
             pffft_aligned_free(fftout);
             pffft_aligned_free(realin);
             pffft_destroy_setup(fft);
