@@ -110,7 +110,7 @@ inline unsigned get_pow2(uint32_t n)
 #endif
 }
 
-void do_fft(aaxBuffer buffer, char verbose)
+void analyze_fft(aaxBuffer buffer, char verbose)
 {
     float **data;
 
@@ -118,46 +118,57 @@ void do_fft(aaxBuffer buffer, char verbose)
     data = (float**)aaxBufferGetData(buffer);
     if (data)
     {
-        int bnum, cnum, num = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
+        int no_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
         int fs = aaxBufferGetSetup(buffer, AAX_FREQUENCY);
-        float *fftout, *realin;
-        size_t size;
+        float *ffttmp, *fftout, *realin;
+        int block_size, size;
 
         // block length
-        bnum = BLOCK_SIZE;
-        cnum = _MIN(num, bnum);
+        block_size = BLOCK_SIZE;
 
-        size = sizeof(float)*2*(bnum/2+1);
+        size = sizeof(float)*2*(block_size+1);
         realin = pffft_aligned_malloc(size);
         fftout = pffft_aligned_malloc(size);
-        if (realin && fftout)
+        ffttmp = pffft_aligned_malloc(size);
+        if (realin && fftout && ffttmp)
         {
-            PFFFT_Setup *fft = pffft_new_setup(bnum, PFFFT_REAL);
+            PFFFT_Setup *fft = pffft_new_setup(block_size, PFFFT_REAL);
             float f;
             int i;
 
             memset(fftout, 0, size);
-            memset(realin, 0, size);
 
-            memcpy(realin, *data + (num-cnum), sizeof(float)*cnum);
-            pffft_transform_ordered(fft, realin, fftout, NULL, PFFFT_FORWARD);
+            // loop the buffer one block at a time and add all FFT results
+            while (no_samples > block_size)
+            {
+                int conversion_num = _MIN(no_samples, block_size);
 
-            // copy the real values to the front of the buffer
-            // and discart the imaginary values.0
-            for (i=1; i<bnum; ++i) {
-               realin[i] = realin[2*i+1];
+                memset(realin, 0, size);
+                memcpy(realin, *data, sizeof(float)*conversion_num);
+
+                *data += conversion_num;
+                no_samples -= conversion_num;
+
+                memset(ffttmp, 0, size);
+                pffft_transform_ordered(fft, realin, ffttmp, NULL, PFFFT_FORWARD);
+
+                // Add the real (sine) and imaginary (cosine) values and move
+                // them to the front of the buffer. Phase is of no concern to us
+                for (i=0; i<block_size; ++i) {
+                   fftout[i] += fabsf(ffttmp[2*i]) + fabsf(ffttmp[2*i+1]);
+                }
             }
 
             // start normalization
             f = 0.0f;
-            for (i=0; i<bnum; ++i) {
+            for (i=0; i<block_size; ++i) {
                 if (f < fabsf(fftout[i])) f = fabsf(fftout[i]);
             }
 
             if (f > 0.0f)
             {
                 f = 1.0f/f;
-                for (i=0; i<bnum; ++i) {
+                for (i=0; i<block_size; ++i) {
                     fftout[i] *= f;
                 }
             }
@@ -165,14 +176,15 @@ void do_fft(aaxBuffer buffer, char verbose)
 
             printf("Frequency\tSignal Level\n");
             printf("---------\t------------\n");
-            for (i=0; i<bnum; ++i)
+            for (i=0; i<block_size; ++i)
             {
-                float v = fabsf(fftout[i]); // sine
-                if (v*v > 0.02f) {
-                    printf("% 6.1f Hz:\t% 7.2f\n", 0.5f*fs*i/bnum, v);
+                float v = fftout[i];
+                if (v*v > 0.01f) {
+                    printf("% 6.1f Hz:\t% 7.2f\n", (float)fs*i/block_size, v);
                 }
             }
 
+            pffft_aligned_free(ffttmp);
             pffft_aligned_free(fftout);
             pffft_aligned_free(realin);
             pffft_destroy_setup(fft);
@@ -331,7 +343,7 @@ int main(int argc, char **argv)
 
         if (fft)
         {
-            do_fft(buffer, verbose);
+            analyze_fft(buffer, verbose);
             goto done;
         }
 
