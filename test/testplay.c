@@ -83,32 +83,26 @@ void help()
     exit(-1);
 }
 
-inline float _lin2log(float v) { return log10f(v); }
-inline float _log2lin(float v) { return powf(10.0f,v); }
-inline float _lin2db(float v) { return 20.0f*log10f(v); }
-inline float _db2lin(float v) { return _MINMAX(powf(10.0f,v/20.0f),0.0f,10.0f); }
-
-inline unsigned get_pow2(uint32_t n)
+#define MAX_WAVES	5
+#define MAX_HARMONICS	8
+const char *names[MAX_WAVES] =
 {
-#if defined(__GNUC__)
-    return 1 << (32 -__builtin_clz(n-1));
-#else
-   unsigned y, x = n;
+   "Sine", "Triangle", "Square", "Sawtooth", "Impulse"
+};
 
-   --x;
-   x |= x >> 16;
-   x |= x >> 8;
-   x |= x >> 4;
-   x |= x >> 2;
-   x |= x >> 1;
-   ++x;
-
-   y = n >> 1;
-   if (y < (x-n)) x >>= 1;
-
-   return x;
-#endif
-}
+float harmonics[MAX_WAVES][MAX_HARMONICS] =
+{
+   // sine
+   { 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0.0f },
+   // triangle
+   { 1.0f, 0.0f, 0.111f, 0.0f, 0.04f, 0.0f, 0.02f, 0.0f },
+   // square
+   { 1.0f, 0.0f, 0.3f, 0.0f, 0.2f, 0.0f, 0.143f, 0.0f },
+   // sawtooth
+   { 1.0f, 0.5f, 0.3f, 0.25f, 0.2f, 0.167f, 0.143f, 0.125f },
+   // impulse
+   { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }
+};
 
 void analyze_fft(aaxBuffer buffer, char verbose)
 {
@@ -133,8 +127,8 @@ void analyze_fft(aaxBuffer buffer, char verbose)
         if (realin && fftout && ffttmp)
         {
             PFFFT_Setup *fft = pffft_new_setup(block_size, PFFFT_REAL);
-            float f;
-            int i;
+            float f, fb = 0.0f;
+            int i, j;
 
             memset(fftout, 0, size);
 
@@ -162,7 +156,11 @@ void analyze_fft(aaxBuffer buffer, char verbose)
             // start normalization
             f = 0.0f;
             for (i=0; i<block_size; ++i) {
-                if (f < fabsf(fftout[i])) f = fabsf(fftout[i]);
+                if (f < fabsf(fftout[i]))
+                {
+                    f = fabsf(fftout[i]);
+                    fb = (float)fs*i/block_size; // base frequency;
+                }
             }
 
             if (f > 0.0f)
@@ -173,6 +171,30 @@ void analyze_fft(aaxBuffer buffer, char verbose)
                 }
             }
             // end normalization
+
+            if (verbose)
+            {
+                printf(" Buffer sample frequency: %5i Hz\n", fs);
+                printf(" Buffer base frequency  : %5.0f Hz\n", rintf(fb));
+                printf("      Harmonics: ");
+                for (i=2; i<MAX_HARMONICS; ++i) {
+                    printf("%5.0f Hz ", rintf(i*fb));
+                }
+                printf("\n");
+
+                if (verbose > 1)
+                {
+                    for (j=0; j<MAX_WAVES; ++j)
+                    {
+                        printf("      %9s:   ", names[j]);
+                        for (i=2; i<MAX_HARMONICS; ++i) {
+                            printf("%5.3g    ", harmonics[j][i]);
+                        }
+                        printf("\n");
+                    }
+                }
+                printf("\n");
+            }
 
             printf("Frequency\tSignal Level\n");
             printf("---------\t------------\n");
@@ -315,6 +337,12 @@ int main(int argc, char **argv)
             base_freq[1] = 0.0f;
         }
 
+        if (fft)
+        {
+            analyze_fft(buffer, verbose);
+            goto done;
+        }
+
         if (verbose)
         {
             unsigned int start, end, tracks;
@@ -339,12 +367,6 @@ int main(int argc, char **argv)
             end = aaxBufferGetSetup(buffer, AAX_LOOP_END);
             printf(" Buffer loop start:     : %i\n", start);
             printf(" Buffer loop end:       : %i\n", end);
-        }
-
-        if (fft)
-        {
-            analyze_fft(buffer, verbose);
-            goto done;
         }
 
         ofile = getOutputFile(argc, argv, NULL);
