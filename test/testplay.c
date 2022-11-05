@@ -104,6 +104,29 @@ float harmonics[MAX_WAVES][MAX_HARMONICS] =
    { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }
 };
 
+unsigned
+get_pow2(uint32_t n)
+{
+#if defined(__GNUC__)
+    return 1 << (32 -__builtin_clz(n-1));
+#else
+   unsigned y, x = n;
+
+   --x;
+   x |= x >> 16;
+   x |= x >> 8;
+   x |= x >> 4;
+   x |= x >> 2;
+   x |= x >> 1;
+   ++x;
+
+   y = n >> 1;
+   if (y < (x-n)) x >>= 1;
+
+   return x;
+#endif
+}
+
 void analyze_fft(aaxBuffer buffer, char verbose)
 {
     float **data;
@@ -112,13 +135,22 @@ void analyze_fft(aaxBuffer buffer, char verbose)
     data = (float**)aaxBufferGetData(buffer);
     if (data)
     {
-        int no_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
+        int max_samples, no_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
         int fs = aaxBufferGetSetup(buffer, AAX_FREQUENCY);
         float *ffttmp, *fftout, *realin;
         int block_size, size;
 
         // block length
+        max_samples = no_samples;
         block_size = BLOCK_SIZE;
+        if (block_size > no_samples) {
+            block_size = get_pow2(no_samples)/2;
+        }
+        if (block_size < 2048)
+        {
+            printf("\nNot eough data for FFT analysis\n");
+            return;
+        }
 
         size = sizeof(float)*2*(block_size+1);
         realin = pffft_aligned_malloc(size);
@@ -133,7 +165,7 @@ void analyze_fft(aaxBuffer buffer, char verbose)
             memset(fftout, 0, size);
 
             // loop the buffer one block at a time and add all FFT results
-            while (no_samples > block_size)
+            while (no_samples)
             {
                 int conversion_num = _MIN(no_samples, block_size);
 
@@ -174,8 +206,15 @@ void analyze_fft(aaxBuffer buffer, char verbose)
 
             if (verbose)
             {
-                printf(" Buffer sample frequency: %5i Hz\n", fs);
-                printf(" Buffer base frequency  : %5.0f Hz\n", rintf(fb));
+                printf(" Buffer duration: ");
+                f = (float)max_samples/fs;
+                if (f > 1.0f) printf("%14.1f sec\n", f);
+                else if (f > 1e-3f) printf("%14.1f ms\n", 1e3f*f);
+                else printf("%14.1f us\n", 1e6f*f);
+
+                printf(" Buffer number of samples: %5i\n", max_samples);
+                printf(" Buffer sample frequency: %6i Hz\n", fs);
+                printf(" Buffer base frequency  : %6.0f Hz\n", rintf(fb));
                 printf("      Harmonics: ");
                 for (i=2; i<MAX_HARMONICS; ++i) {
                     printf("%5.0f Hz ", rintf(i*fb));
@@ -196,13 +235,17 @@ void analyze_fft(aaxBuffer buffer, char verbose)
                 printf("\n");
             }
 
-            printf("Frequency\tSignal Level\n");
-            printf("---------\t------------\n");
+            printf(" Frequency\tLevel\tHarmonic\n");
+            printf("----------\t-----\t--------\n");
             for (i=0; i<block_size; ++i)
             {
                 float v = fftout[i];
-                if (v*v > 0.01f) {
-                    printf("% 6.1f Hz:\t% 7.2f\n", (float)fs*i/block_size, v);
+                if (v*v > 0.01f)
+                {
+                    float f = (float)fs*i/block_size;
+                    float h = f/fb;
+                    printf("% 6.1f Hz\t% 5.2f\t% 3.2f x %c\n", f, v, h,
+                           (h == (int)h) ? '*' : ' ');
                 }
             }
 
