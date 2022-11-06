@@ -104,7 +104,7 @@ float harmonics[MAX_WAVES][MAX_HARMONICS] =
    { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }
 };
 
-unsigned
+inline unsigned
 get_pow2(uint32_t n)
 {
 #if defined(__GNUC__)
@@ -127,7 +127,18 @@ get_pow2(uint32_t n)
 #endif
 }
 
-void analyze_fft(aaxBuffer buffer, char verbose)
+inline float
+note2freq(uint32_t d) {
+    return 440.0f*powf(2.0f, ((float)d-69.0f)/12.0f);
+}
+
+inline uint32_t
+freq2note(float f) {
+    return roundf(12.0f*(logf(f/440.0f)/logf(2.0f))+69.0f);
+}
+
+void
+analyze_fft(aaxBuffer buffer, char verbose)
 {
     float **data;
 
@@ -159,13 +170,13 @@ void analyze_fft(aaxBuffer buffer, char verbose)
         if (realin && fftout && ffttmp)
         {
             PFFFT_Setup *fft = pffft_new_setup(block_size, PFFFT_REAL);
-            float f, fb = 0.0f;
+            float f, fn, fb = 0.0f;
             int i, j;
 
             memset(fftout, 0, size);
 
             // loop the buffer one block at a time and add all FFT results
-            while (no_samples)
+            while (no_samples > block_size)
             {
                 int conversion_num = _MIN(no_samples, block_size);
 
@@ -204,6 +215,7 @@ void analyze_fft(aaxBuffer buffer, char verbose)
             }
             // end normalization
 
+            fn = note2freq(freq2note(fb));
             if (verbose)
             {
                 printf(" Buffer duration: ");
@@ -214,10 +226,12 @@ void analyze_fft(aaxBuffer buffer, char verbose)
 
                 printf(" Buffer number of samples: %5i\n", max_samples);
                 printf(" Buffer sample frequency: %6i Hz\n", fs);
-                printf(" Buffer base frequency  : %6.0f Hz\n", rintf(fb));
+                printf(" Buffer base frequency  : %6.0f Hz\n", roundf(fb));
+                printf(" Closest musical note   : %11.4f Hz\n", fn);
+
                 printf("      Harmonics: ");
                 for (i=2; i<MAX_HARMONICS; ++i) {
-                    printf("%5.0f Hz ", rintf(i*fb));
+                    printf("%5.0f Hz ", roundf(i*fn));
                 }
                 printf("\n");
 
@@ -243,9 +257,9 @@ void analyze_fft(aaxBuffer buffer, char verbose)
                 if (v*v > 0.01f)
                 {
                     float f = (float)fs*i/block_size;
-                    float h = f/fb;
-                    printf("%7.1f Hz\t%-5.2g\t% 3.2f x %c\n", f, v, h,
-                           (h == (int)h) ? '*' : ' ');
+                    float h = f/fn;
+                    printf("%7.1f Hz\t%-5.2g\t% 6.2f x %c\n", f, v, h,
+                           (fabsf(h -roundf(h)) < 0.005f) ? '*' : ' ');
                 }
             }
 
