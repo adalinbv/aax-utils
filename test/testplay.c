@@ -236,7 +236,7 @@ void analyze_fft(aaxBuffer buffer, char verbose)
             }
 
             printf(" Frequency\tLevel\tHarmonic\n");
-            printf("----------\t-----\t--------\n");
+            printf("-----------\t-----\t--------\n");
             for (i=0; i<block_size; ++i)
             {
                 float v = fftout[i];
@@ -244,7 +244,7 @@ void analyze_fft(aaxBuffer buffer, char verbose)
                 {
                     float f = (float)fs*i/block_size;
                     float h = f/fb;
-                    printf("% 6.1f Hz\t% 5.2f\t% 3.2f x %c\n", f, v, h,
+                    printf("%7.1f Hz\t%-5.2g\t% 3.2f x %c\n", f, v, h,
                            (h == (int)h) ? '*' : ' ');
                 }
             }
