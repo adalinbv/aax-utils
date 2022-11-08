@@ -67,16 +67,16 @@ void help()
 
     printf("\nOptions:\n");
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
-    printf("  -f, --frequency <freq>\tplayback frequency\n");
+    printf("  -f, --frequency <freq>\tset the playback frequency\n");
     printf("      --fft\t\t\tdo FFT analysis\n");
-    printf("      --fm\t\t\tuse FM playback mode\n");
+    printf("      --fm\t\t\tuse FM playback mode (aaxs only)\n");
     printf("  -g, --gain <v>[:<dt>[-<v>..]\tchange the gain setting\n");
     printf("  -i, --input <file>\t\tplayback audio from a file\n");
-    printf("  -n, --note <note>\t\ttSet the playback frequrncy based on the note\n");
+    printf("  -n, --note <note>\t\tset the playback note\n");
     printf("  -o, --output <file>\t\talso write to an audio file (optional)\n");
     printf("      --repeat <num>\t\tset the number of repeats\n");
-    printf("      --velocity <value>\tset the note velocity\n");
-    printf("  -p, --pitch <pitch>\t\tSet the playback pitch\n");
+    printf("      --velocity <vel>\t\tset the note velocity\n");
+    printf("  -p, --pitch <pitch>\t\tset the playback pitch\n");
     printf("  -v, --verbose [<level>]\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
 
