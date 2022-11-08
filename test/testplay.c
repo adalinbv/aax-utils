@@ -34,6 +34,7 @@
 #endif
 
 #include <stdio.h>
+#include <ctype.h>
 #include <math.h>
 #include <stdlib.h>	// atof, getenv
 
@@ -67,10 +68,11 @@ void help()
     printf("\nOptions:\n");
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
     printf("  -f, --frequency <freq>\tplayback frequency\n");
-    printf("      --fft\t\tdo FFT analysis\n");
+    printf("      --fft\t\t\tdo FFT analysis\n");
     printf("      --fm\t\t\tuse FM playback mode\n");
     printf("  -g, --gain <v>[:<dt>[-<v>..]\tchange the gain setting\n");
     printf("  -i, --input <file>\t\tplayback audio from a file\n");
+    printf("  -n, --note <note>\t\ttSet the playback frequrncy based on the note\n");
     printf("  -o, --output <file>\t\talso write to an audio file (optional)\n");
     printf("      --repeat <num>\t\tset the number of repeats\n");
     printf("      --velocity <value>\tset the note velocity\n");
@@ -127,7 +129,7 @@ get_pow2(uint32_t n)
 #endif
 }
 
-inline float
+float
 note2freq(uint32_t d) {
     return 440.0f*powf(2.0f, ((float)d-69.0f)/12.0f);
 }
@@ -135,6 +137,39 @@ note2freq(uint32_t d) {
 inline uint32_t
 freq2note(float f) {
     return roundf(12.0f*(logf(f/440.0f)/logf(2.0f))+69.0f);
+}
+
+uint32_t
+tone2note(const char *t)
+{
+    uint32_t rv = 0;
+
+    if (strlen(t) >= 2)
+    {
+        int letter, accidental, octave;
+
+        letter = toupper(*t++);
+        accidental = (*t == '#') ? 1 : 0;
+        if (accidental) t++;
+        octave = atoi(t);
+
+        rv = ((letter - 65) + 5) % 7;
+        switch (rv)
+        {
+        case 0:
+        case 1: 
+        case 2: rv *= 2; break;
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7: rv = 2*rv-1; break;
+        }
+        rv += accidental;
+        rv += (octave+2)*12;
+    }
+
+    return rv;
 }
 
 void
@@ -285,6 +320,7 @@ int main(int argc, char **argv)
     char fft = 0;
     char fm = 0;
     char *env;
+    int note;
     int res;
 
     if (argc == 1 || getCommandLineOption(argc, argv, "-h") ||
@@ -298,6 +334,12 @@ int main(int argc, char **argv)
     if (env) {
         verbose = atoi(env);
         if (!verbose) verbose = 1;
+    }
+
+    env = getCommandLineOption(argc, argv, "-n");
+    if (!env) env = getCommandLineOption(argc, argv, "--note");
+    if (env) {
+        note = tone2note(env);
     }
 
     if (getCommandLineOption(argc, argv, "--repeat")) {
@@ -402,7 +444,8 @@ int main(int argc, char **argv)
 
         if (verbose)
         {
-            unsigned int start, end, tracks;
+            unsigned int start, end, tracks, max_samples;
+            float f, fs;
 
             if (reffile) {
                 printf("Reference file: %s\n", reffile);
@@ -411,6 +454,7 @@ int main(int argc, char **argv)
                 printf(" Buffer base frequency  : %5i Hz\n", base_freq[1]);
                 printf("\n");
             }
+
             printf("Base file: %s\n", infile);
             printf(" Buffer sample frequency: %5i Hz\n",
                     aaxBufferGetSetup(buffer, AAX_FREQUENCY));
@@ -424,6 +468,17 @@ int main(int argc, char **argv)
             end = aaxBufferGetSetup(buffer, AAX_LOOP_END);
             printf(" Buffer loop start:     : %i\n", start);
             printf(" Buffer loop end:       : %i\n", end);
+
+            max_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
+            printf(" Buffer no. samples     : %5i\n", max_samples);
+
+            fs = (float)aaxBufferGetSetup(buffer, AAX_FREQUENCY);
+            f = fs/max_samples;
+            printf(" Buffer duration        : ");
+            f = (float)max_samples/fs;
+            if (f > 1.0f) printf("%5.1f sec\n", f);
+            else if (f > 1e-3f) printf("%5.1f ms\n", 1e3f*f);
+            else printf("%5.1f us\n", 1e6f*f);
         }
 
         ofile = getOutputFile(argc, argv, NULL);
@@ -467,7 +522,11 @@ int main(int argc, char **argv)
             /* pitch */
             pitch_time = SLIDE_TIME;
             pitch[0] = pitch[1] = 1.0f;
-            freq = getFrequency(argc, argv);
+            if (note) {
+                freq = note2freq(note);
+            } else {
+                freq = getFrequency(argc, argv);
+            }
             if (freq == 0.0f)
             {
                 pitch[0] = getPitch(argc, argv);
