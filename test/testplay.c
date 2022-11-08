@@ -154,17 +154,10 @@ tone2note(const char *t)
         octave = atoi(t);
 
         rv = ((letter - 65) + 5) % 7;
-        switch (rv)
-        {
-        case 0:
-        case 1: 
-        case 2: rv *= 2; break;
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7: rv = 2*rv-1; break;
-        }
+
+        rv = 2*(((letter - 65) + 5) % 7);
+        if (rv > 4) --rv;
+
         rv += accidental;
         rv += (octave+2)*12;
     }
@@ -336,6 +329,7 @@ int main(int argc, char **argv)
         if (!verbose) verbose = 1;
     }
 
+    note = 0;
     env = getCommandLineOption(argc, argv, "-n");
     if (!env) env = getCommandLineOption(argc, argv, "--note");
     if (env) {
