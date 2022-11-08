@@ -148,18 +148,24 @@ tone2note(const char *t)
     {
         int letter, accidental, octave;
 
-        letter = toupper(*t++);
-        accidental = (*t == '#') ? 1 : 0;
-        if (accidental) t++;
-        octave = atoi(t);
+        if (isalpha(*t))
+        {
+            letter = toupper(*t++);
+            accidental = (*t == '#') ? 1 : 0;
+            if (accidental) t++;
+            octave = atoi(t);
 
-        rv = ((letter - 65) + 5) % 7;
+            rv = ((letter - 65) + 5) % 7;
 
-        rv = 2*(((letter - 65) + 5) % 7);
-        if (rv > 4) --rv;
+            rv = 2*(((letter - 65) + 5) % 7);
+            if (rv > 4) --rv;
 
-        rv += accidental;
-        rv += (octave+2)*12;
+            rv += accidental;
+            rv += (octave+2)*12;
+        }
+        else {
+           rv = atoi(t);
+        }
     }
 
     return rv;
