@@ -264,8 +264,8 @@ analyze_fft(aaxBuffer buffer, char verbose)
                 printf(" Closest musical note   : %11.4f Hz\n", fn);
 
                 printf("      Harmonics: ");
-                for (i=2; i<MAX_HARMONICS; ++i) {
-                    printf("%5.0f Hz ", roundf(i*fn));
+                for (i=1; i<MAX_HARMONICS; ++i) {
+                    printf("%4.0f Hz ", roundf(i*fn));
                 }
                 printf("\n");
 
@@ -274,8 +274,8 @@ analyze_fft(aaxBuffer buffer, char verbose)
                     for (j=0; j<MAX_WAVES; ++j)
                     {
                         printf("      %9s:   ", names[j]);
-                        for (i=2; i<MAX_HARMONICS; ++i) {
-                            printf("%5.3g    ", harmonics[j][i]);
+                        for (i=1; i<MAX_HARMONICS; ++i) {
+                            printf("%5.3g   ", harmonics[j][i]);
                         }
                         printf("\n");
                     }
