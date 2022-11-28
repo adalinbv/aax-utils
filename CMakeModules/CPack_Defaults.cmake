@@ -156,8 +156,8 @@ else(WIN32)
           COMPONENT Headers
   )
 
-  EXECUTE_PROCESS(COMMAND "cp" -f -p ChangeLog debian/ChangeLog
-                  COMMAND "gzip" -f -9 debian/ChangeLog
+  EXECUTE_PROCESS(COMMAND "cp" -f -p ChangeLog admin/debian/ChangeLog
+                  COMMAND "gzip" -f -9 admin/debian/ChangeLog
                  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR} RESULT_VARIABLE varRes)
   INSTALL(FILES
           admin/debian/ChangeLog.gz
