@@ -72,6 +72,8 @@ void help()
     printf("      --fm\t\t\tuse FM playback mode (aaxs only)\n");
     printf("  -g, --gain <v>[:<dt>[-<v>..]\tchange the gain setting\n");
     printf("  -i, --input <file>\t\tplayback audio from a file\n");
+    printf("      --key-on <file>\t\tSet the key-on sample file\n");
+    printf("      --key-off <file>\t\tSet the key-off sample file\n");
     printf("  -n, --note <note>\t\tset the playback note\n");
     printf("  -o, --output <file>\t\talso write to an audio file (optional)\n");
     printf("      --repeat <num>\t\tset the number of repeats\n");
@@ -232,7 +234,8 @@ analyze_fft(aaxBuffer buffer, char verbose)
 
             // start normalization
             f = 0.0f;
-            for (i=0; i<block_size; ++i) {
+            for (i=0; i<block_size; ++i)
+            {
                 if (f < fabsf(fftout[i]))
                 {
                     f = fabsf(fftout[i]);
@@ -309,7 +312,10 @@ analyze_fft(aaxBuffer buffer, char verbose)
 
 int main(int argc, char **argv)
 {
-    char *devname, *infile, *reffile = NULL;
+    char *devname, *infile;
+    char *key_on_file = NULL;
+    char *key_off_file = NULL;
+    char *reffile = NULL;
     aaxConfig config;
     float velocity;
     float fraction;
@@ -330,7 +336,8 @@ int main(int argc, char **argv)
 
     env = getCommandLineOption(argc, argv, "-v");
     if (!env) env = getCommandLineOption(argc, argv, "--verbose");
-    if (env) {
+    if (env)
+    {
         verbose = atoi(env);
         if (!verbose) verbose = 1;
     }
@@ -361,6 +368,9 @@ int main(int argc, char **argv)
         velocity = 1.0f/1.27f;
     }
 
+    key_on_file = getCommandLineOption(argc, argv, "--key-on");
+    key_off_file = getCommandLineOption(argc, argv, "--key-off");
+
 //  reffile = getCommandLineOption(argc, argv, "--reference");
 //  if (!reffile) reffile = getCommandLineOption(argc, argv, "-r");
 //  if (!reffile) reffile = getenv("AAX_REFERENCE_FILE");
@@ -372,6 +382,7 @@ int main(int argc, char **argv)
 
     if (config)
     {
+        aaxBuffer key_on_buffer = NULL, key_off_buffer = NULL;
         aaxBuffer buffer, refbuf = NULL;
         char *ofile;
 
@@ -384,6 +395,9 @@ int main(int argc, char **argv)
 
         buffer = aaxBufferReadFromStream(config, infile);
         testForError(buffer, "Unable to create a buffer");
+
+        key_on_buffer = aaxBufferReadFromStream(config, key_on_file);
+        key_off_buffer = aaxBufferReadFromStream(config, key_off_file);
 
         if (verbose)
         {
@@ -447,7 +461,8 @@ int main(int argc, char **argv)
             unsigned int start, end, tracks, max_samples;
             float f, fs;
 
-            if (reffile) {
+            if (reffile)
+            {
                 printf("Reference file: %s\n", reffile);
                 printf(" Buffer sample frequency: %5i Hz\n",
                         aaxBufferGetSetup(refbuf, AAX_FREQUENCY));
@@ -487,6 +502,7 @@ int main(int argc, char **argv)
             float envelope[MAX_STAGES+1], envelope_step, envelope_time;
             float prevgain, gain;
             float freq, pitch[2], pitch2, pitch_time;
+            aaxEmitter key_on = NULL, key_off = NULL;
             aaxEmitter e, emitter, refem = NULL;
             int i, stage, max_stages, state, key;
             int paused = AAX_FALSE;
@@ -504,7 +520,8 @@ int main(int argc, char **argv)
             /* envelope */
             stage = 0;
             max_stages = 0;
-            for (i=0; i<MAX_STAGES+1; ++i) {
+            for (i=0; i<MAX_STAGES+1; ++i)
+            {
                envelope[i] = getEnvelopeStage(argc, argv, i);
                if (envelope[i] > 0.0f) max_stages++;
             }
@@ -564,13 +581,15 @@ int main(int argc, char **argv)
                 }
 
                 printf("Playback pitch    : %5.1f", pitch[0]);
-                if (pitch2) {
+                if (pitch2)
+                {
                     printf("    to % .1f,     duration: %3.1f sec.\n",
                               pitch2, pitch_time);
                 } else printf("\n");
 
                 printf("Playback frequency: %5.1f Hz", pitch[0]*base_freq[0]);
-                if (pitch2 != 0.0f) {
+                if (pitch2 != 0.0f)
+                {
                     printf(" to %5.1f Hz, duration: %3.1f sec.\n",
                               pitch2*base_freq[0], pitch_time);
                 } else printf("\n");
@@ -676,6 +695,65 @@ int main(int argc, char **argv)
             }
             testForState(res, "aaxEmitterAddBuffer");
 
+            /** Key-On and Key-Off */
+            if (key_on_buffer)
+            {   
+                key_on = aaxEmitterCreate();
+                testForError(emitter, "Unable to create a new key-on emitter");
+
+                res = aaxEmitterSetMatrix64(key_on, mtx64);
+                testForState(res, "key-on aaxEmitterSetMatrix64");
+
+                res = aaxEmitterSetMode(key_on, AAX_POSITION, AAX_ABSOLUTE);
+                testForState(res, "Unable to set key-on emitter mode");
+
+                res = aaxEmitterAddBuffer(key_on, key_on_buffer);
+                testForState(res, "aaxEmitterAddBuffer key-on");
+
+                /* pitch */
+                effect = aaxEffectCreate(config, AAX_PITCH_EFFECT);
+                testForError(effect, "Unable to create the pitch effect");
+
+                res = aaxEffectSetParam(effect, AAX_PITCH, AAX_LINEAR,
+                                                pitch[0]);
+                testForState(res, "aaxEffectSetParam");
+
+                res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
+                testForState(res, "aaxEffectSetState");
+
+                res = aaxEmitterSetEffect(key_on, effect);
+                testForState(res, "aaxEmitterSetPitch");
+            }   
+
+            if (key_off_buffer)
+            {
+                key_off = aaxEmitterCreate();
+                testForError(emitter, "Unable to create a new key-off emitter");
+
+                res = aaxEmitterSetMatrix64(key_off, mtx64);
+                testForState(res, "key-off aaxEmitterSetMatrix64");
+
+                res = aaxEmitterSetMode(key_off, AAX_POSITION, AAX_ABSOLUTE);
+                testForState(res, "Unable to set key-off emitter mode");
+
+                res = aaxEmitterAddBuffer(key_off, key_off_buffer);
+                testForState(res, "aaxEmitterAddBuffer key-off");
+
+                /* pitch */
+                effect = aaxEffectCreate(config, AAX_PITCH_EFFECT);
+                testForError(effect, "Unable to create the pitch effect");
+
+                res = aaxEffectSetParam(effect, AAX_PITCH, AAX_LINEAR,
+                                                pitch[0]);
+                testForState(res, "aaxEffectSetParam");
+
+                res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
+                testForState(res, "aaxEffectSetState");
+
+                res = aaxEmitterSetEffect(key_off, effect);
+                testForState(res, "aaxEmitterSetPitch");
+            }
+
             /** audio-frame */
             res = aaxMixerSetState(config, AAX_INITIALIZED);
             testForState(res, "aaxMixerInit");
@@ -707,7 +785,19 @@ int main(int argc, char **argv)
             if (reffile)
             {
                 res = aaxAudioFrameRegisterEmitter(frame, refem);
-                testForState(res, "aaxAudioFrameRegisterEmitter");
+                testForState(res, "aaxAudioFrameRegisterEmitter reference");
+            }
+
+            if (key_on_buffer)
+            {
+                res = aaxAudioFrameRegisterEmitter(frame, key_on);
+                testForState(res, "aaxAudioFrameRegisterEmitter key-on");
+            }
+
+            if (key_off_buffer)
+            {
+                res = aaxAudioFrameRegisterEmitter(frame, key_off);
+                testForState(res, "aaxAudioFrameRegisterEmitter key-off");
             }
 
             /** sensor settings */
@@ -744,6 +834,14 @@ int main(int argc, char **argv)
                 testForState(res, "aaxEmitterinit");
                 res = aaxEmitterSetState(emitter, AAX_PLAYING);
                 testForState(res, "aaxEmitterStart");
+
+                if (key_on_buffer)
+                {
+                    res = aaxEmitterSetState(key_on, AAX_INITIALIZED);
+                    testForState(res, "aaxEmitterinit key-on");
+                    res = aaxEmitterSetState(key_on, AAX_PLAYING);
+                    testForState(res, "aaxEmitterStart key-on");
+                }
             }
 
             dt = (float)aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
@@ -876,8 +974,17 @@ int main(int argc, char **argv)
                     }
                     else if (key == ESCAPE_KEY) {
                         break;
-                    } else {
+                    }
+                    else
+                    {
                         aaxEmitterSetState(emitter, AAX_STOPPED);
+                        if (key_off_buffer)
+                        {
+                            res = aaxEmitterSetState(key_off, AAX_INITIALIZED);
+                            testForState(res, "aaxEmitterinit key-off");
+                            res = aaxEmitterSetState(key_off, AAX_PLAYING);
+                            testForState(res, "aaxEmitterStart key-off");
+                        }
                     }
                 }
 
