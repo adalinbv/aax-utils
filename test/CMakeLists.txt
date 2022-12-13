@@ -12,6 +12,7 @@ ENDFUNCTION()
 
 CREATE_TEST(testcapture)
 CREATE_TEST(testplay)
+CREATE_TEST(testplay_simple)
 CREATE_TEST(testplay_multi)
 CREATE_TEST(teststreamed_aaxs)
 CREATE_TEST(testmultiplay)
