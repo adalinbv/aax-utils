@@ -48,7 +48,18 @@
   </effect>
  </emitter>
 
- <audioframe pan="-0.2"/>
+ <audioframe pan="-0.2">
+  <filter type="equalizer">
+   <slot n="0">
+    <param n="0">436.5</param>
+    <param n="1">0.1</param>
+    <param n="2">1.0</param>
+    <param n="3">1.0</param>
+   </slot>
+  </filter>
+ </audioframe>
+
+ <mixer/>
 
  <mixer/>
 
