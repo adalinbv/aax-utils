@@ -37,6 +37,7 @@
 #include <ctype.h>
 #include <math.h>
 #include <stdlib.h>	// atof, getenv
+#include <string.h>	// memcpy
 
 #include <aax/aax.h>
 
@@ -108,7 +109,7 @@ float harmonics[MAX_WAVES][MAX_HARMONICS] =
    { 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f }
 };
 
-inline unsigned
+unsigned
 get_pow2(uint32_t n)
 {
 #if defined(__GNUC__)
@@ -136,7 +137,7 @@ note2freq(uint32_t d) {
     return 440.0f*powf(2.0f, ((float)d-69.0f)/12.0f);
 }
 
-inline uint32_t
+uint32_t
 freq2note(float f) {
     return roundf(12.0f*(logf(f/440.0f)/logf(2.0f))+69.0f);
 }
