@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>	// atof
 
 #include <aax/aax.h>
 
