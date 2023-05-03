@@ -42,19 +42,18 @@
 #include "driver.h"
 #include "wavfile.h"
 
-#define ENABLE_EMITTER_PHASING		1
-#define ENABLE_EMITTER_CHORUS		1
-#define ENABLE_EMITTER_FLANGING		1
-#define ENABLE_EMITTER_FREQFILTER	1
+#define ENABLE_FRAME_PHASING		1
+#define ENABLE_FRAME_CHORUS		1
+#define ENABLE_FRAME_FLANGING		1
+#define ENABLE_FRAME_FREQFILTER		1
 
 #define FILE_PATH			SRC_PATH"/tictac.wav"
 #define _DELAY				120
-#define DELAY                           \
+#define DELAY				\
     deg = 0; set_mode(1);		\
     while(deg < _DELAY) { msecSleep(50); deg++; \
         if(get_key()) { set_mode(0); exit(0); } \
     }; set_mode(0);
-
 
 int main(int argc, char **argv)
 {
@@ -140,36 +139,33 @@ int main(int argc, char **argv)
             res = aaxEmitterSetState(emitter, AAX_PLAYING);
             testForState(res, "aaxEmitterStart");
 
-#if 0
-# if ENABLE_EMITTER_FLANGING
-            /* flanging effect */
-            printf("emitter flanging.. (envelope following)\n");
-            effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
+# if ENABLE_FRAME_CHORUS
+            /* chorus effect */
+            printf("frame chorus..\n");
+#if 1
+            effect = aaxAudioFrameGetEffect(frame, AAX_CHORUS_EFFECT);
+#else
+            effect = aaxEffectCreate(config, AAX_CHORUS_EFFECT);
+#endif
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                              0.7f, 0.7f, 0.5f, 0.0f);
-            res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
-            res = aaxEmitterSetEffect(emitter, effect);
+                                             -0.6f, 0.0f, 0.0f, 0.03f);
+            res = aaxEffectSetState(effect, AAX_CONSTANT_VALUE);
+            res = aaxAudioFrameSetEffect(frame, effect);
             res = aaxEffectDestroy(effect);
-            testForError(effect, "aaxEffectDestroy");
+            testForError(effect, "aaxEffectCreate");
 
             DELAY;
-
-            effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
-            res = aaxEffectSetState(effect, AAX_FALSE);
-            res = aaxEmitterSetEffect(emitter, effect);
-            res = aaxEffectDestroy(effect);
-            testForError(effect, "aaxEffect Destroy");
 # endif
 
-# if ENABLE_EMITTER_PHASING
+# if ENABLE_FRAME_PHASING
             /* phasing effect */
-            printf("emitter phasing.. (envelope following)\n");
+            printf("frame phasing.. (envelope following)\n");
             effect = aaxEffectCreate(config, AAX_PHASING_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               1.0f, 1.0f, 1.0f, 0.0f);
             res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
             testForState(res, "aaxEffectCreate");
-            res = aaxEmitterSetEffect(emitter, effect);
+            res = aaxAudioFrameSetEffect(frame, effect);
             res = aaxEffectDestroy(effect);
             testForState(res, "aaxEmitterSetEffect");
 
@@ -178,47 +174,66 @@ int main(int argc, char **argv)
             printf("no effect\n");
 #endif
 
-# if ENABLE_EMITTER_CHORUS
+# if 0 && ENABLE_FRAME_CHORUS
             /* chorus effect */
-            printf("emitter chorus.. (envelope following)\n");
-            effect = aaxEmitterGetEffect(emitter, AAX_CHORUS_EFFECT);
+            printf("frame chorus.. (envelope following)\n");
+            effect = aaxAudioFrameGetEffect(frame, AAX_CHORUS_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               1.0f, 0.8f, 1.0f, 0.0f);
             res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
-            res = aaxEmitterSetEffect(emitter, effect);
+            res = aaxAudioFrameSetEffect(frame, effect);
             res = aaxEffectDestroy(effect);
             testForError(effect, "aaxEffectCreate");
 
             DELAY;
 # endif
-#endif
 
-            /* emitter effects */
+# if ENABLE_FRAME_FLANGING
+            /* flanging effect */
+            printf("frame flanging.. (envelope following)\n");
+            effect = aaxAudioFrameGetEffect(frame, AAX_FLANGING_EFFECT);
+            res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
+                                              0.7f, 0.7f, 0.5f, 0.0f);
+            res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
+            res = aaxAudioFrameSetEffect(frame, effect);
+            res = aaxEffectDestroy(effect);
+            testForError(effect, "aaxEffectDestroy");
+
+            DELAY;
+
+            effect = aaxAudioFrameGetEffect(frame, AAX_FLANGING_EFFECT);
+            res = aaxEffectSetState(effect, AAX_FALSE);
+            res = aaxAudioFrameSetEffect(frame, effect);
+            res = aaxEffectDestroy(effect);
+            testForError(effect, "aaxEffect Destroy");
+# endif
+
+            /* frame effects */
             for (q=0; q<2; q++)
             {
-# if ENABLE_EMITTER_FREQFILTER
+# if ENABLE_FRAME_FREQFILTER
                 if (q == 1)
                 {
                     /* frequency filter; 4000Hz lowpass */
-                    printf("emitter frequency filter at 4000 Hz lowpass\n");
+                    printf("frame frequency filter at 4000 Hz lowpass\n");
                     filter = aaxFilterCreate(config, AAX_FREQUENCY_FILTER);
                     res = aaxFilterSetSlot(filter, 0, AAX_LINEAR,
                                                     400.0f, 1.0f, 0.0f, 0.0f);
                     res = aaxFilterSetState(filter, AAX_TRUE);
-                    res = aaxEmitterSetFilter(emitter, filter);
+                    res = aaxAudioFrameSetFilter(frame, filter);
                     res = aaxFilterDestroy(filter);
                     testForError(filter, "aaxFilterCreate");
                 }
 # endif
 
-# if ENABLE_EMITTER_FLANGING
+# if ENABLE_FRAME_FLANGING
                 /* flanging effect */
-                printf("emitter flanging.. (sine wave)\n");
+                printf("frame flanging.. (sine wave)\n");
                 effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
                 res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                                   0.8f, 0.9f, 0.5f, 0.0f);
                 res = aaxEffectSetState(effect, AAX_SINE_WAVE);
-                res = aaxEmitterSetEffect(emitter, effect);
+                res = aaxAudioFrameSetEffect(frame, effect);
                 res = aaxEffectDestroy(effect);
                 testForError(effect, "aaxEffectCreate");
 
@@ -226,51 +241,50 @@ int main(int argc, char **argv)
 
                 effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
                 res = aaxEffectSetState(effect, AAX_FALSE);
-                res = aaxEmitterSetEffect(emitter, effect);
+                res = aaxAudioFrameSetEffect(frame, effect);
                 res = aaxEffectDestroy(effect);
                 testForError(effect, "aaxEffect Disable");
 # endif
 
-
-# if ENABLE_EMITTER_PHASING
+# if ENABLE_FRAME_PHASING
                 /* phasing effect */
-                printf("emitter phasing.. (triangle wave)\n");
+                printf("frame phasing.. (triangle wave)\n");
                 effect = aaxEffectCreate(config, AAX_PHASING_EFFECT);
                 res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                                   1.0f, 0.2f, 1.0f, 0.4f);
                 res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
                 testForError(effect, "aaxEffectCreate");
-                res = aaxEmitterSetEffect(emitter, effect);
+                res = aaxAudioFrameSetEffect(frame, effect);
                 res = aaxEffectDestroy(effect);
                 testForState(res, "aaxEmitterSetEffect");
 
                 DELAY;
-# else
-                printf("no effect\n");
+#else
+            printf("no effect\n");
+#endif
+
+# if 0 && ENABLE_FRAME_CHORUS
+            /* chorus effect */
+            printf("frame chorus.. (sine wave)\n");
+            effect = aaxEmitterGetEffect(emitter, AAX_CHORUS_EFFECT);
+            res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
+                                              1.0f, 2.5f, 1.0f, 0.0f);
+            res = aaxEffectSetState(effect, AAX_SINE_WAVE);
+            res = aaxAudioFrameSetEffect(frame, effect);
+            res = aaxEffectDestroy(effect);
+            testForError(effect, "aaxEffectCreate");
+
+            DELAY;
 # endif
 
-# if ENABLE_EMITTER_CHORUS
-                /* chorus effect */
-                printf("emitter chorus.. (sine wave)\n");
-                effect = aaxEmitterGetEffect(emitter, AAX_CHORUS_EFFECT);
-                res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                              0.4f, 2.5f, 1.0f, 0.0f);
-                res = aaxEffectSetState(effect, AAX_SINE_WAVE);
-                res = aaxEmitterSetEffect(emitter, effect);
-                res = aaxEffectDestroy(effect);
-                testForError(effect, "aaxEffectCreate");
-
-                DELAY;
-# endif
-
-# if ENABLE_EMITTER_FLANGING
+# if ENABLE_FRAME_FLANGING
                 /* flanging effect */
-                printf("emitter flanging.. (triangle wave)\n");
+                printf("frame flanging.. (triangle wave)\n");
                 effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
                 res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               0.85f, 0.8f, 1.0f, 0.0f);
                 res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
-                res = aaxEmitterSetEffect(emitter, effect);
+                res = aaxAudioFrameSetEffect(frame, effect);
                 res = aaxEffectDestroy(effect);
                 testForError(effect, "aaxEffectCreate");
 
@@ -279,16 +293,16 @@ int main(int argc, char **argv)
             }
 
             /* disable delay effects */
-            effect = aaxEmitterGetEffect(emitter, AAX_PHASING_EFFECT);
+            effect = aaxAudioFrameGetEffect(frame, AAX_PHASING_EFFECT);
             res = aaxEffectSetState(effect, AAX_FALSE);
-            res = aaxEmitterSetEffect(emitter, effect);
+            res = aaxAudioFrameSetEffect(frame, effect);
             res = aaxEffectDestroy(effect);
             testForError(effect, "aaxEffectCreate");
 
             /* disbale frequency filter */
-            filter = aaxEmitterGetFilter(emitter, AAX_FREQUENCY_FILTER);
+            filter = aaxAudioFrameGetFilter(frame, AAX_FREQUENCY_FILTER);
             res = aaxFilterSetState(filter, AAX_FALSE);
-            res = aaxEmitterSetFilter(emitter, filter);
+            res = aaxAudioFrameSetFilter(frame, filter);
             res = aaxFilterDestroy(filter);
             testForError(filter, "aaxFilterCreate");
 

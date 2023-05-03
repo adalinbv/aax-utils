@@ -42,10 +42,10 @@
 #include "driver.h"
 #include "wavfile.h"
 
-#define ENABLE_EMITTER_PHASING		1
-#define ENABLE_EMITTER_CHORUS		1
-#define ENABLE_EMITTER_FLANGING		1
-#define ENABLE_EMITTER_FREQFILTER	1
+#define ENABLE_MIXER_PHASING		1
+#define ENABLE_MIXER_CHORUS		1
+#define ENABLE_MIXER_FLANGING		1
+
 
 #define FILE_PATH			SRC_PATH"/tictac.wav"
 #define _DELAY				120
@@ -54,7 +54,6 @@
     while(deg < _DELAY) { msecSleep(50); deg++; \
         if(get_key()) { set_mode(0); exit(0); } \
     }; set_mode(0);
-
 
 int main(int argc, char **argv)
 {
@@ -140,157 +139,50 @@ int main(int argc, char **argv)
             res = aaxEmitterSetState(emitter, AAX_PLAYING);
             testForState(res, "aaxEmitterStart");
 
-#if 0
-# if ENABLE_EMITTER_FLANGING
-            /* flanging effect */
-            printf("emitter flanging.. (envelope following)\n");
-            effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
-            res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                              0.7f, 0.7f, 0.5f, 0.0f);
-            res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
-            res = aaxEmitterSetEffect(emitter, effect);
-            res = aaxEffectDestroy(effect);
-            testForError(effect, "aaxEffectDestroy");
-
-            DELAY;
-
-            effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
-            res = aaxEffectSetState(effect, AAX_FALSE);
-            res = aaxEmitterSetEffect(emitter, effect);
-            res = aaxEffectDestroy(effect);
-            testForError(effect, "aaxEffect Destroy");
-# endif
-
-# if ENABLE_EMITTER_PHASING
+# if ENABLE_MIXER_PHASING
             /* phasing effect */
-            printf("emitter phasing.. (envelope following)\n");
-            effect = aaxEffectCreate(config, AAX_PHASING_EFFECT);
+            printf("mixer phasing.. (square wave)\n");
+            effect = aaxMixerGetEffect(config, AAX_PHASING_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                              1.0f, 1.0f, 1.0f, 0.0f);
-            res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
-            testForState(res, "aaxEffectCreate");
-            res = aaxEmitterSetEffect(emitter, effect);
+                                              1.0f, 0.5f, 1.0f, 0.0f);
+            res = aaxEffectSetState(effect, AAX_SQUARE_WAVE);
+            testForError(effect, "aaxEffectCreate");
+            res = aaxMixerSetEffect(config, effect);
             res = aaxEffectDestroy(effect);
-            testForState(res, "aaxEmitterSetEffect");
+            testForState(res, "aaxMixerSetEffect");
 
             DELAY;
-#else
-            printf("no effect\n");
-#endif
+# endif
 
-# if ENABLE_EMITTER_CHORUS
+# if ENABLE_MIXER_CHORUS
             /* chorus effect */
-            printf("emitter chorus.. (envelope following)\n");
-            effect = aaxEmitterGetEffect(emitter, AAX_CHORUS_EFFECT);
+            printf("mixer chorus.. (sawtooth wave)\n");
+            effect = aaxMixerGetEffect(config, AAX_CHORUS_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                              1.0f, 0.8f, 1.0f, 0.0f);
-            res = aaxEffectSetState(effect, AAX_ENVELOPE_FOLLOW);
-            res = aaxEmitterSetEffect(emitter, effect);
-            res = aaxEffectDestroy(effect);
+                                              1.0f, 2.5f, 1.0f, 0.0f);
+            res = aaxEffectSetState(effect, AAX_SAWTOOTH_WAVE);
             testForError(effect, "aaxEffectCreate");
+            res = aaxMixerSetEffect(config, effect);
+            res = aaxEffectDestroy(effect);
+            testForState(res, "aaxMixerSetEffect");
 
             DELAY;
 # endif
-#endif
 
-            /* emitter effects */
-            for (q=0; q<2; q++)
-            {
-# if ENABLE_EMITTER_FREQFILTER
-                if (q == 1)
-                {
-                    /* frequency filter; 4000Hz lowpass */
-                    printf("emitter frequency filter at 4000 Hz lowpass\n");
-                    filter = aaxFilterCreate(config, AAX_FREQUENCY_FILTER);
-                    res = aaxFilterSetSlot(filter, 0, AAX_LINEAR,
-                                                    400.0f, 1.0f, 0.0f, 0.0f);
-                    res = aaxFilterSetState(filter, AAX_TRUE);
-                    res = aaxEmitterSetFilter(emitter, filter);
-                    res = aaxFilterDestroy(filter);
-                    testForError(filter, "aaxFilterCreate");
-                }
-# endif
-
-# if ENABLE_EMITTER_FLANGING
-                /* flanging effect */
-                printf("emitter flanging.. (sine wave)\n");
-                effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
-                res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                                  0.8f, 0.9f, 0.5f, 0.0f);
-                res = aaxEffectSetState(effect, AAX_SINE_WAVE);
-                res = aaxEmitterSetEffect(emitter, effect);
-                res = aaxEffectDestroy(effect);
-                testForError(effect, "aaxEffectCreate");
-
-                DELAY;
-
-                effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
-                res = aaxEffectSetState(effect, AAX_FALSE);
-                res = aaxEmitterSetEffect(emitter, effect);
-                res = aaxEffectDestroy(effect);
-                testForError(effect, "aaxEffect Disable");
-# endif
-
-
-# if ENABLE_EMITTER_PHASING
-                /* phasing effect */
-                printf("emitter phasing.. (triangle wave)\n");
-                effect = aaxEffectCreate(config, AAX_PHASING_EFFECT);
-                res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                                  1.0f, 0.2f, 1.0f, 0.4f);
-                res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
-                testForError(effect, "aaxEffectCreate");
-                res = aaxEmitterSetEffect(emitter, effect);
-                res = aaxEffectDestroy(effect);
-                testForState(res, "aaxEmitterSetEffect");
-
-                DELAY;
-# else
-                printf("no effect\n");
-# endif
-
-# if ENABLE_EMITTER_CHORUS
-                /* chorus effect */
-                printf("emitter chorus.. (sine wave)\n");
-                effect = aaxEmitterGetEffect(emitter, AAX_CHORUS_EFFECT);
-                res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                              0.4f, 2.5f, 1.0f, 0.0f);
-                res = aaxEffectSetState(effect, AAX_SINE_WAVE);
-                res = aaxEmitterSetEffect(emitter, effect);
-                res = aaxEffectDestroy(effect);
-                testForError(effect, "aaxEffectCreate");
-
-                DELAY;
-# endif
-
-# if ENABLE_EMITTER_FLANGING
-                /* flanging effect */
-                printf("emitter flanging.. (triangle wave)\n");
-                effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
-                res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
-                                              0.85f, 0.8f, 1.0f, 0.0f);
-                res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
-                res = aaxEmitterSetEffect(emitter, effect);
-                res = aaxEffectDestroy(effect);
-                testForError(effect, "aaxEffectCreate");
-
-                DELAY;
-# endif
-            }
-
-            /* disable delay effects */
-            effect = aaxEmitterGetEffect(emitter, AAX_PHASING_EFFECT);
-            res = aaxEffectSetState(effect, AAX_FALSE);
-            res = aaxEmitterSetEffect(emitter, effect);
-            res = aaxEffectDestroy(effect);
+# if ENABLE_MIXER_FLANGING
+            /* flanging effect */
+            printf("mixer flanging.. (sawtooth wave)\n");
+            effect = aaxMixerGetEffect(config, AAX_FLANGING_EFFECT);
+            res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
+                                              0.88f, 0.08f, 1.0f, 0.0f);
+            res = aaxEffectSetState(effect, AAX_SAWTOOTH_WAVE);
             testForError(effect, "aaxEffectCreate");
+            res = aaxMixerSetEffect(config, effect);
+            res = aaxEffectDestroy(effect);
+            testForState(res, "aaxMixerSetEffect");
 
-            /* disbale frequency filter */
-            filter = aaxEmitterGetFilter(emitter, AAX_FREQUENCY_FILTER);
-            res = aaxFilterSetState(filter, AAX_FALSE);
-            res = aaxEmitterSetFilter(emitter, filter);
-            res = aaxFilterDestroy(filter);
-            testForError(filter, "aaxFilterCreate");
+            DELAY;
+# endif
 
             res = aaxEmitterSetState(emitter, AAX_PROCESSED);
             testForState(res, "aaxEmitterStop");
