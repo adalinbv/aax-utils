@@ -5,60 +5,24 @@
  * Copyright (C) 2017-2022 by Adalin B.V.
  * All rights reserved.
  *
- * This is UNPUBLISHED PROPRIETARY SOURCE CODE; the contents of this file may
- * not be disclosed to third parties, copied or duplicated in any form, in
- * whole or in part, without the prior written permission of the author.
+ * This file is part of AeonWave and covered by the
+ * Creative Commons Attribution-ShareAlike 4.0 International Public License
+ * https://creativecommons.org/licenses/by-sa/4.0/legalcode
 -->
 
 <aeonwave>
 
- <sound gain="1.64" frequency="1760.0" duration="0.1">
-  <waveform src="sine" ratio="0.15" voices="3"/>
-  <waveform src="pink-noise" processing="add" ratio="0.1" pitch="0.14"/>
- </sound>
+ <info name="Pan Flute" bank="0" program="75">
+  <license type="Attribution-ShareAlike 4.0 International"/>
+  <copyright from="2017" until="2022" by="Adalin B.V."/>
+  <copyright from="2017" until="2022" by="Erik Hofman"/>
+  <contact author="Erik Hofman" website="aeonwave.xyz"/>
+  <note polyphony="2" min="60" max="96" step="12"/>
+  <aftertouch mode="2"/>
+ </info>
 
- <emitter looping="true">
-  <filter type="timed-gain" src="envelope" release-time="0.12">
-   <slot n="0">
-    <param n="0">0.0</param>
-    <param n="1">0.22</param>
-    <param n="2">2.37</param>
-    <param n="3">0.25</param>
-   </slot>
-   <slot n="1">
-    <param n="0" auto="0.729" min="2.09" max="1.43">3.85</param>
-    <param n="1">7.5</param>
-    <param n="2">1.24</param>
-    <param n="3">0.2</param>
-   </slot>
-  </filter>
-  <effect type="timed-pitch" src="envelope">
-   <slot n="0">
-    <param n="0" auto="0.3">2.15</param>
-    <param n="1" auto="0.2">0.3</param>
-    <param n="2">1.0</param>
-    <param n="3">7.0</param>
-   </slot>
-   <slot n="1">
-    <param n="0">0.99</param>
-    <param n="1">0.5</param>
-    <param n="2">0.98</param>
-    <param n="3">0.0</param>
-   </slot>
-  </effect>
- </emitter>
-
- <audioframe pan="-0.2">
-  <filter type="equalizer">
-   <slot n="0">
-    <param n="0">436.5</param>
-    <param n="1">0.1</param>
-    <param n="2">1.0</param>
-    <param n="3">1.0</param>
-   </slot>
-  </filter>
- </audioframe>
-
- <mixer/>
+ <resonator include="flute-pan-resonator"/>
+ <emitter looping="true" include="flute-pan-emitter"/>
+ <audioframe pan="-0.2" include="flute-pan-body"/>
 
 </aeonwave>
