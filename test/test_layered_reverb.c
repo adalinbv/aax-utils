@@ -169,7 +169,7 @@ int main(int argc, char **argv)
                effect = aaxAudioFrameGetEffect(frame, AAX_REVERB_EFFECT);
                testForError(effect, "aaxAudioFrameGetEffect");
 
-               res = aaxEffectSetState(effect, AAX_REVERB_1ST_ORDER);
+               res = aaxEffectSetState(effect, AAX_EFFECT_1ST_ORDER);
                testForState(res, "aaxEffectSetState");
 
                res = aaxAudioFrameSetEffect(frame, effect);
@@ -181,7 +181,7 @@ int main(int argc, char **argv)
                effect = aaxAudioFrameGetEffect(reverb, AAX_REVERB_EFFECT);
                testForError(effect, "aaxAudioFrameGetEffect");
 
-               res = aaxEffectSetState(effect, AAX_REVERB_2ND_ORDER);
+               res = aaxEffectSetState(effect, AAX_EFFECT_2ND_ORDER);
                testForState(res, "aaxEffectSetState");
 
                res = aaxAudioFrameSetEffect(reverb, effect);

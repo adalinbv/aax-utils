@@ -131,7 +131,7 @@ int main(int argc, char **argv)
             {
                effect = aaxMixerGetEffect(config, AAX_REVERB_EFFECT);
 
-               res = aaxEffectSetState(effect,AAX_REVERB_2ND_ORDER|AAX_INVERSE);
+               res = aaxEffectSetState(effect,AAX_INVERSE|AAX_EFFECT_2ND_ORDER);
                testForState(res, "aaxEffectSetState");
 
                res = aaxMixerSetEffect(config, effect);
@@ -142,7 +142,7 @@ int main(int argc, char **argv)
 
                effect = aaxAudioFrameGetEffect(frame, AAX_REVERB_EFFECT);
 
-               res = aaxEffectSetState(effect,AAX_REVERB_1ST_ORDER|AAX_INVERSE);
+               res = aaxEffectSetState(effect,AAX_INVERSE|AAX_EFFECT_1ST_ORDER);
                testForState(res, "aaxEffectSetState");
 
                res = aaxAudioFrameSetEffect(frame, effect);

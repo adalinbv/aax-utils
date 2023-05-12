@@ -76,7 +76,7 @@ int main(int argc, char **argv)
 
     if (aax.set(AAX_INITIALIZED))
     {
-        std::cout << "Driver  : " << aax.info(AAX_DRIVER_STRING) << std::endl;
+        std::cout << "Driver  : " << aax.info(AAX_NAME_STRING) << std::endl;
         std::cout << "Renderer: " << aax.info(AAX_RENDERER_STRING) << std::endl;
         std::cout << "Version : " << aax.version() << " (" << aax::major_version() << "." << aax::minor_version() << ")" << std::endl;
         std::cout << "Vendor  : " << aax.info(AAX_VENDOR_STRING) << std::endl;
@@ -86,8 +86,8 @@ int main(int argc, char **argv)
         std::cout << "Mixer supported track range: " << aax.get(AAX_TRACKS_MIN) << " - " << aax.get(AAX_TRACKS_MAX) << " tracks" << std::endl;
         std::cout << "Mixer frequency range: " << aax.get(AAX_FREQUENCY_MIN)/1000 << "kHz - " << aax.get(AAX_FREQUENCY_MAX)/1000 << "kHz" << std::endl;
         std::cout << "Mixer frequency: " << aax.get(AAX_FREQUENCY) << " Hz" << std::endl;
-        std::cout << "Mixer refresh rate: " << aax.get(AAX_REFRESHRATE) << " Hz" << std::endl;
-        std::cout << "Mixer update rate:  " << aax.get(AAX_UPDATERATE) << " Hz" << std::endl;
+        std::cout << "Mixer refresh rate: " << aax.get(AAX_REFRESH_RATE) << " Hz" << std::endl;
+        std::cout << "Mixer update rate:  " << aax.get(AAX_UPDATE_RATE) << " Hz" << std::endl;
         std::cout << "Mixer latency: " << aax.get(AAX_LATENCY)*1e-3f << " ms" << std::endl;
 
         unsigned int x = aax.get(AAX_MONO_EMITTERS);

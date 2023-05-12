@@ -112,7 +112,8 @@ enum type_t
     FILTER,
     EFFECT,
     EMITTER,
-    FRAME
+    FRAME,
+    MIXER
 };
 
 static const char* format_float3(float f)
@@ -156,16 +157,6 @@ static float note2freq(uint8_t d) {
 static uint8_t freq2note(float freq) {
     return 12.0f*log2f(freq/440.0f)+69.0f;
 }
-
-#if 0
-static float note2pitch(uint8_t d, float freq) {
-    return note2freq(d)/freq;
-}
-
-static uint8_t pitch2note(float pitch, float freq) {
-    return freq2note(pitch*freq);
-}
-#endif
 
 struct info_t
 {
@@ -769,7 +760,7 @@ struct layer_t
 struct sound_t
 {
     int mode;
-    float gain, db;
+    float gain;
     float frequency;
     float duration;
     int voices;
@@ -907,7 +898,7 @@ void print_layers(struct sound_t *sound, struct info_t *info, FILE *output)
     }
 }
 
-void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gain, float db, char simplify, char emitter)
+void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gain, char simplify, char emitter)
 {
     char noise;
 
@@ -934,13 +925,6 @@ void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gai
     } else {
         sound->gain = gain;
     }
-#if 0
-    if (sound->db == -AAX_FPINFINITE) {
-        sound->db = _MIN(xmlAttributeGetDouble(xid, "db"), 0.0f);
-    } else {
-        sound->db = db;
-    }
-#endif
 
     if (xmlAttributeExists(xid, "file")) {
         sound->file = xmlAttributeGetString(xid, "file");
@@ -997,7 +981,6 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
        } else {
            fprintf(output, " gain=\"%3.2f\"", sound->gain);
        }
-       fprintf(output, " db=\"%3.1f\"", sound->db);
     }
 
     if (sound->loop_start > 0) {
@@ -1068,14 +1051,16 @@ void free_sound(struct sound_t *sound)
     assert(sound);
 }
 
-struct object_t		// emitter and audioframe
+struct object_t		// emitter, audioframe and mixer
 {
     char *mode;
-    int looping;
     float pan;
 
     int freqfilter;
     int equalizer;
+
+    uint8_t active;
+    uint8_t looping;
 
     uint8_t no_dsps;
     struct dsp_t dsp[16];
@@ -1092,10 +1077,12 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
     obj->mode = lwrstr(xmlAttributeGetString(xid, "mode"));
     obj->looping = xmlAttributeGetBool(xid, "looping");
     obj->pan = _MINMAX(xmlAttributeGetDouble(xid, "pan"), -1.0f, 1.0f);
+    obj->active = (obj->mode || obj->looping || obj->pan) ? 1 : 0;
 
     p = 0;
     xdid = xmlMarkId(xid);
     dnum = xmlNodeGetNum(xdid, "filter");
+    if (dnum) obj->active = 1;
     for (d=0; d<dnum; d++)
     {
         if (xmlNodeGetPos(xid, xdid, "filter", d) != 0)
@@ -1113,10 +1100,12 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
             if (!(simplify & SIMPLIFY) || !emitter
                   || strcasecmp(type, "frequency"))
             {
-                float m = fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter, 0);
+                float m;
+                int n;
+
+                m = fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter, 0);
                 if (!max) max = m;
 
-                int n;
                 for (n=0; n < p; ++n) {
                     if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
                         obj->dsp[n].dtype == obj->dsp[p].dtype) {
@@ -1132,6 +1121,7 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
 
     xdid = xmlMarkId(xid);
     dnum = xmlNodeGetNum(xdid, "effect");
+    if (dnum) obj->active = 1;
     for (d=0; d<dnum; d++)
     {
         if (xmlNodeGetPos(xid, xdid, "effect", d) != 0)
@@ -1144,10 +1134,12 @@ float fill_object(struct object_t *obj, void *xid, float env_fact, char final, c
                 || !strcasecmp(type, "ringmodulator")))
                 || (emitter && !strcasecmp(type, "timed-pitch")))
             {
-                float m = fill_dsp(&obj->dsp[p], xdid, EFFECT, final, env_fact, simplify, emitter, 0);
+                float m;
+                int n;
+
+                m = fill_dsp(&obj->dsp[p], xdid, EFFECT, final, env_fact, simplify, emitter, 0);
                 if (!max) max = m;
 
-                int n;
                 for (n=0; n < p; ++n) {
                     if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
                         obj->dsp[n].dtype == obj->dsp[p].dtype) {
@@ -1169,12 +1161,13 @@ void print_object(struct object_t *obj, enum type_t type, struct info_t *info, F
 {
     unsigned int d;
 
-    if (type == FRAME)
-    {
-//      if (!obj->no_dsps) return;
+    if (obj->active == 0) return;
+
+    if (type == MIXER) {
+        fprintf(output, " <mixer");
+    } else if (type == FRAME) {
         fprintf(output, " <audioframe");
-    }
-    else {
+    } else {
         fprintf(output, " <emitter");
     }
 
@@ -1195,8 +1188,10 @@ void print_object(struct object_t *obj, enum type_t type, struct info_t *info, F
 
         if (type == EMITTER) {
             fprintf(output, " </emitter>\n\n");
-        } else {
+        } else if (type == FRAME) {
             fprintf(output, " </audioframe>\n\n");
+        } else {
+            fprintf(output, " </mixer>\n\n");
         }
     }
     else {
@@ -1216,6 +1211,7 @@ struct aax_t
     struct sound_t sound;
     struct object_t emitter;
     struct object_t audioframe;
+    struct object_t mixer;
     char add_fm;
 };
 
@@ -1255,7 +1251,7 @@ int get_info(struct aax_t *aax, const char *filename)
     return rv;
 }
 
-int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float db, float env_fact, char final)
+int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float env_fact, char final)
 {
     int rv = AAX_TRUE;
     void *xid;
@@ -1279,7 +1275,7 @@ int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain,
             if (xtid)
             {
                 aax->add_fm = AAX_TRUE;
-                fill_sound(&aax->fm, &aax->info, xtid, gain, db, 0, 1);
+                fill_sound(&aax->fm, &aax->info, xtid, gain, 0, 1);
                 xmlFree(xtid);
             }
             else {
@@ -1289,7 +1285,7 @@ int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain,
             xtid = xmlNodeGet(xaid, "sound");
             if (xtid)
             {
-                fill_sound(&aax->sound, &aax->info, xtid, gain, db, simplify, 1);
+                fill_sound(&aax->sound, &aax->info, xtid, gain, simplify, 1);
                 xmlFree(xtid);
             }
             else
@@ -1301,16 +1297,21 @@ int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain,
             xtid = xmlNodeGet(xaid, "emitter");
             if (xtid)
             {
-                float m = fill_object(&aax->emitter, xtid, env_fact, final, simplify, 1);
-                if (m > 0) aax->sound.db = _lin2db(1.0f/m);
+                fill_object(&aax->emitter, xtid, env_fact, final, simplify, 1);
                 xmlFree(xtid);
             }
 
             xtid = xmlNodeGet(xaid, "audioframe");
             if (xtid)
             {
-                float m = fill_object(&aax->audioframe, xtid, -1.f, final, simplify, 0);
-                if (m < 0) aax->sound.db -= m;
+                fill_object(&aax->audioframe, xtid, -1.f, final, simplify, 0);
+                xmlFree(xtid);
+            }
+
+            xtid = xmlNodeGet(xaid, "mixer");
+            if (xtid)
+            {
+                fill_object(&aax->mixer, xtid, -1.f, final, simplify, 0);
                 xmlFree(xtid);
             }
 
@@ -1381,6 +1382,7 @@ void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp)
     print_sound(&aax->sound, &aax->info, output, tmp, "sound");
     print_object(&aax->emitter, EMITTER, &aax->info, output);
     print_object(&aax->audioframe, FRAME, &aax->info, output);
+    print_object(&aax->mixer, MIXER, &aax->info, output);
     fprintf(output, "</aeonwave>\n");
 
     if (outfile) {
@@ -1395,9 +1397,10 @@ void free_aax(struct aax_t *aax)
     free_sound(&aax->sound);
     free_object(&aax->emitter);
     free_object(&aax->audioframe);
+    free_object(&aax->mixer);
 }
 
-float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char commons, float *db, float *gain, float freq)
+float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char commons, float *gain, float freq)
 {
     char tmpfile[128], aaxsfile[128];
     char *ptr;
@@ -1442,14 +1445,13 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
     res = aaxSensorSetMatrix64(config, mtx64);
     testForState(res, "aaxSensorSetMatrix64");
 
-    if (fill_aax(aax, infile, simplify, 1.0f, 1.0f, -AAX_FPINFINITE, 0))
+    if (fill_aax(aax, infile, simplify, 1.0f, 1.0f, 0))
     {
         float pitch = 1.0f;
         aaxEffect effect;
 
         print_aax(aax, aaxsfile, commons, 1);
         *gain = aax->sound.gain;
-        *db = aax->sound.db;
         free_aax(aax);
 
         /* buffer, defaults to processing the sound section of AAXS files */
@@ -1686,52 +1688,42 @@ int main(int argc, char **argv)
     outfile = getOutputFile(argc, argv, NULL);
     if (infile)
     {
-        float env_fact_fm = 1.0f;
-        float fval, db, gain, env_fact;
+        float fval, gain, env_fact;
         struct aax_t aax;
 
-        setenv("AAX_RENDER_MODE", "synthesizer", 1);
-        fval = calculate_loudness(infile, &aax, simplify, commons, &db, &gain, 0.0f);
-        unsetenv("AAX_RENDER_MODE");
-
-        if (fval == 0.0f) exit(-1);
-
-        env_fact_fm = 1.0f;
-        if (gain > 0.0f && fabsf(gain-fval) > 0.1f) {
-            env_fact_fm = gain/fval;
-        }
-        env_fact_fm *= getGain(argc, argv);
-
         get_info(&aax, infile);
-        if (aax.info.note.min && aax.info.note.max)
+        if (agc)
         {
-            float freq1 = note2freq(aax.info.note.min);
-            float freq2 = note2freq(aax.info.note.max);
-            fval = calculate_loudness(infile, &aax, simplify, commons,
-                                      &db, &gain, freq1);
-            fval += calculate_loudness(infile, &aax, simplify, commons,
-                                       &db, &gain, freq2);
-            fval *= 0.5f;
+            if (aax.info.note.min && aax.info.note.max)
+            {
+                float freq1 = note2freq(aax.info.note.min);
+                float freq2 = note2freq(aax.info.note.max);
+                fval = calculate_loudness(infile, &aax, simplify, commons,
+                                          &gain, freq1);
+                fval += calculate_loudness(infile, &aax, simplify, commons,
+                                           &gain, freq2);
+                fval *= 0.5f;
+            }
+            else {
+                fval = calculate_loudness(infile, &aax, simplify, commons,
+                                          &gain, 0.0f);
+            }
+            env_fact = 1.0f;
+            if (gain > 0.0f && fabsf(gain-fval) > 0.1f)
+            {
+                env_fact = gain/fval;
+                gain = fval;
+            }
+            env_fact *= getGain(argc, argv);
         }
-        else {
-            fval = calculate_loudness(infile, &aax, simplify, commons,
-                                      &db, &gain, 0.0f);
+        else
+        {
+            env_fact = 1.0f;
+            calculate_loudness(infile, &aax, simplify, commons, &gain, 0.0f);
+            gain *= getGain(argc, argv);
         }
 
-        env_fact = 1.0f;
-#if 0
-        if (agc && gain > 0.0f && fabsf(gain-fval) > 0.1f)
-        {
-            env_fact = gain/fval;
-            gain = fval;
-        }
-        env_fact *= getGain(argc, argv);
-#else
-        gain *= getGain(argc, argv);
-#endif
-
-        fill_aax(&aax, infile, simplify, gain, db, env_fact, 1);
-        aax.fm.db = _lin2db(gain/env_fact_fm);
+        fill_aax(&aax, infile, simplify, gain, env_fact, 1);
         print_aax(&aax, outfile, commons, 0);
         free_aax(&aax);
     }

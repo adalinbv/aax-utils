@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 # if ENABLE_FRAME_FLANGING
             /* flanging effect */
             printf("frame flanging.. (sine wave)\n");
-            effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
+            effect = aaxAudioFrameGetEffect(frame, AAX_FLANGING_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               0.4f, 0.9f, 0.5f, 0.0f);
             res = aaxEffectSetState(effect, AAX_SINE_WAVE);

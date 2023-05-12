@@ -119,7 +119,7 @@ int main(int argc, char **argv)
                 unsigned max_device;
                 const char *d;
 
-                d = aaxDriverGetSetup(cfg, AAX_DRIVER_STRING);
+                d = aaxDriverGetSetup(cfg, AAX_NAME_STRING);
                 max_device = aaxDriverGetDeviceCount(cfg, mode);
                 if (max_device)
                 {
@@ -212,7 +212,7 @@ int main(int argc, char **argv)
             s = (char *)aaxGetVersionString(cfg);
             printf("Version string: %i.%i %s\n", x, y, s);
 
-            s = aaxDriverGetSetup(cfg, AAX_DRIVER_STRING);
+            s = aaxDriverGetSetup(cfg, AAX_NAME_STRING);
             printf("Driver string: %s\n", s);
 
             s = aaxDriverGetSetup(cfg, AAX_RENDERER_STRING);
@@ -235,15 +235,15 @@ int main(int argc, char **argv)
             x = aaxMixerGetSetup(cfg, AAX_FREQUENCY);
             printf("Mixer frequency: %6u Hz\n", x);
 
-            x = aaxMixerGetSetup(cfg, AAX_REFRESHRATE);
+            x = aaxMixerGetSetup(cfg, AAX_REFRESH_RATE);
             printf("Mixer refresh rate: %3u Hz\n", x);
 
-            x = aaxMixerGetSetup(cfg, AAX_UPDATERATE);
+            x = aaxMixerGetSetup(cfg, AAX_UPDATE_RATE);
             if (x) {
                 printf("Mixer update rate:  %3u Hz\n", x);
             }
 
-            x = aaxMixerGetSetup(cfg, AAX_BITRATE);
+            x = aaxMixerGetSetup(cfg, AAX_BIT_RATE);
             printf("Mixer bitrate: %8.1f kbps\n", 1e-3f*x);
 
             x = aaxMixerGetSetup(cfg, AAX_LATENCY);

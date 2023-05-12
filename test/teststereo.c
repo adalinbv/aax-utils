@@ -69,7 +69,7 @@ int main(int argc, char **argv)
             int q, state;
 
             /** mixer */
-            res = aaxMixerSetSetup(config, AAX_REFRESHRATE, 50);
+            res = aaxMixerSetSetup(config, AAX_REFRESH_RATE, 50);
             testForState(res, "aaxMixerSetSetup");
 
             res = aaxMixerSetState(config, AAX_INITIALIZED);

@@ -59,6 +59,7 @@ int main(int argc, char **argv)
 
         while (++i < argc)
         {
+            printf("Processing buffer: %s\n", argv[i]);
             aax::Buffer& buffer = aax.buffer(argv[i]);
             if (buffer)
             {
@@ -68,13 +69,18 @@ int main(int argc, char **argv)
                TRY( emitter.set(AAX_PLAYING) );
 
                TRY( frame.add(emitter) );
+               set_mode(1);
                do
                {
                    // Your (game) code could be placed here
                    printf("\rposition: %5.1f", emitter.offset());
                    msecSleep(50);
+                   if (get_key()) {
+                      TRY( emitter.set(AAX_STOPPED) );
+                   }
                }
                while (emitter.state() == AAX_PLAYING);
+               set_mode(0);
                TRY( frame.remove(emitter) );
             }
             else printf("Unable to load: %s\n", argv[i]);

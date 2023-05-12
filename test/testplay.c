@@ -608,7 +608,8 @@ int main(int argc, char **argv)
 
             if (velocity)
             {
-               res = aaxEmitterSetSetup(emitter, AAX_VELOCITY_FACTOR,
+               res = aaxEmitterSetSetup(emitter,
+                                        AAX_MIDI_ATTACK_VELOCITY_FACTOR,
                                         127.0f*_MINMAX(velocity, 0.0f, 1.0f));
 //             testForState(res, "Unable to set velocity");
             }
@@ -630,7 +631,8 @@ int main(int argc, char **argv)
 
                 if (velocity)
                 {
-                   res = aaxEmitterSetSetup(refem, AAX_VELOCITY_FACTOR,
+                   res = aaxEmitterSetSetup(refem,
+                                          AAX_MIDI_ATTACK_VELOCITY_FACTOR,
                                           127.0f*_MINMAX(velocity, 0.0f, 1.0f));
 //                 testForState(res, "Unable to set velocity");
                 }

@@ -175,7 +175,7 @@ int main(int argc, char **argv)
         }
 
         /** mixer */
-        res = config.set(AAX_REFRESHRATE, 64);
+        res = config.set(AAX_REFRESH_RATE, 64);
         testForState(res, "aaxMixerSetSetup");
 
         res = config.set(AAX_INITIALIZED);

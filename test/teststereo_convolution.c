@@ -101,10 +101,10 @@ int main(int argc, char **argv)
             res = aaxMixerSetState(config, AAX_INITIALIZED);
             testForState(res, "aaxMixerInit");
 
-            res = aaxMixerSetSetup(config, AAX_REFRESHRATE, REFRATE);
+            res = aaxMixerSetSetup(config, AAX_REFRESH_RATE, REFRATE);
             testForState(res, "aaxMixerSetSetup");
 
-            printf("refresh rate: %i\n", aaxMixerGetSetup(config, AAX_REFRESHRATE));
+            printf("refresh rate: %i\n", aaxMixerGetSetup(config, AAX_REFRESH_RATE));
 
             res = aaxMixerRegisterEmitter(config, emitter);
             testForState(res, "aaxMixerRegisterEmitter");

@@ -206,7 +206,7 @@ int main(int argc, char **argv)
                fd = open(outfile, flags, 0644);
                if (fd >= 0)
                {
-                  int size = aaxBufferGetSetup(buffer, AAX_TRACKSIZE);
+                  int size = aaxBufferGetSetup(buffer, AAX_TRACK_SIZE);
                   void **data = aaxBufferGetData(buffer);
                   if (data)
                   {

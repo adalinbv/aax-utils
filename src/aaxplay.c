@@ -226,7 +226,7 @@ int main(int argc, char **argv)
         }
 
         /** mixer */
-        res = aaxMixerSetSetup(config, AAX_REFRESHRATE, 64);
+        res = aaxMixerSetSetup(config, AAX_REFRESH_RATE, 64);
         testForState(res, "aaxMixerSetSetup");
 
         res = aaxMixerSetState(config, AAX_INITIALIZED);
@@ -370,11 +370,11 @@ int main(int argc, char **argv)
             unsigned int samples = aaxMixerGetSetup(record, AAX_SAMPLES_MAX);
             int rate = aaxMixerGetSetup(record, AAX_FREQUENCY);
             int bps = aaxGetBitsPerSample(aaxMixerGetSetup(record, AAX_FORMAT));
-            int bitrate = aaxMixerGetSetup(record, AAX_BITRATE);
+            int bitrate = aaxMixerGetSetup(record, AAX_BIT_RATE);
             int tracks = aaxMixerGetSetup(record, AAX_TRACKS);
             int vbr = (bitrate < 0) ? AAX_TRUE : AAX_FALSE;
 
-            s = aaxDriverGetSetup(config, AAX_DRIVER_STRING);
+            s = aaxDriverGetSetup(config, AAX_NAME_STRING);
             printf(" Playback driver: %s\n", s);
 
             bitrate = abs(bitrate);

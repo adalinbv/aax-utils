@@ -92,11 +92,11 @@ int main(int argc, char **argv)
             frame2 = aaxAudioFrameCreate(config);
             testForError(frame2, "Unable to create a new audio frame 2\n");
 
-            /** register audio frame 2 to the mixer*/
+            /** 1. register frame2 to the mixer */
             res = aaxMixerRegisterAudioFrame(config, frame2);
             testForState(res, "aaxMixerRegisterAudioFrame");
 
-            /** register audio frame 2 to audio frame 1*/
+            /** 2. register frame2 to frame1 */
             res = aaxAudioFrameRegisterAudioFrame(frame, frame2);
             testForState(res, "aaxAudioFrameRegisterAudioFrame frame2 to frame1");
 
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
             res = aaxAudioFrameSetState(frame2, AAX_PLAYING);
             testForState(res, "aaxAudioFrameStart");
 
-            /** register audio frame 1  to audio frame 2*/
+            /** 3. register frame1 to frame2 */
             res = aaxAudioFrameRegisterAudioFrame(frame2, frame);
             testForState(res, "aaxAudioFrameRegisterAudioFrame frame1 to frame2");
 
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
             testForState(res, "aaxEmitterSetPitch");
             aaxEffectDestroy(effect);
 
-            /** register emitter */
+            /** 4. register emitter to frame2 */
             res = aaxAudioFrameRegisterEmitter(frame2, emitter);
             testForState(res, "aaxMixerRegisterEmitter");
 
