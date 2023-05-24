@@ -449,6 +449,8 @@ char *fill_src(struct dsp_t *dsp, enum aaxWaveformType type, char freqfilter)
         SRC_ADD(p, l, m, "sawtooth");
     } else if (type & AAX_CYCLOID_WAVE) {
         SRC_ADD(p, l, m, "cycloid");
+    } else if (type & AAX_RANDOM_SELECT) {
+        SRC_ADD(p, l, m, "random");
     } else if (type & AAX_RANDOMNESS) {
         SRC_ADD(p, l, m, "randomness");
     } else if (type & AAX_ENVELOPE_FOLLOW) {
