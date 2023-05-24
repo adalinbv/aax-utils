@@ -410,9 +410,132 @@ struct dsp_t
             float value;
             float pitch;
             float adjust;
+            char *type;
         } param[4];
     } slot[4];
 };
+
+#define SRC_ADD(p, l, m, s) { \
+    size_t sl = strlen(s); \
+    if (m && l) *p++ = '|'; \
+    if (l > sl) { \
+        memcpy(p, s, sl); \
+        p += sl; l -= sl; m = 1; *p= 0; \
+    } \
+}
+
+/* reconstruct the src string from the aaxWaveformType */
+char *fill_src(struct dsp_t *dsp, enum aaxWaveformType type, char freqfilter)
+{
+    char rv[1024] = "false";
+    int l = 1024;
+    char *p = rv;
+    char m = 0;
+
+    if (type & AAX_INVERSE) {
+        SRC_ADD(p, l, m, "inverse-");
+    }
+
+    m = 0;
+    if (type & AAX_WAVE_NONE) {
+        SRC_ADD(p, l, m, "false");
+    } else if (type & AAX_TRIANGLE_WAVE) {
+        SRC_ADD(p, l, m, "triangle");
+    } else if (type & AAX_SINE_WAVE) {
+        SRC_ADD(p, l, m, "sine");
+    } else if (type & AAX_SQUARE_WAVE) {
+        SRC_ADD(p, l, m, "square");
+    } else if (type & AAX_SAWTOOTH_WAVE) {
+        SRC_ADD(p, l, m, "sawtooth");
+    } else if (type & AAX_CYCLOID_WAVE) {
+        SRC_ADD(p, l, m, "cycloid");
+    } else if (type & AAX_RANDOMNESS) {
+        SRC_ADD(p, l, m, "randomness");
+    } else if (type & AAX_ENVELOPE_FOLLOW) {
+        SRC_ADD(p, l, m, "envelope");
+    } else if (type & AAX_TIMED_TRANSITION) {
+        SRC_ADD(p, l, m, "timed");
+    } else if (type & AAX_EFFECT_1ST_ORDER) {
+        SRC_ADD(p, l, m, "1st-order");
+    } else if (type & AAX_EFFECT_2ND_ORDER) {
+        SRC_ADD(p, l, m, "2nd-order");
+    }
+
+    if (freqfilter)
+    {
+        if ((type & (AAX_6DB_OCT|AAX_12DB_OCT)) == (AAX_6DB_OCT|AAX_12DB_OCT)) {
+            SRC_ADD(p, l, m, "Q");
+        } else if (type & AAX_6DB_OCT) {
+            SRC_ADD(p, l, m, "6db");
+        } else if (type & AAX_12DB_OCT) {
+            SRC_ADD(p, l, m, "12db");
+        } else if (type & AAX_24DB_OCT) {
+            SRC_ADD(p, l, m, "24db");
+        } else if (type & AAX_36DB_OCT) {
+            SRC_ADD(p, l, m, "36db");
+        } else if (type & AAX_48DB_OCT) {
+            SRC_ADD(p, l, m, "48db");
+        }
+
+        if (type & AAX_BESSEL) {
+            SRC_ADD(p, l, m, "bessel");
+        }
+    }
+    else
+    {
+        if (type & AAX_CONSTANT_VALUE) {
+            SRC_ADD(p, l, m, "true");
+        } else if (type & AAX_IMPULSE_WAVE) {
+            SRC_ADD(p, l, m, "impulse");
+        }
+
+        if (type & AAX_WHITE_NOISE) {
+            SRC_ADD(p, l, m, "white-noise");
+        } else if (type & AAX_PINK_NOISE) {
+            SRC_ADD(p, l, m, "pink-noise");
+        } else if (type & AAX_BROWNIAN_NOISE) {
+            SRC_ADD(p, l, m, "brownian-noise");
+        }
+    }
+
+    if (type & AAX_ENVELOPE_FOLLOW_LOG)
+    {
+        if (freqfilter) {
+            SRC_ADD(p, l, m, "logarithmic");
+        } else {
+            SRC_ADD(p, l, m, "exponential");
+        }
+    }
+
+    return strdup(rv);
+}
+
+/* reconstruct the type string from the aaxType */
+char *fill_type(enum aaxType type)
+{
+    char *rv = NULL;
+    switch(type)
+    {
+    case AAX_DECIBEL:
+        rv = "db";
+        break;
+    case AAX_MICROSECONDS:
+        rv = "usec";
+        break;
+    case AAX_MILLISECONDS:
+        rv = "msec";
+        break;
+    case AAX_SECONDS:
+        rv = "sec";
+        break;
+    case AAX_BITS_PER_SAMPLE:
+        rv = "bps";
+        break;
+    default:
+        break;
+    }
+    return rv;
+}
 
 void fill_slots(struct dsp_t *dsp, xmlId *xid, float max, float env_fact, char simplify)
 {
@@ -440,11 +563,19 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float max, float env_fact, char s
             {
                 if (xmlNodeGetPos(xsid, xpid, "param", p) != 0)
                 {
+                    enum aaxType type = AAX_LINEAR;
                     float adjust, value, v;
                     int pn = p;
 
                     if (xmlAttributeExists(xpid, "n")) {
                         pn = _MINMAX(xmlAttributeGetInt(xpid, "n"), 0, 3);
+                    }
+
+                    if (xmlAttributeExists(xpid, "type"))
+                    {
+                        char tn[64];
+                        xmlAttributeCopyString(xpid, "type", tn, 64);
+                        type = aaxGetTypeByName(tn);
                     }
 
                     f = _MAX(xmlAttributeGetDouble(xpid, "pitch"), 0.0f);
@@ -476,6 +607,7 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float max, float env_fact, char s
 
                     dsp->slot[sn].param[pn].adjust = adjust;
                     dsp->slot[sn].param[pn].value = value;
+                    dsp->slot[sn].param[pn].type = fill_type(type);
                 }
             }
             xmlFree(xpid);
@@ -508,25 +640,32 @@ float fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, floa
     }
     else
     {
-        enum aaxWaveformType src_type;
+        char src[64];
+        char freqfilter = ((dsp->dtype == FILTER) && (dsp->eff_type == AAX_FREQUENCY_FILTER));
+        enum aaxWaveformType src_type = AAX_CONSTANT_VALUE;
 
-        dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
-        src_type = aaxGetWaveformTypeByName(dsp->src);
+        if (xmlAttributeCopyString(xid, "src", src, 64))
+        {
+            if (freqfilter) {
+                src_type = aaxGetFrequencyFilterTypeByName(src);
+            } else {
+                src_type = aaxGetWaveformTypeByName(src);
+            }
+        }
+        dsp->src = fill_src(dsp, src_type, freqfilter);
+
         if (!emitter && !layer && final)
         {
-            if (src_type != AAX_WAVE_NONE)
-            {
-                if (src_type & AAX_INVERSE_TIMED_TRANSITION) {
-                    printf("\033[0;31mWarning:\033[0m timed transision filters "
-                           "and effects are one-shot only and therefore\n\t of "
-                           "little use inside audio-frames.\n");
-                }
+            if (src_type & AAX_TIMED_TRANSITION) {
+                printf("\033[0;31mWarning:\033[0m timed transision filters "
+                       "and effects are one-shot only and therefore\n\t of "
+                       "little use inside audio-frames.\n");
             }
 
             if (!emitter && (t == FILTER) &&
                 (dsp->eff_type == AAX_FREQUENCY_FILTER))
             {
-                if (src_type & AAX_INVERSE_ENVELOPE_FOLLOW)  {
+                if (src_type & AAX_ENVELOPE_FOLLOW)  {
                     printf("\033[0;31mWarning:\033[0m A frequency filter is "
                            "defined in an audio frame\n\t\tConsider using a one"
                            ", two or three band equalizer.\n");
@@ -575,25 +714,32 @@ float fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, floa
 
     if (1)
     {
-        enum aaxWaveformType src_type;
+        char src[64];
+        char freqfilter = ((dsp->dtype == FILTER) && (dsp->eff_type == AAX_FREQUENCY_FILTER));
+        enum aaxWaveformType src_type = AAX_CONSTANT_VALUE;
 
-        dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
-        src_type = aaxGetWaveformTypeByName(dsp->src);
+        if (xmlAttributeCopyString(xid, "src", src, 64))
+        {
+            if (freqfilter) {
+                src_type = aaxGetFrequencyFilterTypeByName(src);
+            } else {
+                src_type = aaxGetWaveformTypeByName(src);
+            }
+        }
+        dsp->src = fill_src(dsp, src_type, freqfilter);
+
         if (!emitter && !layer && final)
         {
-            if (src_type != AAX_WAVE_NONE)
-            {
-                if (src_type & AAX_INVERSE_TIMED_TRANSITION) {
-                    printf("\033[0;31mWarning:\033[0m timed transision filters "
-                           "and effects are one-shot only and therefore\n\t of "
-                           "little use inside audio-frames.\n");
-                }
+            if (src_type & AAX_TIMED_TRANSITION) {
+                printf("\033[0;31mWarning:\033[0m timed transision filters "
+                       "and effects are one-shot only and therefore\n\t of "
+                       "little use inside audio-frames.\n");
             }
 
             if (!emitter && (t == FILTER) &&
                 (dsp->eff_type == AAX_FREQUENCY_FILTER))
             {
-                if (src_type & AAX_INVERSE_ENVELOPE_FOLLOW)  {
+                if (src_type & AAX_ENVELOPE_FOLLOW)  {
                     printf("\033[0;31mWarning:\033[0m A frequency filter is "
                            "defined in an audio frame\n\t\tConsider using a one"
                            ", two or three band equalizer.\n");
@@ -649,7 +795,7 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, char simpli
     if (dsp->repeat) fprintf(output, " repeat=\"%s\"", dsp->repeat);
     if (dsp->stereo) fprintf(output, " stereo=\"true\"");
     if (dsp->optional) fprintf(output, " optional=\"true\"");
-    if (dsp->release_time > 0.01f) {
+    if (dsp->release_time > 0.001f) {
         fprintf(output, " release-time=\"%s\"", format_float3(dsp->release_time));
     }
     fprintf(output, ">\n");
@@ -663,10 +809,14 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, char simpli
         }
         for(p=0; p<4; ++p)
         {
+            char * type = dsp->slot[s].param[p].type;
             float adjust = dsp->slot[s].param[p].adjust;
             float pitch = dsp->slot[s].param[p].pitch;
 
             fprintf(output, "%s  <param n=\"%i\"", ident, p);
+            if (type) {
+                fprintf(output, " type=\"%s\"", type);
+            }
             if (pitch)
             {
                 fprintf(output, " pitch=\"%s\"", format_float3(pitch));
@@ -730,6 +880,13 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, char simpli
 
 void free_dsp(struct dsp_t *dsp)
 {
+    int s, p;
+    for(s=0; s<dsp->no_slots; ++s)
+    {
+        for(p=0; p<4; ++p) {
+            if (dsp->slot[s].param[p].type) free(dsp->slot[s].param[p].type);
+        }
+    }
     if (dsp->type) xmlFree(dsp->type);
     if (dsp->repeat) xmlFree(dsp->repeat);
     if (dsp->src != false_const) xmlFree(dsp->src);
