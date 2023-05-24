@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018-2022 by Erik Hofman.
- * Copyright (C) 2018-2022 by Adalin B.V.
+ * Copyright (C) 2018-2023 by Erik Hofman.
+ * Copyright (C) 2018-2023 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -192,9 +192,9 @@ struct info_t
     float aftertouch_factor;
 };
 
-void fill_info(struct info_t *info, void *xid, const char *filename)
+void fill_info(struct info_t *info, xmlId *xid, const char *filename)
 {
-    void *xtid;
+    xmlId *xtid;
     char *ptr;
 
     ptr = strrchr(filename, PATH_SEPARATOR);
@@ -252,7 +252,7 @@ void fill_info(struct info_t *info, void *xid, const char *filename)
     if (xtid)
     {
         unsigned int c, cnum = xmlNodeGetNum(xid, "copyright");
-        void *xcid = xmlMarkId(xtid);
+        xmlId *xcid = xmlMarkId(xtid);
 
         for (c=0; c<cnum; c++)
         {
@@ -414,92 +414,21 @@ struct dsp_t
     } slot[4];
 };
 
-float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
+void fill_slots(struct dsp_t *dsp, xmlId *xid, float max, float env_fact, char simplify)
 {
     char *keep_volume = getenv("KEEP_VOLUME");
-    unsigned int s, snum;
-    float f, max = 0.0f;
-    char distortion = 0;
-    char distance = 0;
-    char env = 0;
-    void *xsid;
+    xmlId *xsid = xmlMarkId(xid);
+    char env = dsp->env;
+    int s, snum;
+    float f;
 
-    dsp->dtype = t;
-    dsp->type = lwrstr(xmlAttributeGetString(xid, "type"));
-    dsp->eff_type = (t == FILTER) ? aaxFilterGetByName(NULL, dsp->type) :
-                                    aaxEffectGetByName(NULL, dsp->type);
-    if (!final && (!strcasecmp(dsp->type, "volume") ||
-                   !strcasecmp(dsp->type, "timed-gain") ||
-                   !strcasecmp(dsp->type, "dynamic-gain")))
-    {
-        dsp->src = false_const;
-    }
-    else if (!strcasecmp(dsp->type, "dynamic-timbre") &&
-             (simplify & NO_LAYER_SUPPORT))
-    {
-        dsp->src = false_const;
-    }
-    else
-    {
-        dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
-        if (!emitter && !layer && final)
-        {
-            if (dsp->src)
-            {
-               int slen = strlen(dsp->src);
-               int tlen = strlen("timed");
-               int itlen = strlen("inverse-timed");
-               if ((slen >= tlen && !strcmp(dsp->src+slen-tlen, "timed")) ||
-                  (slen >= itlen && !strcmp(dsp->src+slen-itlen, "inverse-timed")))
-               {
-                   printf("\033[0;31mWarning:\033[0m timed transision filters "
-                          "and effects are le-shot only and therefore\n\t of "
-                          "little use inside audio-frames.\n");
-               }
-            }
-
-            if (!emitter && !strcasecmp(dsp->type, "frequency"))
-            {
-               int slen = dsp->src ? strlen(dsp->src) : 0;
-               int tlen = strlen("envelope");
-               int itlen = strlen("inverse-envelope");
-                if (!slen ||
-                   ((slen >= tlen && strcmp(dsp->src+slen-tlen, "envelope")) ||
-                    (slen >= itlen && strcmp(dsp->src+slen-itlen, "inverse-envelope")))) {
-                  printf("\033[0;31mWarning:\033[0m A frequency filter is "
-                         "defined in an autio frame\n\t\tConsider using a one,"
-                         " two or three band equalizer.\n");
-               }
-            }
-        }
-    }
-    dsp->stereo = xmlAttributeGetBool(xid, "stereo");
-    dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
-    dsp->optional = xmlAttributeGetBool(xid, "optional");
-    if (!strcasecmp(dsp->type, "timed-gain")) {
-        if (xmlAttributeExists(xid, "release-time")) {
-           f = _MAX(xmlAttributeGetDouble(xid, "release-time"), 0.0f);
-        } else {
-           f = _MAX(xmlAttributeGetDouble(xid, "release-factor")/2.5f, 0.0f);
-        }
-        dsp->release_time = f;
-        env = 1;
-    } else if (!strcasecmp(dsp->type, "distortion")) {
-        distortion = 1;
-    }
-    else if (!strcasecmp(dsp->type, "distance")) {
-       distance = 1;
-    }
-    dsp->env = env;
-
-    xsid = xmlMarkId(xid);
     dsp->no_slots = snum = xmlNodeGetNum(xid, "slot");
     for (s=0; s<snum; s++)
     {
         if (xmlNodeGetPos(xid, xsid, "slot", s) != 0)
         {
             unsigned int p, pnum = xmlNodeGetNum(xsid, "param");
-            void *xpid = xmlMarkId(xsid);
+            xmlId *xpid = xmlMarkId(xsid);
             int sn = s;
 
             if (xmlAttributeExists(xsid, "n")) {
@@ -552,14 +481,151 @@ float fill_dsp(struct dsp_t *dsp, void *xid, enum type_t t, char final, float en
             xmlFree(xpid);
         }
     }
+    xmlFree(xsid);
+}
+
+float fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
+{
+    float f, max = 0.0f;
+    char distance = 0;
+    char env = 0;
+
+    assert(t == FILTER);
+
+    dsp->eff_type = aaxFilterGetByName(NULL, dsp->type);
+
+    if (!final &&
+        (dsp->eff_type == AAX_VOLUME_FILTER ||
+         dsp->eff_type == AAX_TIMED_GAIN_FILTER ||
+         dsp->eff_type == AAX_DYNAMIC_GAIN_FILTER))
+    {
+        dsp->src = false_const;
+    }
+    else if ((dsp->eff_type == AAX_DYNAMIC_LAYER_FILTER) &&
+             (simplify & NO_LAYER_SUPPORT))
+    {
+        dsp->src = false_const;
+    }
+    else
+    {
+        enum aaxWaveformType src_type;
+
+        dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
+        src_type = aaxGetWaveformTypeByName(dsp->src);
+        if (!emitter && !layer && final)
+        {
+            if (src_type != AAX_WAVE_NONE)
+            {
+                if (src_type & AAX_INVERSE_TIMED_TRANSITION) {
+                    printf("\033[0;31mWarning:\033[0m timed transision filters "
+                           "and effects are one-shot only and therefore\n\t of "
+                           "little use inside audio-frames.\n");
+                }
+            }
+
+            if (!emitter && (t == FILTER) &&
+                (dsp->eff_type == AAX_FREQUENCY_FILTER))
+            {
+                if (src_type & AAX_INVERSE_ENVELOPE_FOLLOW)  {
+                    printf("\033[0;31mWarning:\033[0m A frequency filter is "
+                           "defined in an audio frame\n\t\tConsider using a one"
+                           ", two or three band equalizer.\n");
+                }
+            }
+        }
+    }
+
+    dsp->stereo = xmlAttributeGetBool(xid, "stereo");
+    dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
+    dsp->optional = xmlAttributeGetBool(xid, "optional");
+    if (dsp->eff_type == AAX_TIMED_GAIN_FILTER)
+    {
+        if (xmlAttributeExists(xid, "release-time")) {
+            f = _MAX(xmlAttributeGetDouble(xid, "release-time"), 0.0f);
+        } else {
+            f = _MAX(xmlAttributeGetDouble(xid, "release-factor")/2.5f, 0.0f);
+        }
+        dsp->release_time = f;
+        env = 1;
+    }
+    else if (dsp->eff_type == AAX_DISTANCE_FILTER) {
+       distance = 1;
+    }
+    dsp->env = env;
+
+    fill_slots(dsp, xid, max, env_fact, simplify);
 
     if (!distance)
     {
 // TODO: add a missing distance filter
     }
 
-    xmlFree(xsid);
+    return max;
+}
 
+float fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
+{
+    float max = 0.0f;
+//  char distortion = 0;
+    char env = 0;
+
+    assert(t == EFFECT);
+
+    dsp->eff_type = aaxEffectGetByName(NULL, dsp->type);
+
+    if (1)
+    {
+        enum aaxWaveformType src_type;
+
+        dsp->src = lwrstr(xmlAttributeGetString(xid, "src"));
+        src_type = aaxGetWaveformTypeByName(dsp->src);
+        if (!emitter && !layer && final)
+        {
+            if (src_type != AAX_WAVE_NONE)
+            {
+                if (src_type & AAX_INVERSE_TIMED_TRANSITION) {
+                    printf("\033[0;31mWarning:\033[0m timed transision filters "
+                           "and effects are one-shot only and therefore\n\t of "
+                           "little use inside audio-frames.\n");
+                }
+            }
+
+            if (!emitter && (t == FILTER) &&
+                (dsp->eff_type == AAX_FREQUENCY_FILTER))
+            {
+                if (src_type & AAX_INVERSE_ENVELOPE_FOLLOW)  {
+                    printf("\033[0;31mWarning:\033[0m A frequency filter is "
+                           "defined in an audio frame\n\t\tConsider using a one"
+                           ", two or three band equalizer.\n");
+                }
+            }
+        }
+    }
+
+    dsp->stereo = xmlAttributeGetBool(xid, "stereo");
+    dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
+    dsp->optional = xmlAttributeGetBool(xid, "optional");
+    if (dsp->eff_type ==AAX_DISTORTION_EFFECT) {
+//      distortion = 1;
+    }
+    dsp->env = env;
+
+    fill_slots(dsp, xid, max, env_fact, simplify);
+
+    return max;
+}
+
+float fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
+{
+    float max = 0.0f;
+
+    dsp->dtype = t;
+    dsp->type = lwrstr(xmlAttributeGetString(xid, "type"));
+    if (t == FILTER) {
+        max = fill_filter(dsp, xid, t, final, env_fact, simplify, emitter, layer);
+    } else if (t == EFFECT) {
+        max = fill_effect(dsp, xid, t, final, env_fact, simplify, emitter, layer);
+    }
     return max;
 }
 
@@ -683,7 +749,7 @@ struct waveform_t
     float phase;
 };
 
-char fill_waveform(struct waveform_t *wave, void *xid, char simplify)
+char fill_waveform(struct waveform_t *wave, xmlId *xid, char simplify)
 {
     wave->src = lwrstr(xmlAttributeGetString(xid, "src"));
     wave->processing = lwrstr(xmlAttributeGetString(xid, "processing"));
@@ -775,10 +841,10 @@ struct sound_t
     struct layer_t layer[3];
 };
 
-char fill_layers(struct sound_t *sound, void *xid, char simplify)
+char fill_layers(struct sound_t *sound, xmlId *xid, char simplify)
 {
     unsigned int l, layers;
-    void *xlid, *xsid;
+    xmlId *xlid, *xsid;
     int p, s, smax;
     char noise;
 
@@ -898,7 +964,7 @@ void print_layers(struct sound_t *sound, struct info_t *info, FILE *output)
     }
 }
 
-void fill_sound(struct sound_t *sound, struct info_t *info, void *xid, float gain, char simplify, char emitter)
+void fill_sound(struct sound_t *sound, struct info_t *info, xmlId *xid, float gain, char simplify, char emitter)
 {
     char noise;
 
@@ -1066,11 +1132,11 @@ struct object_t		// emitter, audioframe and mixer
     struct dsp_t dsp[16];
 };
 
-float fill_object(struct object_t *obj, void *xid, float env_fact, char final, char simplify, char emitter)
+float fill_object(struct object_t *obj, xmlId *xid, float env_fact, char final, char simplify, char emitter)
 {
     unsigned int p, d, dnum;
     float max = 0.0f;
-    void *xdid;
+    xmlId *xdid;
 
     obj->freqfilter = -1;
     obj->equalizer = -1;
@@ -1218,16 +1284,16 @@ struct aax_t
 int get_info(struct aax_t *aax, const char *filename)
 {
     int rv = AAX_TRUE;
-    void *xid;
+    xmlId *xid;
 
     memset(aax, 0, sizeof(struct aax_t));
     xid = xmlOpen(filename);
     if (xid)
     {
-        void *xaid = xmlNodeGet(xid, "/aeonwave");
+        xmlId *xaid = xmlNodeGet(xid, "/aeonwave");
         if (xaid)
         {
-            void *xtid = xmlNodeGet(xaid, "instrument");
+            xmlId *xtid = xmlNodeGet(xaid, "instrument");
             if (!xtid) xtid = xmlNodeGet(xaid, "info");
             if (xtid)
             {
@@ -1254,16 +1320,16 @@ int get_info(struct aax_t *aax, const char *filename)
 int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float env_fact, char final)
 {
     int rv = AAX_TRUE;
-    void *xid;
+    xmlId *xid;
 
     memset(aax, 0, sizeof(struct aax_t));
     xid = xmlOpen(filename);
     if (xid)
     {
-        void *xaid = xmlNodeGet(xid, "/aeonwave");
+        xmlId *xaid = xmlNodeGet(xid, "/aeonwave");
         if (xaid)
         {
-            void *xtid = xmlNodeGet(xaid, "instrument");
+            xmlId *xtid = xmlNodeGet(xaid, "instrument");
             if (!xtid) xtid = xmlNodeGet(xaid, "info");
             if (xtid)
             {
