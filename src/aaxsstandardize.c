@@ -398,6 +398,7 @@ struct dsp_t
     char *repeat;
     int stereo;
     int optional;
+    float max;
     float release_time;
     char env;
 
@@ -539,11 +540,10 @@ char *fill_type(enum aaxType type)
     return rv;
 }
 
-void fill_slots(struct dsp_t *dsp, xmlId *xid, float max, float env_fact, char simplify)
+void fill_slots(struct dsp_t *dsp, xmlId *xid, float env_fact, char simplify)
 {
     char *keep_volume = getenv("KEEP_VOLUME");
     xmlId *xsid = xmlMarkId(xid);
-    char env = dsp->env;
     int s, snum;
     float f;
 
@@ -591,7 +591,7 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float max, float env_fact, char s
                     value = xmlGetDouble(xpid);
                     v = _MAX(value - adjust*_lin2log(220.0f), 0.01f);
 
-                    if (env && (p % 2 == 0) && v > max) max = v;
+                    if (dsp->env && (p % 2 == 0) && v > dsp->max) dsp->max = v;
 
                     if (simplify & SIMPLIFY)
                     {
@@ -601,7 +601,7 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float max, float env_fact, char s
                         adjust = 0.0f;
                     }
 
-                    if (!keep_volume && env && (pn % 2) == 0)
+                    if (!keep_volume && dsp->env && (pn % 2) == 0)
                     {
                         adjust *= env_fact;
                         value *= env_fact;
@@ -618,9 +618,9 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float max, float env_fact, char s
     xmlFree(xsid);
 }
 
-float fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
+void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
 {
-    float f, max = 0.0f;
+    float f;
     char distance = 0;
     char env = 0;
 
@@ -694,19 +694,16 @@ float fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, floa
     }
     dsp->env = env;
 
-    fill_slots(dsp, xid, max, env_fact, simplify);
+    fill_slots(dsp, xid, env_fact, simplify);
 
     if (!distance)
     {
 // TODO: add a missing distance filter
     }
-
-    return max;
 }
 
-float fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
+void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
 {
-    float max = 0.0f;
 //  char distortion = 0;
     char env = 0;
 
@@ -758,23 +755,18 @@ float fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, floa
     }
     dsp->env = env;
 
-    fill_slots(dsp, xid, max, env_fact, simplify);
-
-    return max;
+    fill_slots(dsp, xid, env_fact, simplify);
 }
 
-float fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
+void fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float env_fact, char simplify, char emitter, char layer)
 {
-    float max = 0.0f;
-
     dsp->dtype = t;
     dsp->type = lwrstr(xmlAttributeGetString(xid, "type"));
     if (t == FILTER) {
-        max = fill_filter(dsp, xid, t, final, env_fact, simplify, emitter, layer);
+        fill_filter(dsp, xid, t, final, env_fact, simplify, emitter, layer);
     } else if (t == EFFECT) {
-        max = fill_effect(dsp, xid, t, final, env_fact, simplify, emitter, layer);
+        fill_effect(dsp, xid, t, final, env_fact, simplify, emitter, layer);
     }
-    return max;
 }
 
 void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, char simplify)
@@ -1279,7 +1271,9 @@ void free_sound(struct sound_t *sound)
 struct object_t		// emitter, audioframe and mixer
 {
     char *mode;
+
     float pan;
+    float env_max;
 
     int freqfilter;
     int equalizer;
@@ -1291,10 +1285,9 @@ struct object_t		// emitter, audioframe and mixer
     struct dsp_t dsp[16];
 };
 
-float fill_object(struct object_t *obj, xmlId *xid, float env_fact, char final, char simplify, char emitter)
+void fill_object(struct object_t *obj, xmlId *xid, float env_fact, char final, char simplify, char emitter)
 {
     unsigned int p, d, dnum;
-    float max = 0.0f;
     xmlId *xdid;
 
     obj->freqfilter = -1;
@@ -1325,11 +1318,12 @@ float fill_object(struct object_t *obj, xmlId *xid, float env_fact, char final, 
             if (!(simplify & SIMPLIFY) || !emitter
                   || strcasecmp(type, "frequency"))
             {
-                float m;
                 int n;
 
-                m = fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter, 0);
-                if (!max) max = m;
+                fill_dsp(&obj->dsp[p], xdid, FILTER, final, env_fact, simplify, emitter, 0);
+                if (obj->dsp[p].max > obj->env_max) {
+                    obj->env_max = obj->dsp[p].max;
+                }
 
                 for (n=0; n < p; ++n) {
                     if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
@@ -1359,12 +1353,9 @@ float fill_object(struct object_t *obj, xmlId *xid, float env_fact, char final, 
                 || !strcasecmp(type, "ringmodulator")))
                 || (emitter && !strcasecmp(type, "timed-pitch")))
             {
-                float m;
                 int n;
 
-                m = fill_dsp(&obj->dsp[p], xdid, EFFECT, final, env_fact, simplify, emitter, 0);
-                if (!max) max = m;
-
+                fill_dsp(&obj->dsp[p], xdid, EFFECT, final, env_fact, simplify, emitter, 0);
                 for (n=0; n < p; ++n) {
                     if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
                         obj->dsp[n].dtype == obj->dsp[p].dtype) {
@@ -1378,8 +1369,6 @@ float fill_object(struct object_t *obj, xmlId *xid, float env_fact, char final, 
     }
     xmlFree(xdid);
     obj->no_dsps = p;
-
-    return max;
 }
 
 void print_object(struct object_t *obj, enum type_t type, struct info_t *info, FILE *output)
@@ -1818,11 +1807,8 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
         aaxDriverClose(config);
         aaxDriverDestroy(config);
 
-#if 1
-        fval = 6.0f*_MAX(peak, 0.1f) * _db2lin(-24.0f - loudness);
-#else
-        fval = _db2lin(-16.0f - loudness);
-#endif
+//      fval = 6.0f*_MAX(peak, 0.1f) * _db2lin(-24.0f - loudness);
+        fval = _db2lin(-28.0f - loudness);
 
         printf("%-42s: %4.0f Hz, R128: % -3.1f", infile, freq, loudness);
         printf(", new gain: %4.1f\n", (*gain > 0.0f) ? fval : -*gain);
@@ -1934,11 +1920,19 @@ int main(int argc, char **argv)
                                           &gain, 0.0f);
             }
             env_fact = 1.0f;
+
+#if 1
+printf("gain: %f, fval: %f, env max: %f\n", gain, fval/0.25f, aax.emitter.env_max);
+            env_fact = 1.0f/aax.emitter.env_max;
+            gain *= aax.emitter.env_max; //fval;
+#else
             if (gain > 0.0f && fabsf(gain-fval) > 0.1f)
             {
                 env_fact = gain/fval;
                 gain = fval;
             }
+#endfi
+
             env_fact *= getGain(argc, argv);
         }
         else
