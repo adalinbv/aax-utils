@@ -6,7 +6,7 @@
  </sound>
 
  <emitter looping="true">
-  <filter type="frequency" src="inverse-cycloid|24db">
+  <filter type="frequency" src="cycloid|24db|logarithmic">
    <slot n="0">
     <param n="0">110</param>
     <param n="1">1.0</param>

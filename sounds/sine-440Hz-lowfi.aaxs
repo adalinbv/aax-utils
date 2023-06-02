@@ -6,7 +6,7 @@
  </sound>
 
  <emitter looping="true">
-  <filter type="bitcrusher" src="inverse-cycloid|pink-noise">
+  <filter type="bitcrusher" src="cycloid|pink-noise">
    <slot n="0">
     <param n="0">0.6</param>
     <param n="1">0.5</param>

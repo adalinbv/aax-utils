@@ -207,9 +207,9 @@ int main(int argc, char **argv)
             s = aaxDriverGetSetup(cfg, AAX_VENDOR_STRING);
             printf("Vendor string: %s\n", s);
 
-            x = aaxGetMajorVersion();
-            y = aaxGetMinorVersion();
-            s = (char *)aaxGetVersionString(cfg);
+            x = aaxGetByType(AAX_VERSION_MAJOR);
+            y = aaxGetByType(AAX_VERSION_MINOR);
+            s = aaxGetString(AAX_VERSION_STRING);
             printf("Version string: %i.%i %s\n", x, y, s);
 
             s = aaxDriverGetSetup(cfg, AAX_NAME_STRING);
@@ -290,7 +290,7 @@ int main(int argc, char **argv)
             else printf("%6i\n", x);
 
             printf("\nSupported Filters:\n ");
-            for (i=1; i<aaxMaxFilter(); i++)
+            for (i=1; i<aaxGetByType(AAX_MAX_FILTER); i++)
             {
                 const char *s = aaxFilterGetNameByType(cfg, i);
                 static int len = 1;
@@ -307,7 +307,7 @@ int main(int argc, char **argv)
             }
 
             printf("\n\nSupported Effects:\n ");
-            for (i=1; i<aaxMaxEffect(); i++)
+            for (i=1; i<aaxGetByType(AAX_MAX_EFFECT); i++)
             {
                 const char *s = aaxEffectGetNameByType(cfg, i);
                 static int len = 1;

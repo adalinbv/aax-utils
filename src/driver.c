@@ -283,7 +283,7 @@ printCopyright(int argc, char **argv)
     char *ret = getCommandLineOption(argc, argv, "-c");
     if (!ret) ret = getCommandLineOption(argc, argv, "--copyright");
     if (ret) {
-        printf("%s\n", aaxGetCopyrightString());
+        printf("%s\n", aaxGetString(AAX_COPYRIGHT_STRING));
     }
     return ret ? -1 : 0;
 }
