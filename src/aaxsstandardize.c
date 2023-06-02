@@ -1931,7 +1931,7 @@ printf("gain: %f, fval: %f, env max: %f\n", gain, fval/0.25f, aax.emitter.env_ma
                 env_fact = gain/fval;
                 gain = fval;
             }
-#endfi
+#endif
 
             env_fact *= getGain(argc, argv);
         }
