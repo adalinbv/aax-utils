@@ -626,7 +626,7 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
     assert(t == FILTER);
 
-    dsp->eff_type = aaxFilterGetByName(NULL, dsp->type);
+    dsp->eff_type = aaxGetByName(dsp->type);
 
     if (!final &&
         (dsp->eff_type == AAX_VOLUME_FILTER ||
@@ -704,7 +704,7 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
     assert(t == EFFECT);
 
-    dsp->eff_type = aaxEffectGetByName(NULL, dsp->type);
+    dsp->eff_type = aaxGetByName(dsp->type);
 
     if (1)
     {
