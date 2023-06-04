@@ -803,8 +803,14 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, char simpli
             }
             if (pitch)
             {
+                float val = freq*pitch;
+                if (val > 22000.0f) /* Hz */
+                {
+                    pitch *= 22000.0f/val;
+                    val = freq*pitch;
+                }
                 fprintf(output, " pitch=\"%s\"", format_float3(pitch));
-                dsp->slot[s].param[p].value = freq*pitch;
+                dsp->slot[s].param[p].value = val;
             }
             if (adjust)
             {
