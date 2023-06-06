@@ -577,7 +577,7 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, char simpl
                     {
                         char tn[64];
                         xmlAttributeCopyString(xpid, "type", tn, 64);
-                        type = aaxGetByName(tn);
+                        type = aaxGetByName(tn, AAX_TYPE_NAME);
                     }
 
                     f = _MAX(xmlAttributeGetDouble(xpid, "pitch"), 0.0f);
@@ -626,7 +626,7 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
     assert(t == FILTER);
 
-    dsp->eff_type = aaxGetByName(dsp->type);
+    dsp->eff_type = aaxGetByName(dsp->type, AAX_FILTER_NAME);
 
     if (!final &&
         (dsp->eff_type == AAX_VOLUME_FILTER ||
@@ -647,7 +647,7 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
         enum aaxWaveformType src_type = AAX_CONSTANT_VALUE;
 
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
-            src_type = aaxGetByName(src);
+            src_type = aaxGetByName(src, AAX_ALL);
         }
         dsp->src = fill_src(dsp, src_type, freqfilter);
 
@@ -704,18 +704,17 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
     assert(t == EFFECT);
 
-    dsp->eff_type = aaxGetByName(dsp->type);
+    dsp->eff_type = aaxGetByName(dsp->type, AAX_EFFECT_NAME);
 
     if (1)
     {
         char src[64];
-        char freqfilter = ((dsp->dtype == FILTER) && (dsp->eff_type == AAX_FREQUENCY_FILTER));
         enum aaxWaveformType src_type = AAX_CONSTANT_VALUE;
 
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
-            src_type = aaxGetByName(src);
+            src_type = aaxGetByName(src, AAX_ALL);
         }
-        dsp->src = fill_src(dsp, src_type, freqfilter);
+        dsp->src = fill_src(dsp, src_type, AAX_FALSE);
 
         if (!emitter && !layer && final)
         {

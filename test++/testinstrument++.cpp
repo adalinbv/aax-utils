@@ -71,7 +71,7 @@ int main(int argc, char **argv)
     config = std::move(aax::AeonWave(devname, AAX_MODE_WRITE_STEREO));
     testForError(config, "No default audio device available.");
 
-    if (!aax::is_valid(config, AAX_CONFIG_HD))
+    if (!aax::is_valid(config, AAX_CONFIG))
     {
         printf("Warning:\n");
         printf("  %s requires a registered version of AeonWave\n", argv[0]);
