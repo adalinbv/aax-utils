@@ -130,7 +130,7 @@ int main(int argc, char **argv)
 
             do
             {
-               aaxFilter flt = aaxEmitterGetFilter(emitter, AAX_ANGULAR_FILTER);
+               aaxFilter flt = aaxEmitterGetFilter(emitter, AAX_DIRECTIONAL_FILTER);
                testForError(flt, "aaxFilterCreate");
 
                res = aaxFilterSetSlot(flt, 0, AAX_RADIANS,
