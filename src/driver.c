@@ -665,20 +665,20 @@ log2i(uint32_t x)
 int
 bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxWaveformType wtype)
 {
-    static const char *waveform[AAX_MAX_WAVE_NOISE] = {
+    static const char *waveform[AAX_MAX_WAVE_NOISE+1] = {
         "none", "true", "triangle", "sine", "square", "sawtooth", "impulse",
-        "white-noise", "pink-noise", "brownian-noise"
+        "white-noise", "pink-noise", "brownian-noise", "randomness", "cycloid"
     };
-    static const char aax_fmt[] = "<?xml version=\"1.0\"?> \
-        <aeonwave> \
-         <sound frequency=\"%.0f\"> \
-          <waveform src=\"%s%s\" staticity=\"%f\"/> \
-         </sound> \
+    static const char aax_fmt[] = "<?xml version=\"1.0\"?>\n \
+        <aeonwave>\n \
+         <sound frequency=\"%.0f\">\n \
+          <waveform src=\"%s%s\" staticity=\"%f\"/>\n \
+         </sound>\n \
         </aeonwave>";
-    int pos = log2i(wtype & AAX_WAVEFORM_MASK);
+    int pos = log2i(wtype & AAX_ALL_WAVEFORM_MASK);
     int rv = AAX_FALSE;
 
-    if (pos < AAX_MAX_WAVE_NOISE)
+    if (pos <= AAX_MAX_WAVE_NOISE)
     {
         char *inverse = (wtype & AAX_INVERSE) ? "inverse-" : "";
         char aaxs[1024];

@@ -51,13 +51,14 @@ static struct {
     char* name;
     float rate;
     enum aaxWaveformType type;
-} buf_info[AAX_MAX_WAVE_NOISE-1] =
+} buf_info[MAX_WAVES] =
 {
   { "triangle wave",    440.0f, AAX_TRIANGLE_WAVE  },
   { "sine wave",        440.0f, AAX_SINE_WAVE      },
   { "square wave",      440.0f, AAX_SQUARE_WAVE    },
   { "sawtooth",         440.0f, AAX_SAWTOOTH_WAVE  },
   { "impulse",          440.0f, AAX_IMPULSE_WAVE   },
+  { "cycloid",          440.0f, AAX_CYCLOID_WAVE   },
   { "white noise",        0.0f, AAX_WHITE_NOISE    },
   { "pink noise",         0.0f, AAX_PINK_NOISE     },
   { "brownian noise",     0.0f, AAX_BROWNIAN_NOISE },
