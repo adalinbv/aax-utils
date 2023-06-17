@@ -2,8 +2,7 @@
 
 <aeonwave>
  <sound frequency="440">
-  <waveform src="sine"/>
-  <waveform src="sine" processing="modulate" pitch="3.0"/>
+  <waveform src="impulse"/>
  </sound>
 
  <emitter looping="true">

@@ -2,7 +2,7 @@
 
 <aeonwave>
  <sound frequency="440">
-  <waveform src="square"/>
+  <waveform src="triangle"/>
  </sound>
 
  <emitter looping="true">
