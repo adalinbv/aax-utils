@@ -149,7 +149,7 @@ int main(int argc, char **argv)
 #endif
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                              -0.6f, 0.0f, 0.0f, 0.03f);
-            res = aaxEffectSetState(effect, AAX_CONSTANT_VALUE);
+            res = aaxEffectSetState(effect, AAX_CONSTANT);
             res = aaxAudioFrameSetEffect(frame, effect);
             res = aaxEffectDestroy(effect);
             testForError(effect, "aaxEffectCreate");
@@ -232,7 +232,7 @@ int main(int argc, char **argv)
                 effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
                 res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                                   0.8f, 0.9f, 0.5f, 0.0f);
-                res = aaxEffectSetState(effect, AAX_SINE_WAVE);
+                res = aaxEffectSetState(effect, AAX_SINE);
                 res = aaxAudioFrameSetEffect(frame, effect);
                 res = aaxEffectDestroy(effect);
                 testForError(effect, "aaxEffectCreate");
@@ -252,7 +252,7 @@ int main(int argc, char **argv)
                 effect = aaxEffectCreate(config, AAX_PHASING_EFFECT);
                 res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                                   1.0f, 0.2f, 1.0f, 0.4f);
-                res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
+                res = aaxEffectSetState(effect, AAX_TRIANGLE);
                 testForError(effect, "aaxEffectCreate");
                 res = aaxAudioFrameSetEffect(frame, effect);
                 res = aaxEffectDestroy(effect);
@@ -269,7 +269,7 @@ int main(int argc, char **argv)
             effect = aaxEmitterGetEffect(emitter, AAX_CHORUS_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               1.0f, 2.5f, 1.0f, 0.0f);
-            res = aaxEffectSetState(effect, AAX_SINE_WAVE);
+            res = aaxEffectSetState(effect, AAX_SINE);
             res = aaxAudioFrameSetEffect(frame, effect);
             res = aaxEffectDestroy(effect);
             testForError(effect, "aaxEffectCreate");
@@ -283,7 +283,7 @@ int main(int argc, char **argv)
                 effect = aaxEmitterGetEffect(emitter, AAX_FLANGING_EFFECT);
                 res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               0.85f, 0.8f, 1.0f, 0.0f);
-                res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
+                res = aaxEffectSetState(effect, AAX_TRIANGLE);
                 res = aaxAudioFrameSetEffect(frame, effect);
                 res = aaxEffectDestroy(effect);
                 testForError(effect, "aaxEffectCreate");

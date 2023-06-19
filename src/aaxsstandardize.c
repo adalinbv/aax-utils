@@ -416,103 +416,6 @@ struct dsp_t
     } slot[4];
 };
 
-#define SRC_ADD(p, l, m, s) { \
-    size_t sl = strlen(s); \
-    if (m && l) *p++ = '|'; \
-    if (l > sl) { \
-        memcpy(p, s, sl); \
-        p += sl; l -= sl; m = 1; *p= 0; \
-    } \
-}
-
-/* reconstruct the src string from the aaxWaveformType */
-char *fill_src(struct dsp_t *dsp, enum aaxWaveformType type, char freqfilter)
-{
-    char rv[1024] = "false";
-    int l = 1024;
-    char *p = rv;
-    char m = 0;
-
-    if (type & AAX_INVERSE) {
-        SRC_ADD(p, l, m, "inverse-");
-    }
-
-    m = 0;
-    if (type & AAX_WAVE_NONE) {
-        SRC_ADD(p, l, m, "false");
-    } else if (type & AAX_TRIANGLE_WAVE) {
-        SRC_ADD(p, l, m, "triangle");
-    } else if (type & AAX_SINE_WAVE) {
-        SRC_ADD(p, l, m, "sine");
-    } else if (type & AAX_SQUARE_WAVE) {
-        SRC_ADD(p, l, m, "square");
-    } else if (type & AAX_SAWTOOTH_WAVE) {
-        SRC_ADD(p, l, m, "sawtooth");
-    } else if (type & AAX_CYCLOID_WAVE) {
-        SRC_ADD(p, l, m, "cycloid");
-    } else if (type & AAX_RANDOM_SELECT) {
-        SRC_ADD(p, l, m, "random");
-    } else if (type & AAX_RANDOMNESS) {
-        SRC_ADD(p, l, m, "randomness");
-    } else if (type & AAX_ENVELOPE_FOLLOW) {
-        SRC_ADD(p, l, m, "envelope");
-    } else if (type & AAX_TIMED_TRANSITION) {
-        SRC_ADD(p, l, m, "timed");
-    } else if (type & AAX_EFFECT_1ST_ORDER) {
-        SRC_ADD(p, l, m, "1st-order");
-    } else if (type & AAX_EFFECT_2ND_ORDER) {
-        SRC_ADD(p, l, m, "2nd-order");
-    }
-
-    if (freqfilter)
-    {
-        if ((type & (AAX_6DB_OCT|AAX_12DB_OCT)) == (AAX_6DB_OCT|AAX_12DB_OCT)) {
-            SRC_ADD(p, l, m, "Q");
-        } else if (type & AAX_6DB_OCT) {
-            SRC_ADD(p, l, m, "6db");
-        } else if (type & AAX_12DB_OCT) {
-            SRC_ADD(p, l, m, "12db");
-        } else if (type & AAX_24DB_OCT) {
-            SRC_ADD(p, l, m, "24db");
-        } else if (type & AAX_36DB_OCT) {
-            SRC_ADD(p, l, m, "36db");
-        } else if (type & AAX_48DB_OCT) {
-            SRC_ADD(p, l, m, "48db");
-        }
-
-        if (type & AAX_BESSEL) {
-            SRC_ADD(p, l, m, "bessel");
-        }
-    }
-    else
-    {
-        if (type & AAX_CONSTANT_VALUE) {
-            SRC_ADD(p, l, m, "true");
-        } else if (type & AAX_IMPULSE_WAVE) {
-            SRC_ADD(p, l, m, "impulse");
-        }
-
-        if (type & AAX_WHITE_NOISE) {
-            SRC_ADD(p, l, m, "white-noise");
-        } else if (type & AAX_PINK_NOISE) {
-            SRC_ADD(p, l, m, "pink-noise");
-        } else if (type & AAX_BROWNIAN_NOISE) {
-            SRC_ADD(p, l, m, "brownian-noise");
-        }
-    }
-
-    if (type & AAX_ENVELOPE_FOLLOW_LOG)
-    {
-        if (freqfilter) {
-            SRC_ADD(p, l, m, "logarithmic");
-        } else {
-            SRC_ADD(p, l, m, "exponential");
-        }
-    }
-
-    return strdup(rv);
-}
-
 /* reconstruct the type string from the aaxType */
 char *fill_type(enum aaxType type)
 {
@@ -644,12 +547,12 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     {
         char src[64];
         char freqfilter = ((dsp->dtype == FILTER) && (dsp->eff_type == AAX_FREQUENCY_FILTER));
-        enum aaxWaveformType src_type = AAX_CONSTANT_VALUE;
+        enum aaxSourceType src_type = AAX_CONSTANT;
 
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
             src_type = aaxGetByName(src, AAX_ALL);
         }
-        dsp->src = fill_src(dsp, src_type, freqfilter);
+        dsp->src = getSourceString(src_type, freqfilter);
 
         if (!emitter && !layer && final)
         {
@@ -709,12 +612,12 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     if (1)
     {
         char src[64];
-        enum aaxWaveformType src_type = AAX_CONSTANT_VALUE;
+        enum aaxSourceType src_type = AAX_CONSTANT;
 
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
             src_type = aaxGetByName(src, AAX_ALL);
         }
-        dsp->src = fill_src(dsp, src_type, AAX_FALSE);
+        dsp->src = getSourceString(src_type, AAX_FALSE);
 
         if (!emitter && !layer && final)
         {

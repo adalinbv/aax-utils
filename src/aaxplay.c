@@ -258,7 +258,7 @@ int main(int argc, char **argv)
                                           0.0f, 0.025f, pitch, 0.0f);
                 testForState(res, "aaxEffectSetSlot");
 
-                res = aaxEffectSetState(effect, AAX_SINE_WAVE);
+                res = aaxEffectSetState(effect, AAX_SINE);
                 testForState(res, "aaxEffectSetState");
 
                 res = aaxAudioFrameSetEffect(frame, effect);
@@ -308,7 +308,7 @@ int main(int argc, char **argv)
                                       0.0f, frame ? 0.5f : 0.06f, pitch, 0.0f);
             testForState(res, "aaxEffectSetSlot");
 
-            res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
+            res = aaxEffectSetState(effect, AAX_TRIANGLE);
             testForState(res, "aaxEffectSetState");
 
             if (record) {

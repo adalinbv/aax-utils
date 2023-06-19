@@ -76,7 +76,7 @@ int main(int argc, char **argv)
         res = aaxBufferSetSetup(buffer, AAX_FREQUENCY, SAMPLE_FREQUENCY);
         testForState(res, "aaxBufferSetFrequency");
 
-        res = bufferProcessWaveform(buffer, 660.0f, AAX_SQUARE_WAVE);
+        res = bufferProcessWaveform(buffer, 660.0f, AAX_SQUARE);
         testForState(res, "bufferProcessWaveform");
 
         /** emitter */
@@ -150,7 +150,7 @@ int main(int argc, char **argv)
                                           0.0f, 6.0f, 1.0f, 0.0f);
         testForState(res, "aaxFilterSetSlot");
 
-        res = aaxFilterSetState(filter, AAX_SINE_WAVE);
+        res = aaxFilterSetState(filter, AAX_SINE);
         testForState(res, "aaxFilterSetState");
 
         res = aaxEmitterSetFilter(emitter, filter);
@@ -169,7 +169,7 @@ int main(int argc, char **argv)
                                           0.0f, 10.0f, 1.0f, 0.0f);
         testForState(res, "aaxEffectSetSlot");
 
-        res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
+        res = aaxEffectSetState(effect, AAX_TRIANGLE);
         testForState(res, "aaxEffectSetState");
 
         res = aaxEmitterSetEffect(emitter, effect);
@@ -206,7 +206,7 @@ int main(int argc, char **argv)
                                           0.0f, 2.0f, 1.0f, 0.0f);
         testForState(res, "aaxEffectSetSlot");
 
-        res = aaxFilterSetState(filter, AAX_SINE_WAVE);
+        res = aaxFilterSetState(filter, AAX_SINE);
         testForState(res, "aaxEffectSetState");
 
         res = aaxMixerSetFilter(config, filter);
@@ -225,7 +225,7 @@ int main(int argc, char **argv)
                                           0.0f, 4.0f, 1.0f, 0.0f);
         testForState(res, "aaxEffectSetSlot");
 
-        res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
+        res = aaxEffectSetState(effect, AAX_TRIANGLE);
         testForState(res, "aaxEffectSetState");
 
         res = aaxMixerSetEffect(config, effect);

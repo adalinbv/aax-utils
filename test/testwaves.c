@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2018 by Erik Hofman.
- * Copyright (C) 2009-2018 by Adalin B.V.
+ * Copyright (C) 2008-2023 by Erik Hofman.
+ * Copyright (C) 2009-2023 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -45,20 +45,20 @@
 #define	SAMPLE_FREQ		22050
 #define SAMPLE_FORMAT		AAX_PCM16S
 #define FILE_PATH		SRC_PATH"/stereo.wav"
-#define MAX_WAVES		(AAX_MAX_WAVE_NOISE-1)
+#define MAX_WAVES		(AAX_MAX_WAVE+AAX_MAX_NOISE)
 
 static struct {
     char* name;
     float rate;
-    enum aaxWaveformType type;
+    enum aaxSourceType type;
 } buf_info[MAX_WAVES] =
 {
-  { "triangle wave",    440.0f, AAX_TRIANGLE_WAVE  },
-  { "sine wave",        440.0f, AAX_SINE_WAVE      },
-  { "square wave",      440.0f, AAX_SQUARE_WAVE    },
-  { "sawtooth",         440.0f, AAX_SAWTOOTH_WAVE  },
-  { "impulse",          440.0f, AAX_IMPULSE_WAVE   },
-  { "cycloid",          440.0f, AAX_CYCLOID_WAVE   },
+  { "sawtooth",         440.0f, AAX_SAWTOOTH       },
+  { "square wave",      440.0f, AAX_SQUARE         },
+  { "triangle wave",    440.0f, AAX_TRIANGLE       },
+  { "sine wave",        440.0f, AAX_SINE           },
+  { "cycloid",          440.0f, AAX_CYCLOID        },
+  { "impulse",          440.0f, AAX_IMPULSE        },
   { "white noise",        0.0f, AAX_WHITE_NOISE    },
   { "pink noise",         0.0f, AAX_PINK_NOISE     },
   { "brownian noise",     0.0f, AAX_BROWNIAN_NOISE },

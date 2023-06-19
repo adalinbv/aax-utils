@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2022 by Erik Hofman.
- * Copyright (C) 2009-2022 by Adalin B.V.
+ * Copyright (C) 2008-2023 by Erik Hofman.
+ * Copyright (C) 2009-2023 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -52,6 +52,15 @@
 
 #include "driver.h"
 
+
+#define SRC_ADD(p, l, m, s) { \
+    size_t sl = strlen(s); \
+    if (m && l) *p++ = '|'; \
+    if (l > sl) { \
+        memcpy(p, s, sl); \
+        p += sl; l -= sl; m = 1; *p= 0; \
+    } \
+}
 
 char *
 getDeviceName(int argc, char **argv)
@@ -649,41 +658,155 @@ getFormatString(enum aaxFormat format)
    return rv;
 }
 
-
-static unsigned
-log2i(uint32_t x)
+char*
+getSourceString(enum aaxSourceType type, char freqfilter)
 {
-   int y = 0;
-   while (x > 0)
-   {
-      x >>= 1;
-      ++y;
-   }
-   return y;
+    enum aaxSourceType ntype = type & AAX_NOISE_MASK;
+    enum aaxSourceType wtype = type & AAX_WAVEFORM_MASK;
+    char rv[1024] = "none";
+    int l = 1024;
+    char *p = rv;
+    char m = 0;
+
+    if (type & AAX_INVERSE) {
+        SRC_ADD(p, l, m, "inverse-");
+    }
+
+    m = 0;
+    /* AAX_CONSTANT, AAX_IMPULSE and noises are different for
+       frequency filters. */
+    switch(wtype)
+    {
+    case AAX_SAWTOOTH:
+        SRC_ADD(p, l, m, "sawtooth");
+        break;
+    case AAX_SQUARE:
+        SRC_ADD(p, l, m, "square");
+        break;
+    case AAX_TRIANGLE:
+        SRC_ADD(p, l, m, "triangle");
+        break;
+    case AAX_SINE:
+        SRC_ADD(p, l, m, "sine");
+        break;
+    case AAX_CYCLOID:
+        SRC_ADD(p, l, m, "cycloid");
+        break;
+    case AAX_RANDOMNESS:
+        SRC_ADD(p, l, m, "randomness");
+        break;
+    case AAX_WAVE_NONE:
+    default:
+        break;
+    }
+
+    if (type & AAX_ENVELOPE_FOLLOW) {
+        SRC_ADD(p, l, m, "envelope");
+    } else if (type & AAX_TIMED_TRANSITION) {
+        SRC_ADD(p, l, m, "timed");
+    }
+
+    if (freqfilter)
+    {
+        if (type & AAX_EFFECT_1ST_ORDER) {
+            SRC_ADD(p, l, m, "1st-order");
+        } else if (type & AAX_EFFECT_2ND_ORDER) {
+            SRC_ADD(p, l, m, "2nd-order");
+        }
+
+        if (type & AAX_RESONANCE_FACTOR) {
+            SRC_ADD(p, l, m, "Q");
+        }
+
+        switch(type & AAX_ORDER_MASK)
+        {
+        case AAX_6DB_OCT:
+            SRC_ADD(p, l, m, "6db");
+            break;
+        case AAX_12DB_OCT:
+            SRC_ADD(p, l, m, "12db");
+            break;
+        case AAX_24DB_OCT:
+            SRC_ADD(p, l, m, "24db");
+            break;
+        case AAX_36DB_OCT:
+            SRC_ADD(p, l, m, "36db");
+            break;
+        case AAX_48DB_OCT:
+            SRC_ADD(p, l, m, "48db");
+            break;
+        default:
+            break;
+        }
+
+        if (type & AAX_BESSEL) {
+            SRC_ADD(p, l, m, "bessel");
+        }
+
+        if (type & AAX_ENVELOPE_FOLLOW_LOG) {
+            SRC_ADD(p, l, m, "logarithmic");
+        }
+    }
+    else
+    {
+        if (type & AAX_RANDOM_SELECT) {
+            SRC_ADD(p, l, m, "random");
+        }
+
+        switch(wtype)
+        {
+        case AAX_CONSTANT:
+            SRC_ADD(p, l, m, "true");
+            break;
+        case AAX_IMPULSE:
+            SRC_ADD(p, l, m, "impulse");
+            break;
+        default:
+            break;
+        }
+
+        switch(ntype)
+        {
+        case AAX_WHITE_NOISE:
+            SRC_ADD(p, l, m, "white-noise");
+            break;
+        case AAX_PINK_NOISE:
+            SRC_ADD(p, l, m, "pink-noise");
+            break;
+        case AAX_BROWNIAN_NOISE:
+            SRC_ADD(p, l, m, "brownian-noise");
+            break;
+        default:
+            break;
+        }
+
+        if (type & AAX_ENVELOPE_FOLLOW_LOG) {
+            SRC_ADD(p, l, m, "exponential");
+        }
+    }
+
+    return strdup(rv);
 }
 
 int
-bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxWaveformType wtype)
+bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType wtype)
 {
-    static const char *waveform[AAX_MAX_WAVE_NOISE+1] = {
-        "none", "true", "triangle", "sine", "square", "sawtooth", "impulse",
-        "white-noise", "pink-noise", "brownian-noise", "randomness", "cycloid"
-    };
     static const char aax_fmt[] = "<?xml version=\"1.0\"?>\n \
         <aeonwave>\n \
          <sound frequency=\"%.0f\">\n \
           <waveform src=\"%s%s\" staticity=\"%f\"/>\n \
          </sound>\n \
         </aeonwave>";
-    int pos = log2i(wtype & AAX_ALL_WAVEFORM_MASK);
+    char *waveform = getSourceString(wtype, 0);
     int rv = AAX_FALSE;
 
-    if (pos <= AAX_MAX_WAVE_NOISE)
+    if ((wtype >= AAX_1ST_WAVE && wtype <= AAX_LAST_WAVE) ||
+        (wtype >= AAX_1ST_NOISE && wtype <= AAX_LAST_NOISE))
     {
         char *inverse = (wtype & AAX_INVERSE) ? "inverse-" : "";
         char aaxs[1024];
 
-        snprintf(aaxs, 1024, aax_fmt, rate, inverse, waveform[pos], rate);
+        snprintf(aaxs, 1024, aax_fmt, rate, inverse, waveform, rate);
 
         aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_AAXS16S);
         rv = aaxBufferSetData(buffer, aaxs);

@@ -98,7 +98,7 @@ int main(int argc, char **argv)
                                               1.0f, 0.01f, 100.0f, 50.0f);
             testForState(res, "aaxEffectSetSlot 0");
 
-            res = aaxEffectSetState(effect, AAX_SINE_WAVE);
+            res = aaxEffectSetState(effect, AAX_SINE);
             testForState(res, "aaxEffectSetState");
 
             res = aaxEmitterSetEffect(emitter, effect);
@@ -117,7 +117,7 @@ int main(int argc, char **argv)
                                               0.15f, 0.01f, 0.8f, 0.3f);
             testForState(res, "aaxFilterSetSlot 0");
 
-            res = aaxFilterSetState(filter, AAX_SINE_WAVE|AAX_ENVELOPE_FOLLOW);
+            res = aaxFilterSetState(filter, AAX_SINE|AAX_ENVELOPE_FOLLOW);
             testForState(res, "aaxFilterSetState");
 
             res = aaxEmitterSetFilter(emitter, filter);

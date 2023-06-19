@@ -176,7 +176,7 @@ int main(int argc, char **argv)
             effect = aaxEmitterGetEffect(emitter, AAX_PHASING_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               0.8f, 0.0f, 0.0f, 0.095f);
-            res = aaxEffectSetState(effect, AAX_TRIANGLE_WAVE);
+            res = aaxEffectSetState(effect, AAX_TRIANGLE);
             res = aaxEmitterSetEffect(emitter, effect);
             res = aaxEffectDestroy(effect);
             testForError(effect, "aaxEffectCreate");

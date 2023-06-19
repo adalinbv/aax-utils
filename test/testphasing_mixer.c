@@ -145,7 +145,7 @@ int main(int argc, char **argv)
             effect = aaxMixerGetEffect(config, AAX_PHASING_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               1.0f, 0.5f, 1.0f, 0.0f);
-            res = aaxEffectSetState(effect, AAX_SQUARE_WAVE);
+            res = aaxEffectSetState(effect, AAX_SQUARE);
             testForError(effect, "aaxEffectCreate");
             res = aaxMixerSetEffect(config, effect);
             res = aaxEffectDestroy(effect);
@@ -160,7 +160,7 @@ int main(int argc, char **argv)
             effect = aaxMixerGetEffect(config, AAX_CHORUS_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               1.0f, 2.5f, 1.0f, 0.0f);
-            res = aaxEffectSetState(effect, AAX_SAWTOOTH_WAVE);
+            res = aaxEffectSetState(effect, AAX_SAWTOOTH);
             testForError(effect, "aaxEffectCreate");
             res = aaxMixerSetEffect(config, effect);
             res = aaxEffectDestroy(effect);
@@ -175,7 +175,7 @@ int main(int argc, char **argv)
             effect = aaxMixerGetEffect(config, AAX_FLANGING_EFFECT);
             res = aaxEffectSetSlot(effect, 0, AAX_LINEAR,
                                               0.88f, 0.08f, 1.0f, 0.0f);
-            res = aaxEffectSetState(effect, AAX_SAWTOOTH_WAVE);
+            res = aaxEffectSetState(effect, AAX_SAWTOOTH);
             testForError(effect, "aaxEffectCreate");
             res = aaxMixerSetEffect(config, effect);
             res = aaxEffectDestroy(effect);

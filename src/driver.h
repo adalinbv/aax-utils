@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2022 by Erik Hofman.
- * Copyright (C) 2009-2022 by Adalin B.V.
+ * Copyright (C) 2008-2023 by Erik Hofman.
+ * Copyright (C) 2009-2023 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -114,7 +114,8 @@ float getTime(int, char**);
 float getDuration(int, char**);
 int getMode(int, char**);
 char* getRenderer(int, char**);
-int bufferProcessWaveform(aaxBuffer, float, enum aaxWaveformType);
+char* getSourceString(enum aaxSourceType, char);
+int bufferProcessWaveform(aaxBuffer, float, enum aaxSourceType);
 aaxBuffer setFiltersEffects(int, char**, aaxConfig, aaxConfig, aaxFrame, aaxEmitter, const char*);
 int printCopyright(int, char**);
 char* strDup(const char*);
