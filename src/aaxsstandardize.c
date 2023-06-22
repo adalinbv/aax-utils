@@ -556,16 +556,16 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
         if (!emitter && !layer && final)
         {
-            if (src_type & AAX_TIMED_TRANSITION) {
+            if ((src_type & AAX_SOURCE_MASK) == AAX_TIMED_TRANSITION) {
                 printf("\033[0;31mWarning:\033[0m timed transision filters "
                        "and effects are one-shot only and therefore\n\t of "
                        "little use inside audio-frames.\n");
             }
 
-            if (!emitter && (t == FILTER) &&
+            if ((t == FILTER) &&
                 (dsp->eff_type == AAX_FREQUENCY_FILTER))
             {
-                if (src_type & AAX_ENVELOPE_FOLLOW)  {
+                if ((src_type & AAX_SOURCE_MASK) == AAX_ENVELOPE_FOLLOW) {
                     printf("\033[0;31mWarning:\033[0m A frequency filter is "
                            "defined in an audio frame\n\t\tConsider using a one"
                            ", two or three band equalizer.\n");
@@ -621,16 +621,16 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
         if (!emitter && !layer && final)
         {
-            if (src_type & AAX_TIMED_TRANSITION) {
+            if ((src_type & AAX_SOURCE_MASK) == AAX_TIMED_TRANSITION) {
                 printf("\033[0;31mWarning:\033[0m timed transision filters "
                        "and effects are one-shot only and therefore\n\t of "
                        "little use inside audio-frames.\n");
             }
 
-            if (!emitter && (t == FILTER) &&
+            if ((t == FILTER) &&
                 (dsp->eff_type == AAX_FREQUENCY_FILTER))
             {
-                if (src_type & AAX_ENVELOPE_FOLLOW)  {
+                if ((src_type & AAX_SOURCE_MASK) == AAX_ENVELOPE_FOLLOW) {
                     printf("\033[0;31mWarning:\033[0m A frequency filter is "
                            "defined in an audio frame\n\t\tConsider using a one"
                            ", two or three band equalizer.\n");

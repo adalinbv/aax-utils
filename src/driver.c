@@ -662,7 +662,7 @@ char*
 getSourceString(enum aaxSourceType type, char freqfilter)
 {
     enum aaxSourceType ntype = type & AAX_NOISE_MASK;
-    enum aaxSourceType wtype = type & AAX_WAVEFORM_MASK;
+    enum aaxSourceType stype = type & AAX_SOURCE_MASK;
     char rv[1024] = "none";
     int l = 1024;
     char *p = rv;
@@ -675,7 +675,7 @@ getSourceString(enum aaxSourceType type, char freqfilter)
     m = 0;
     /* AAX_CONSTANT, AAX_IMPULSE and noises are different for
        frequency filters. */
-    switch(wtype)
+    switch(stype)
     {
     case AAX_SAWTOOTH:
         SRC_ADD(p, l, m, "sawtooth");
@@ -743,7 +743,7 @@ getSourceString(enum aaxSourceType type, char freqfilter)
             SRC_ADD(p, l, m, "bessel");
         }
 
-        if (type & AAX_ENVELOPE_FOLLOW_LOG) {
+        if (type & AAX_LFO_EXPONENTIAL) {
             SRC_ADD(p, l, m, "logarithmic");
         }
     }
@@ -753,7 +753,7 @@ getSourceString(enum aaxSourceType type, char freqfilter)
             SRC_ADD(p, l, m, "random");
         }
 
-        switch(wtype)
+        switch(stype)
         {
         case AAX_CONSTANT:
             SRC_ADD(p, l, m, "true");
@@ -780,7 +780,7 @@ getSourceString(enum aaxSourceType type, char freqfilter)
             break;
         }
 
-        if (type & AAX_ENVELOPE_FOLLOW_LOG) {
+        if (type & AAX_LFO_EXPONENTIAL) {
             SRC_ADD(p, l, m, "exponential");
         }
     }
@@ -789,7 +789,7 @@ getSourceString(enum aaxSourceType type, char freqfilter)
 }
 
 int
-bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType wtype)
+bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType stype)
 {
     static const char aax_fmt[] = "<?xml version=\"1.0\"?>\n \
         <aeonwave>\n \
@@ -797,13 +797,13 @@ bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType wtype)
           <waveform src=\"%s%s\" staticity=\"%f\"/>\n \
          </sound>\n \
         </aeonwave>";
-    char *waveform = getSourceString(wtype, 0);
+    char *waveform = getSourceString(stype, 0);
     int rv = AAX_FALSE;
 
-    if ((wtype >= AAX_1ST_WAVE && wtype <= AAX_LAST_WAVE) ||
-        (wtype >= AAX_1ST_NOISE && wtype <= AAX_LAST_NOISE))
+    if ((stype >= AAX_1ST_WAVE && stype <= AAX_LAST_WAVE) ||
+        (stype >= AAX_1ST_NOISE && stype <= AAX_LAST_NOISE))
     {
-        char *inverse = (wtype & AAX_INVERSE) ? "inverse-" : "";
+        char *inverse = (stype & AAX_INVERSE) ? "inverse-" : "";
         char aaxs[1024];
 
         snprintf(aaxs, 1024, aax_fmt, rate, inverse, waveform, rate);

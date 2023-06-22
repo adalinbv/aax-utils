@@ -117,7 +117,7 @@ int main(int argc, char **argv)
                                               0.15f, 0.01f, 0.8f, 0.3f);
             testForState(res, "aaxFilterSetSlot 0");
 
-            res = aaxFilterSetState(filter, AAX_SINE|AAX_ENVELOPE_FOLLOW);
+            res = aaxFilterSetState(filter, AAX_SINE|AAX_LFO_EXPONENTIAL);
             testForState(res, "aaxFilterSetState");
 
             res = aaxEmitterSetFilter(emitter, filter);
