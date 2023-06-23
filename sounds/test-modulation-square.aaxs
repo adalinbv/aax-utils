@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<aeonwave>
+
+ <sound frequency="440">
+  <waveform src="sine"/>
+ </sound>
+
+ <emitter looping="true">
+  <filter type="dynamic-gain" src="square">
+   <slot n="0">
+    <param n="0">0.0</param>
+    <param n="1">1.75</param>
+    <param n="2">1.0</param>
+    <param n="3">0.0</param>
+   </slot>
+  </filter>
+ </emitter>
+
+ <audioframe/>
+
+</aeonwave>
