@@ -724,14 +724,14 @@ getSourceString(enum aaxSourceType type, char freqfilter)
         break;
     }
 
+   if (type & AAX_EFFECT_1ST_ORDER) {
+        SRC_ADD(p, l, m, "1st-order");
+    } else if (type & AAX_EFFECT_2ND_ORDER) {
+        SRC_ADD(p, l, m, "2nd-order");
+    }
+
     if (freqfilter)
     {
-        if (type & AAX_EFFECT_1ST_ORDER) {
-            SRC_ADD(p, l, m, "1st-order");
-        } else if (type & AAX_EFFECT_2ND_ORDER) {
-            SRC_ADD(p, l, m, "2nd-order");
-        }
-
         switch(type & AAX_ORDER_MASK)
         {
         case AAX_6DB_OCT:
