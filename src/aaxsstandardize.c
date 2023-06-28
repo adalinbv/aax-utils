@@ -552,7 +552,7 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
             src_type = aaxGetByName(src, AAX_ALL);
         }
-        dsp->src = getSourceString(src_type, freqfilter);
+        dsp->src = getSourceString(src_type, freqfilter, AAX_FALSE);
 
         if (!emitter && !layer && final)
         {
@@ -612,12 +612,19 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     if (1)
     {
         char src[64];
+        char delay = (dsp->dtype == EFFECT) &&
+                      (dsp->eff_type == AAX_PHASING_EFFECT ||
+                       dsp->eff_type == AAX_CHORUS_EFFECT ||
+                       dsp->eff_type == AAX_FLANGING_EFFECT ||
+                       dsp->eff_type == AAX_DELAY_EFFECT ||
+                       dsp->eff_type == AAX_REVERB_EFFECT);
+
         enum aaxSourceType src_type = AAX_CONSTANT;
 
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
             src_type = aaxGetByName(src, AAX_ALL);
         }
-        dsp->src = getSourceString(src_type, AAX_FALSE);
+        dsp->src = getSourceString(src_type, AAX_FALSE, delay);
 
         if (!emitter && !layer && final)
         {

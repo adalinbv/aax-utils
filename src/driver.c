@@ -659,7 +659,7 @@ getFormatString(enum aaxFormat format)
 }
 
 char*
-getSourceString(enum aaxSourceType type, char freqfilter)
+getSourceString(enum aaxSourceType type, char freqfilter, char delay)
 {
     enum aaxSourceType ntype = type & AAX_NOISE_MASK;
     enum aaxSourceType stype = type & AAX_SOURCE_MASK;
@@ -724,10 +724,13 @@ getSourceString(enum aaxSourceType type, char freqfilter)
         break;
     }
 
-   if (type & AAX_EFFECT_1ST_ORDER) {
-        SRC_ADD(p, l, m, "1st-order");
-    } else if (type & AAX_EFFECT_2ND_ORDER) {
-        SRC_ADD(p, l, m, "2nd-order");
+    if (delay)
+    {
+        if (type & AAX_EFFECT_1ST_ORDER) {
+            SRC_ADD(p, l, m, "1st-order");
+        } else if (type & AAX_EFFECT_2ND_ORDER) {
+            SRC_ADD(p, l, m, "2nd-order");
+        }
     }
 
     if (freqfilter)
@@ -811,7 +814,7 @@ bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType stype)
           <waveform src=\"%s%s\" staticity=\"%f\"/>\n \
          </sound>\n \
         </aeonwave>";
-    char *waveform = getSourceString(stype, 0);
+    char *waveform = getSourceString(stype, 0, 0);
     int rv = AAX_FALSE;
 
     if ((stype >= AAX_1ST_WAVE && stype <= AAX_LAST_WAVE) ||
