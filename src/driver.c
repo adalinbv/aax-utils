@@ -692,18 +692,36 @@ getSourceString(enum aaxSourceType type, char freqfilter)
     case AAX_CYCLOID:
         SRC_ADD(p, l, m, "cycloid");
         break;
+    case AAX_ENVELOPE_FOLLOW:
+        SRC_ADD(p, l, m, "envelope");
+        break;
+    case AAX_TIMED_TRANSITION:
+        SRC_ADD(p, l, m, "timed");
+        break;
     case AAX_RANDOMNESS:
         SRC_ADD(p, l, m, "randomness");
+        break;
+    case AAX_RANDOM_SELECT:
+        SRC_ADD(p, l, m, "random");
+        break;
+    case AAX_PURE_SAWTOOTH:
+        SRC_ADD(p, l, m, "pure-sawtooth");
+        break;
+    case AAX_PURE_SQUARE:
+        SRC_ADD(p, l, m, "pure-square");
+        break;
+    case AAX_PURE_TRIANGLE:
+        SRC_ADD(p, l, m, "pure-triangle");
+        break;
+    case AAX_PURE_SINE:
+        SRC_ADD(p, l, m, "pure-sine");
+        break;
+    case AAX_PURE_CYCLOID:
+        SRC_ADD(p, l, m, "pure-cycloid");
         break;
     case AAX_WAVE_NONE:
     default:
         break;
-    }
-
-    if (type & AAX_ENVELOPE_FOLLOW) {
-        SRC_ADD(p, l, m, "envelope");
-    } else if (type & AAX_TIMED_TRANSITION) {
-        SRC_ADD(p, l, m, "timed");
     }
 
     if (freqfilter)
@@ -712,10 +730,6 @@ getSourceString(enum aaxSourceType type, char freqfilter)
             SRC_ADD(p, l, m, "1st-order");
         } else if (type & AAX_EFFECT_2ND_ORDER) {
             SRC_ADD(p, l, m, "2nd-order");
-        }
-
-        if (type & AAX_RESONANCE_FACTOR) {
-            SRC_ADD(p, l, m, "Q");
         }
 
         switch(type & AAX_ORDER_MASK)
@@ -735,6 +749,9 @@ getSourceString(enum aaxSourceType type, char freqfilter)
         case AAX_48DB_OCT:
             SRC_ADD(p, l, m, "48db");
             break;
+        case AAX_RESONANCE_FACTOR:
+            SRC_ADD(p, l, m, "Q");
+            break;
         default:
             break;
         }
@@ -749,10 +766,6 @@ getSourceString(enum aaxSourceType type, char freqfilter)
     }
     else
     {
-        if (type & AAX_RANDOM_SELECT) {
-            SRC_ADD(p, l, m, "random");
-        }
-
         switch(stype)
         {
         case AAX_CONSTANT:
@@ -785,6 +798,7 @@ getSourceString(enum aaxSourceType type, char freqfilter)
         }
     }
 
+    if (!strcmp(rv, "none")) return NULL;
     return strdup(rv);
 }
 
