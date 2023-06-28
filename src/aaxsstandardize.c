@@ -486,10 +486,6 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, char simpl
                     f = _MAX(xmlAttributeGetDouble(xpid, "pitch"), 0.0f);
                     dsp->slot[sn].param[pn].pitch = f;
 
-                    if (dsp->slot[sn].param[pn].adjust == 0.0f) {
-                       adjust = xmlAttributeGetDouble(xpid, "auto-sustain");
-                    }
-
                     adjust = xmlAttributeGetDouble(xpid, "auto");
                     value = xmlGetDouble(xpid);
                     v = _MAX(value - adjust*_lin2log(220.0f), 0.01f);
