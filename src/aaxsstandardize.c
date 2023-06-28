@@ -155,7 +155,7 @@ static float note2freq(uint8_t d) {
 }
 
 static uint8_t freq2note(float freq) {
-    return 12.0f*log2f(freq/440.0f)+69.0f;
+    return rintf(12.0f*log2f(freq/440.0f)+69.0f);
 }
 
 struct info_t
@@ -1050,10 +1050,10 @@ void fill_sound(struct sound_t *sound, struct info_t *info, xmlId *xid, float ga
     }
 
     if (sound_frequency == 0.0f) {
-       sound->frequency = _MINMAX(xmlAttributeGetDouble(xid, "frequency"), 8.176f, 12543.854f);
-    } else {
-       sound->frequency = sound_frequency;
+       sound_frequency = _MINMAX(xmlAttributeGetDouble(xid, "frequency"), 8.176f, 12543.854f);
     }
+    sound->frequency = note2freq(freq2note(sound_frequency));
+
     if (xmlAttributeGetDouble(xid, "duration")) {
         sound->duration = _MAX(xmlAttributeGetDouble(xid, "duration"), 0.0f);
     } else {
