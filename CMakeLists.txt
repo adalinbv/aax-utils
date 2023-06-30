@@ -55,12 +55,12 @@ else(WIN32)
 
   # DEBIAN
   set(CPACK_DEBIAN_PACKAGE_SECTION "utils")
-  set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1), libaax3-bin (>= 3.0.0), libaax3-data (>= 3.4.0)")
+  set(CPACK_DEBIAN_PACKAGE_DEPENDS "libc6 (>= 2.1), libaax4-bin (>= 4.0.0), libaax4-data (>= 4.0.0)")
 
   # RPM
   set(CPACK_RPM_PACKAGE_LICENSE "BSD")
   set(CPACK_RPM_PACKAGE_GROUP "System/System/GUI/KDE")
-  set(CPACK_RPM_PACKAGE_REQUIRES "libaax3-bin >= 3.0.0, libaax3-data >= 3.4.0")
+  set(CPACK_RPM_PACKAGE_REQUIRES "libaax4-bin >= 4.0.0, libaax4-data >= 4.0.0")
 endif (WIN32)
 
 # ZIP
