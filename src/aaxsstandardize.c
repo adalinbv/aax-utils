@@ -62,8 +62,12 @@
 # define PATH_SEPARATOR		'/'
 #endif
 
-#define SIMPLIFY		0x01
-#define NO_LAYER_SUPPORT	0x02
+enum simplify_t {
+    NORMAL = 0,
+    SIMPLIFY          = 0x01,
+    NO_LAYER_SUPPORT  = 0x02,
+    NO_PURE_WAVEFORMS = 0x04
+};
 
 static char debug = 0;
 static float freq = 220.0f;
@@ -443,7 +447,7 @@ char *fill_type(enum aaxType type)
     return rv;
 }
 
-void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, char simplify)
+void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simplify_t simplify)
 {
     char *keep_volume = getenv("KEEP_VOLUME");
     xmlId *xsid = xmlMarkId(xid);
@@ -517,7 +521,7 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, char simpl
     xmlFree(xsid);
 }
 
-void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float envelope_factor, char simplify, char emitter, char layer)
+void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float envelope_factor, enum simplify_t simplify, char emitter, char layer)
 {
     float f;
     char distance = 0;
@@ -596,7 +600,7 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     }
 }
 
-void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float envelope_factor, char simplify, char emitter, char layer)
+void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float envelope_factor, enum simplify_t simplify, char emitter, char layer)
 {
 //  char distortion = 0;
     char env = 0;
@@ -653,7 +657,7 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     fill_slots(dsp, xid, envelope_factor, simplify);
 }
 
-void fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float envelope_factor, char simplify, char emitter, char layer)
+void fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float envelope_factor, enum simplify_t simplify, char emitter, char layer)
 {
     dsp->dtype = t;
     dsp->type = lwrstr(xmlAttributeGetString(xid, "type"));
@@ -664,7 +668,7 @@ void fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float en
     }
 }
 
-void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, char simplify)
+void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simplify_t simplify)
 {
     char *ident = simplify ? "  " : "   ";
     unsigned int s, p;
@@ -801,7 +805,7 @@ struct waveform_t
     float phase;
 };
 
-char fill_waveform(struct waveform_t *wave, xmlId *xid, char simplify)
+char fill_waveform(struct waveform_t *wave, xmlId *xid, enum simplify_t simplify)
 {
     wave->src = lwrstr(xmlAttributeGetString(xid, "src"));
     wave->processing = lwrstr(xmlAttributeGetString(xid, "processing"));
@@ -820,11 +824,16 @@ char fill_waveform(struct waveform_t *wave, xmlId *xid, char simplify)
     return wave->src ? (strstr(wave->src, "noise") ? 1 : 0) : 0;
 }
 
-void print_waveform(struct waveform_t *wave, FILE *output, char simplify)
+void print_waveform(struct waveform_t *wave, FILE *output, enum simplify_t simplify)
 {
-    char *ident = simplify ? "  " : "   ";
+    char *ident = (simplify & SIMPLIFY) ? "  " : "   ";
+    char *src = wave->src;
 
-    fprintf(output, "%s<waveform src=\"%s\"", ident, wave->src);
+    if ((simplify & NO_PURE_WAVEFORMS) && !strncmp(src, "pure-", strlen("pure-"))) {
+        src += strlen("pure-");
+    }
+
+    fprintf(output, "%s<waveform src=\"%s\"", ident, src);
     if (wave->processing) fprintf(output, " processing=\"%s\"", wave->processing);
     if (wave->ratio) {
         if (wave->processing && !strcasecmp(wave->processing, "mix") && wave->ratio != 0.5f) {
@@ -893,7 +902,7 @@ struct sound_t
     struct layer_t layer[3];
 };
 
-char fill_layers(struct sound_t *sound, xmlId *xid, char simplify)
+char fill_layers(struct sound_t *sound, xmlId *xid, enum simplify_t simplify)
 {
     unsigned int l, layers;
     xmlId *xlid, *xsid;
@@ -975,16 +984,15 @@ char fill_layers(struct sound_t *sound, xmlId *xid, char simplify)
     return noise;
 }
 
-void print_layers(struct sound_t *sound, struct info_t *info, FILE *output)
+void print_layers(struct sound_t *sound, struct info_t *info, FILE *output, enum simplify_t simplify)
 {
-    char simplify = sound->no_layers <= 1;
     unsigned int e, l;
 
     for (l=0; l<sound->no_layers; ++l)
     {
         struct layer_t *layer = &sound->layer[l];
 
-        if (!simplify) fprintf(output, "  <layer");
+        if (!(simplify & NO_LAYER_SUPPORT)) fprintf(output, "  <layer");
 
         if (layer->ratio != 0.0 && layer->ratio != 1.0) {
             fprintf(output, " ratio=\"%s\"", format_float3(layer->ratio));
@@ -1002,7 +1010,7 @@ void print_layers(struct sound_t *sound, struct info_t *info, FILE *output)
             }
         }
 
-        if (!simplify) fprintf(output, ">\n");
+        if (!(simplify & NO_LAYER_SUPPORT)) fprintf(output, ">\n");
 
         for (e=0; e<layer->no_entries; ++e)
         {
@@ -1012,11 +1020,11 @@ void print_layers(struct sound_t *sound, struct info_t *info, FILE *output)
                 print_dsp(&layer->entry[e].slot.dsp, info, output, simplify);
             }
         }
-        if (!simplify) fprintf(output, "  </layer>\n");
+        if (!(simplify & NO_LAYER_SUPPORT)) fprintf(output, "  </layer>\n");
     }
 }
 
-void fill_sound(struct sound_t *sound, struct info_t *info, xmlId *xid, float gain, char simplify, char emitter)
+void fill_sound(struct sound_t *sound, struct info_t *info, xmlId *xid, float gain, enum simplify_t simplify, char emitter)
 {
     char noise;
 
@@ -1073,7 +1081,7 @@ void fill_sound(struct sound_t *sound, struct info_t *info, xmlId *xid, float ga
     if (noise) sound->duration = _MAX(sound->duration, 0.3f);
 }
 
-void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char tmp, const char *section)
+void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char tmp, const char *section, enum simplify_t simplify)
 {
     fprintf(output, " <%s", section);
     if (sound->mode) {
@@ -1158,7 +1166,7 @@ void print_sound(struct sound_t *sound, struct info_t *info, FILE *output, char 
 
     fprintf(output, ">\n");
 
-    print_layers(sound, info, output);
+    print_layers(sound, info, output, simplify);
 
     fprintf(output, " </%s>\n\n", section);
 }
@@ -1186,7 +1194,7 @@ struct object_t		// emitter, audioframe and mixer
     struct dsp_t dsp[16];
 };
 
-void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char final, char simplify, char emitter)
+void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char final, enum simplify_t simplify, char emitter)
 {
     unsigned int p, d, dnum;
     xmlId *xdid;
@@ -1366,7 +1374,7 @@ int get_info(struct aax_t *aax, const char *filename)
     return rv;
 }
 
-int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain, float envelope_factor, char final)
+int fill_aax(struct aax_t *aax, const char *filename, enum simplify_t simplify, float gain, float envelope_factor, char final)
 {
     int rv = AAX_TRUE;
     xmlId *xid;
@@ -1447,7 +1455,7 @@ int fill_aax(struct aax_t *aax, const char *filename, char simplify, float gain,
     return rv;
 }
 
-void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp)
+void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp, enum simplify_t simplify)
 {
     FILE *output;
     struct tm* tm_info;
@@ -1492,9 +1500,9 @@ void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp)
     fprintf(output, "<aeonwave>\n\n");
     print_info(&aax->info, output, commons);
     if (aax->add_fm) {
-        print_sound(&aax->fm, &aax->info, output, tmp, "fm");
+        print_sound(&aax->fm, &aax->info, output, tmp, "fm", simplify);
     }
-    print_sound(&aax->sound, &aax->info, output, tmp, "sound");
+    print_sound(&aax->sound, &aax->info, output, tmp, "sound", simplify);
     print_object(&aax->emitter, EMITTER, &aax->info, output);
     print_object(&aax->audioframe, FRAME, &aax->info, output);
     print_object(&aax->mixer, MIXER, &aax->info, output);
@@ -1515,7 +1523,7 @@ void free_aax(struct aax_t *aax)
     free_object(&aax->mixer);
 }
 
-float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char commons, float *gain, float freq)
+float calculate_loudness(char *infile, struct aax_t *aax, enum simplify_t simplify, char commons, float *gain, float freq)
 {
     char tmpfile[128], aaxsfile[128];
     char *ptr;
@@ -1565,7 +1573,7 @@ float calculate_loudness(char *infile, struct aax_t *aax, char simplify, char co
         float pitch = 1.0f;
         aaxEffect effect;
 
-        print_aax(aax, aaxsfile, commons, 1);
+        print_aax(aax, aaxsfile, commons, 1, simplify);
         *gain = aax->sound.gain;
         free_aax(aax);
 
@@ -1742,6 +1750,7 @@ void help()
     printf("     --debug\t\t\tAdd some debug information to the AAXS file.\n");
     printf("     --auto-gain\t\tApply auto gain changes.\n");
     printf("     --no-layers\t\tDo not add layers.\n");
+    printf("     --no-pure-waveforms\tDo not use pure waveforms.\n");
     printf("     --omit-cc-by\t\tDo not add the CC-BY license reference.\n");
     printf("     --force-cc-by\t\tForce the CC-BY license reference.\n");
     printf("     --force-simplify\t\tForce simplification of the configuration file.\n");
@@ -1755,9 +1764,9 @@ void help()
 
 int main(int argc, char **argv)
 {
+    enum simplify_t simplify = NORMAL;
     char *infile, *outfile;
     char agc = 0;
-    char simplify = 0;
     char commons = 1;
     char *arg;
 
@@ -1788,8 +1797,11 @@ int main(int argc, char **argv)
     if (getCommandLineOption(argc, argv, "--no-layers")) {
         simplify |= NO_LAYER_SUPPORT;
     }
+    if (getCommandLineOption(argc, argv, "--no-pure-waveforms")) {
+        simplify |= NO_PURE_WAVEFORMS;
+    }
     if (getCommandLineOption(argc, argv, "--force-simplify")) {
-        simplify |= SIMPLIFY;
+        simplify |= SIMPLIFY|NO_LAYER_SUPPORT|NO_PURE_WAVEFORMS;
     }
 
     if (getCommandLineOption(argc, argv, "--debug")) {
@@ -1843,7 +1855,7 @@ int main(int argc, char **argv)
         }
 
         fill_aax(&aax, infile, simplify, sound_gain, envelope_factor, 1);
-        print_aax(&aax, outfile, commons, 0);
+        print_aax(&aax, outfile, commons, 0, simplify);
         free_aax(&aax);
     }
     else {
