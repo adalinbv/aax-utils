@@ -670,11 +670,16 @@ void fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float en
 
 void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simplify_t simplify)
 {
-    char *ident = simplify ? "  " : "   ";
+    char *ident = (simplify & SIMPLIFY) ? "  " : "   ";
+    char *src = dsp->src;
     unsigned int s, p;
 
-    if (dsp->src == false_const) {
+    if (src == false_const) {
         return;
+    }
+
+    if ((src && simplify & NO_PURE_WAVEFORMS) && !strncmp(src, "pure-", strlen("pure-"))) {
+        src += strlen("pure-");
     }
 
     if (dsp->dtype == FILTER) {
@@ -682,8 +687,8 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simpli
     } else {
         fprintf(output, "%s<effect type=\"%s\"", ident, dsp->type);
     }
-    if (dsp->src && (strcmp(dsp->src, "12db") && strcmp(dsp->src, "true"))) {
-        fprintf(output, " src=\"%s\"", dsp->src);
+    if (src && (strcmp(src, "12db") && strcmp(src, "true"))) {
+        fprintf(output, " src=\"%s\"", src);
     }
     if (dsp->repeat) fprintf(output, " repeat=\"%s\"", dsp->repeat);
     if (dsp->stereo) fprintf(output, " stereo=\"true\"");
@@ -992,7 +997,7 @@ void print_layers(struct sound_t *sound, struct info_t *info, FILE *output, enum
     {
         struct layer_t *layer = &sound->layer[l];
 
-        if (!(simplify & NO_LAYER_SUPPORT)) fprintf(output, "  <layer");
+        if (!(simplify & NO_LAYER_SUPPORT)) fprintf(output, "  <layer n=\"%i\"", l);
 
         if (layer->ratio != 0.0 && layer->ratio != 1.0) {
             fprintf(output, " ratio=\"%s\"", format_float3(layer->ratio));
@@ -1280,7 +1285,7 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
     obj->no_dsps = p;
 }
 
-void print_object(struct object_t *obj, enum type_t type, struct info_t *info, FILE *output)
+void print_object(struct object_t *obj, enum type_t type, struct info_t *info, FILE *output, enum simplify_t simplify)
 {
     unsigned int d;
 
@@ -1306,7 +1311,7 @@ void print_object(struct object_t *obj, enum type_t type, struct info_t *info, F
         fprintf(output, ">\n");
 
         for (d=0; d<obj->no_dsps; ++d) {
-            print_dsp(&obj->dsp[d], info, output, 1);
+            print_dsp(&obj->dsp[d], info, output, simplify);
         }
 
         if (type == EMITTER) {
@@ -1358,13 +1363,13 @@ int get_info(struct aax_t *aax, const char *filename)
                 xmlFree(xtid);
             }
             xmlFree(xaid);
+            xmlClose(xid);
         }
         else
         {
             printf("%s does not seem to be AAXS compatible.\n", filename);
             rv = AAX_FALSE;
         }
-        xmlClose(xid);
     }
     else
     {
@@ -1503,9 +1508,9 @@ void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp, e
         print_sound(&aax->fm, &aax->info, output, tmp, "fm", simplify);
     }
     print_sound(&aax->sound, &aax->info, output, tmp, "sound", simplify);
-    print_object(&aax->emitter, EMITTER, &aax->info, output);
-    print_object(&aax->audioframe, FRAME, &aax->info, output);
-    print_object(&aax->mixer, MIXER, &aax->info, output);
+    print_object(&aax->emitter, EMITTER, &aax->info, output, simplify);
+    print_object(&aax->audioframe, FRAME, &aax->info, output, simplify);
+    print_object(&aax->mixer, MIXER, &aax->info, output, simplify);
     fprintf(output, "</aeonwave>\n");
 
     if (outfile) {
@@ -1815,47 +1820,56 @@ int main(int argc, char **argv)
         float fval, sound_gain, envelope_factor;
         struct aax_t aax;
 
-        get_info(&aax, infile);
-        if (agc)
+        if (get_info(&aax, infile))
         {
-            if (aax.info.note.min && aax.info.note.max)
+#if 0
+            if (agc)
             {
-                float freq1 = note2freq(aax.info.note.min);
-                float freq2 = note2freq(aax.info.note.max);
-                fval = calculate_loudness(infile, &aax, simplify, commons,
-                                          &sound_gain, freq1);
-                fval += calculate_loudness(infile, &aax, simplify, commons,
-                                           &sound_gain, freq2);
-                fval *= 0.5f;
-            }
-            else {
-                fval = calculate_loudness(infile, &aax, simplify, commons,
-                                          &sound_gain, 0.0f);
-            }
-            envelope_factor = 1.0f;
+                if (aax.info.note.min && aax.info.note.max)
+                {
+                    float freq1 = note2freq(aax.info.note.min);
+                    float freq2 = note2freq(aax.info.note.max);
+                    fval = calculate_loudness(infile, &aax, simplify, commons,
+                                              &sound_gain, freq1);
+                    fval += calculate_loudness(infile, &aax, simplify, commons,
+                                               &sound_gain, freq2);
+                    fval *= 0.5f;
+                }
+                else {
+                    fval = calculate_loudness(infile, &aax, simplify, commons,
+                                              &sound_gain, 0.0f);
+                }
+                envelope_factor = 1.0f;
 
 #if 1
-            envelope_factor = 1.0f/aax.emitter.envelope_max;
-            sound_gain *= aax.emitter.envelope_max; //fval;
+                envelope_factor = 1.0f/aax.emitter.envelope_max;
+                sound_gain *= aax.emitter.envelope_max; //fval;
 #else
-            if (sound_gain > 0.0f && fabsf(sound_gain-fval) > 0.1f)
-            {
-                envelope_factor = sound_gain/fval;
-                sound_gain = fval;
-            }
+                if (sound_gain > 0.0f && fabsf(sound_gain-fval) > 0.1f)
+                {
+                    envelope_factor = sound_gain/fval;
+                    sound_gain = fval;
+                }
 #endif
 
-            envelope_factor *= getGain(argc, argv);
-        }
-        else
-        {
+                envelope_factor *= getGain(argc, argv);
+            }
+            else
+            {
+                envelope_factor = 1.0f;
+                calculate_loudness(infile, &aax, simplify, commons, &sound_gain, 0.0f);
+                sound_gain *= getGain(argc, argv);
+            }
+#else
+            printf("%-42s\n", infile);
             envelope_factor = 1.0f;
-            calculate_loudness(infile, &aax, simplify, commons, &sound_gain, 0.0f);
-            sound_gain *= getGain(argc, argv);
-        }
+            fill_aax(&aax, infile, simplify, 1.0f, 1.0f, 0);
+            sound_gain = getGain(argc, argv) * aax.sound.gain;
+#endif
 
-        fill_aax(&aax, infile, simplify, sound_gain, envelope_factor, 1);
-        print_aax(&aax, outfile, commons, 0, simplify);
+            fill_aax(&aax, infile, simplify, sound_gain, envelope_factor, 1);
+            print_aax(&aax, outfile, commons, 0, simplify);
+        }
         free_aax(&aax);
     }
     else {
