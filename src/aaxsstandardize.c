@@ -668,9 +668,9 @@ void fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float en
     }
 }
 
-void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simplify_t simplify)
+void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simplify_t simplify, char sound)
 {
-    char *ident = (simplify & SIMPLIFY) ? "  " : "   ";
+    char *ident = (!sound || (simplify & NO_LAYER_SUPPORT)) ? "  " : "   ";
     char *src = dsp->src;
     unsigned int s, p;
 
@@ -1022,7 +1022,7 @@ void print_layers(struct sound_t *sound, struct info_t *info, FILE *output, enum
             if (layer->entry[e].type == WAVEFORM) {
                 print_waveform(&layer->entry[e].slot.waveform, output, simplify);
             } else {
-                print_dsp(&layer->entry[e].slot.dsp, info, output, simplify);
+                print_dsp(&layer->entry[e].slot.dsp, info, output, simplify, 1);
             }
         }
         if (!(simplify & NO_LAYER_SUPPORT)) fprintf(output, "  </layer>\n");
@@ -1311,7 +1311,7 @@ void print_object(struct object_t *obj, enum type_t type, struct info_t *info, F
         fprintf(output, ">\n");
 
         for (d=0; d<obj->no_dsps; ++d) {
-            print_dsp(&obj->dsp[d], info, output, simplify);
+            print_dsp(&obj->dsp[d], info, output, simplify, 0);
         }
 
         if (type == EMITTER) {
