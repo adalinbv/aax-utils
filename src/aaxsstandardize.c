@@ -588,9 +588,6 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
             f = _MAX(xmlAttributeGetDouble(xid, "release-factor")/2.5f, 0.0f);
         }
         dsp->release_time = f;
-        if (!final && !dsp->sustain && dsp->release_time == 0.0f) {
-            printf("\033[0;31mWarning:\033[0m %s timed-gain filter does not specify an infinite sustain\n\t\tand does not specify a release-time.\n");
-        }
         env = 1;
     }
     else if (dsp->eff_type == AAX_DISTANCE_FILTER) {
@@ -599,6 +596,12 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     dsp->env = env;
 
     fill_slots(dsp, xid, envelope_factor, simplify);
+
+    if (!final && dsp->env && !dsp->sustain && dsp->release_time == 0.0f) {
+        printf("\033[0;31mWarning:\033[0m timed-gain filter does not"
+               "specify an infinite sustain\n\t\tand does not specify a "
+               "release-time.\n");
+    }
 
     if (!distance)
     {
