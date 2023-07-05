@@ -403,6 +403,7 @@ struct dsp_t
     int stereo;
     int optional;
     float max;
+    char sustain;
     float release_time;
     char env;
 
@@ -492,6 +493,8 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
 
                     adjust = xmlAttributeGetDouble(xpid, "auto");
                     value = xmlGetDouble(xpid);
+                    if (value == AAX_FPINFINITE) dsp->sustain = 4*s+p;
+
                     v = _MAX(value - adjust*_lin2log(220.0f), 0.01f);
 
                     if (dsp->env && (p % 2 == 0) && v > dsp->max) dsp->max = v;
@@ -585,6 +588,9 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
             f = _MAX(xmlAttributeGetDouble(xid, "release-factor")/2.5f, 0.0f);
         }
         dsp->release_time = f;
+        if (!final && !dsp->sustain && dsp->release_time == 0.0f) {
+            printf("\033[0;31mWarning:\033[0m %s timed-gain filter does not specify an infinite sustain\n\t\tand does not specify a release-time.\n");
+        }
         env = 1;
     }
     else if (dsp->eff_type == AAX_DISTANCE_FILTER) {
