@@ -184,7 +184,7 @@ analyze_fft(aaxBuffer buffer, char verbose)
     if (data)
     {
         int max_samples, no_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
-        int fs = aaxBufferGetSetup(buffer, AAX_FREQUENCY);
+        int fs = aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE);
         float *ffttmp, *fftout, *realin;
         int block_size, size;
 
@@ -443,10 +443,10 @@ int main(int argc, char **argv)
             testForError(refbuf, "Unable to create the refbuf buffer");
         }
 
-        base_freq[0] = aaxBufferGetSetup(buffer, AAX_UPDATE_RATE);
+        base_freq[0] = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
         fraction = 1e-6f*aaxBufferGetSetup(buffer, AAX_REFRESH_RATE);
         if (reffile) {
-            base_freq[1] = aaxBufferGetSetup(refbuf, AAX_UPDATE_RATE);
+            base_freq[1] = aaxBufferGetSetup(refbuf, AAX_BASE_FREQUENCY);
         } else {
             base_freq[1] = 0.0f;
         }
@@ -466,14 +466,14 @@ int main(int argc, char **argv)
             {
                 printf("Reference file: %s\n", reffile);
                 printf(" Buffer sample frequency: %5i Hz\n",
-                        aaxBufferGetSetup(refbuf, AAX_FREQUENCY));
+                        aaxBufferGetSetup(refbuf, AAX_SAMPLE_RATE));
                 printf(" Buffer base frequency  : %5i Hz\n", base_freq[1]);
                 printf("\n");
             }
 
             printf("Base file: %s\n", infile);
             printf(" Buffer sample frequency: %5i Hz\n",
-                    aaxBufferGetSetup(buffer, AAX_FREQUENCY));
+                    aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE));
             printf(" Buffer base frequency  : %5i Hz\n", base_freq[0]);
             printf(" Buffer pitch fraction  : %4.3f\n", fraction);
 
@@ -488,7 +488,7 @@ int main(int argc, char **argv)
             max_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
             printf(" Buffer no. samples     : %5i\n", max_samples);
 
-            fs = (float)aaxBufferGetSetup(buffer, AAX_FREQUENCY);
+            fs = (float)aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE);
             f = fs/max_samples;
             printf(" Buffer duration        : ");
             f = (float)max_samples/fs;
@@ -848,7 +848,7 @@ int main(int argc, char **argv)
             }
 
             dt = (float)aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
-            dt /= (float)aaxBufferGetSetup(buffer, AAX_FREQUENCY);
+            dt /= (float)aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE);
             if (duration > dt && !aaxBufferGetSetup(buffer, AAX_LOOPING)) {
                duration = dt;
             }
