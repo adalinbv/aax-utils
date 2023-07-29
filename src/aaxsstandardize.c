@@ -70,7 +70,9 @@ enum simplify_t {
 };
 
 static char debug = 0;
+static char commons = 1;
 static float freq = 220.0f;
+static float release_factor = 1.0f;
 static char* false_const = "false";
 
 static char *sound_name = NULL;
@@ -290,7 +292,7 @@ void fill_info(struct info_t *info, xmlId *xid, const char *filename)
     }
 }
 
-void print_info(struct info_t *info, FILE *output, char commons)
+void print_info(struct info_t *info, FILE *output)
 {
     struct tm* tm_info;
     time_t timer;
@@ -507,10 +509,18 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
                         adjust = 0.0f;
                     }
 
-                    if (!keep_volume && dsp->env && (pn % 2) == 0)
+                    if (!keep_volume && dsp->env)
                     {
-                        adjust *= envelope_factor;
-                        value *= envelope_factor;
+                       if ((pn % 2) == 0)
+                       {
+                           adjust *= envelope_factor;
+                           value *= envelope_factor;
+                       }
+                       else
+                       {
+                           adjust *= release_factor;
+                           value *= release_factor;
+                       }
                     }
 
                     dsp->slot[sn].param[pn].adjust = adjust;
@@ -1469,7 +1479,7 @@ int fill_aax(struct aax_t *aax, const char *filename, enum simplify_t simplify, 
     return rv;
 }
 
-void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp, enum simplify_t simplify)
+void print_aax(struct aax_t *aax, const char *outfile, char tmp, enum simplify_t simplify)
 {
     FILE *output;
     struct tm* tm_info;
@@ -1512,7 +1522,7 @@ void print_aax(struct aax_t *aax, const char *outfile, char commons, char tmp, e
     fprintf(output, "-->\n\n");
 
     fprintf(output, "<aeonwave>\n\n");
-    print_info(&aax->info, output, commons);
+    print_info(&aax->info, output);
     if (aax->add_fm) {
         print_sound(&aax->fm, &aax->info, output, tmp, "fm", simplify);
     }
@@ -1537,7 +1547,7 @@ void free_aax(struct aax_t *aax)
     free_object(&aax->mixer);
 }
 
-float calculate_loudness(char *infile, struct aax_t *aax, enum simplify_t simplify, char commons, float *gain, float freq)
+float calculate_loudness(char *infile, struct aax_t *aax, enum simplify_t simplify, float *gain, float freq)
 {
     char tmpfile[128], aaxsfile[128];
     char *ptr;
@@ -1587,7 +1597,7 @@ float calculate_loudness(char *infile, struct aax_t *aax, enum simplify_t simpli
         float pitch = 1.0f;
         aaxEffect effect;
 
-        print_aax(aax, aaxsfile, commons, 1, simplify);
+        print_aax(aax, aaxsfile, 1, simplify);
         *gain = aax->sound.gain;
         free_aax(aax);
 
@@ -1761,8 +1771,10 @@ void help()
     printf("\nOptions:\n");
     printf(" -i, --input <file>\t\tthe .aaxs configuration file to standardize.\n");
     printf(" -o, --output <file>\t\twrite the new .aaxs configuration to this file.\n");
-    printf("     --debug\t\t\tAdd some debug information to the AAXS file.\n");
+    printf(" -g, --gain\t\t\tApply a gain factor.\n");
     printf("     --auto-gain\t\tApply auto gain changes.\n");
+    printf("     --release-factor\t\tApply a factor to the envelope release time.\n");
+    printf("     --debug\t\t\tAdd some debug information to the AAXS file.\n");
     printf("     --no-layers\t\tDo not add layers.\n");
     printf("     --no-pure-waveforms\tDo not use pure waveforms.\n");
     printf("     --omit-cc-by\t\tDo not add the CC-BY license reference.\n");
@@ -1781,7 +1793,6 @@ int main(int argc, char **argv)
     enum simplify_t simplify = NORMAL;
     char *infile, *outfile;
     char agc = 0;
-    char commons = 1;
     char *arg;
 
     if (argc == 1 || getCommandLineOption(argc, argv, "-h") ||
@@ -1797,6 +1808,8 @@ int main(int argc, char **argv)
     if (arg) sound_program = atoi(arg);
     arg = getCommandLineOption(argc, argv, "--frequency");
     if (arg) sound_frequency = atof(arg);
+    arg = getCommandLineOption(argc, argv, "--release-factor");
+    if (arg) release_factor = atof(arg);
 
     if (getCommandLineOption(argc, argv, "--omit-cc-by")) {
         commons = 0;
@@ -1838,14 +1851,14 @@ int main(int argc, char **argv)
                 {
                     float freq1 = note2freq(aax.info.note.min);
                     float freq2 = note2freq(aax.info.note.max);
-                    fval = calculate_loudness(infile, &aax, simplify, commons,
+                    fval = calculate_loudness(infile, &aax, simplify,
                                               &sound_gain, freq1);
-                    fval += calculate_loudness(infile, &aax, simplify, commons,
+                    fval += calculate_loudness(infile, &aax, simplify,
                                                &sound_gain, freq2);
                     fval *= 0.5f;
                 }
                 else {
-                    fval = calculate_loudness(infile, &aax, simplify, commons,
+                    fval = calculate_loudness(infile, &aax, simplify,
                                               &sound_gain, 0.0f);
                 }
                 envelope_factor = 1.0f;
@@ -1866,7 +1879,7 @@ int main(int argc, char **argv)
             else
             {
                 envelope_factor = 1.0f;
-                calculate_loudness(infile, &aax, simplify, commons, &sound_gain, 0.0f);
+                calculate_loudness(infile, &aax, simplify, &sound_gain, 0.0f);
                 sound_gain *= getGain(argc, argv);
             }
 #else
@@ -1877,7 +1890,7 @@ int main(int argc, char **argv)
 #endif
 
             fill_aax(&aax, infile, simplify, sound_gain, envelope_factor, 1);
-            print_aax(&aax, outfile, commons, 0, simplify);
+            print_aax(&aax, outfile, 0, simplify);
         }
         free_aax(&aax);
     }
