@@ -72,8 +72,7 @@ enum simplify_t {
 static char debug = 0;
 static char commons = 1;
 static float freq = 220.0f;
-static float release_factor = 1.0f;
-static char release_state = 0;
+static float timing_factor = 1.0f;
 static char* false_const = "false";
 
 static char *sound_name = NULL;
@@ -524,8 +523,10 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
                         }
                         else if (value)
                         {
-                            sn_release = sn;
-                            pn_release = pn;
+//                          sn_release = sn;
+//                          pn_release = pn;
+                            adjust *= timing_factor;
+                            value *= timing_factor;
                         }
                     }
 
@@ -536,11 +537,11 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
             }
             xmlFree(xpid);
 
-            if (dsp->env && sn_release && pn_release)
-            {
-               dsp->slot[sn_release].param[pn_release].adjust *= release_factor;
-               dsp->slot[sn_release].param[pn_release].value *= release_factor;
-            }
+//          if (dsp->env && sn_release && pn_release)
+//          {
+//             dsp->slot[sn_release].param[pn_release].adjust *= timing_factor;
+//             dsp->slot[sn_release].param[pn_release].value *= timing_factor;
+//          }
         }
     }
     xmlFree(xsid);
@@ -1785,7 +1786,7 @@ void help()
     printf(" -o, --output <file>\t\twrite the new .aaxs configuration to this file.\n");
     printf(" -g, --gain\t\t\tApply a gain factor.\n");
     printf("     --auto-gain\t\tApply auto gain changes.\n");
-    printf("     --release-factor\t\tApply a factor to the envelope release time.\n");
+    printf("     --timing-factor\t\tApply a factor to the envelope time parameters.\n");
     printf("     --debug\t\t\tAdd some debug information to the AAXS file.\n");
     printf("     --no-layers\t\tDo not add layers.\n");
     printf("     --no-pure-waveforms\tDo not use pure waveforms.\n");
@@ -1820,8 +1821,8 @@ int main(int argc, char **argv)
     if (arg) sound_program = atoi(arg);
     arg = getCommandLineOption(argc, argv, "--frequency");
     if (arg) sound_frequency = atof(arg);
-    arg = getCommandLineOption(argc, argv, "--release-factor");
-    if (arg) release_factor = atof(arg);
+    arg = getCommandLineOption(argc, argv, "--timing-factor");
+    if (arg) timing_factor = atof(arg);
 
     if (getCommandLineOption(argc, argv, "--omit-cc-by")) {
         commons = 0;
