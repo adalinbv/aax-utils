@@ -73,6 +73,7 @@ static char debug = 0;
 static char commons = 1;
 static float freq = 220.0f;
 static float release_factor = 1.0f;
+static char release_state = 0;
 static char* false_const = "false";
 
 static char *sound_name = NULL;
@@ -464,6 +465,8 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
         {
             unsigned int p, pnum = xmlNodeGetNum(xsid, "param");
             xmlId *xpid = xmlMarkId(xsid);
+            int sn_release = 0;
+            int pn_release = 0;
             int sn = s;
 
             if (xmlAttributeExists(xsid, "n")) {
@@ -509,18 +512,21 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
                         adjust = 0.0f;
                     }
 
-                    if (!keep_volume && dsp->env)
+                    if (dsp->env)
                     {
-                       if ((pn % 2) == 0)
-                       {
-                           adjust *= envelope_factor;
-                           value *= envelope_factor;
-                       }
-                       else
-                       {
-                           adjust *= release_factor;
-                           value *= release_factor;
-                       }
+                        if ((pn % 2) == 0)
+                        {
+                            if (!keep_volume)
+                            {
+                                adjust *= envelope_factor;
+                                value *= envelope_factor;
+                            }
+                        }
+                        else if (value)
+                        {
+                            sn_release = sn;
+                            pn_release = pn;
+                        }
                     }
 
                     dsp->slot[sn].param[pn].adjust = adjust;
@@ -529,6 +535,12 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
                 }
             }
             xmlFree(xpid);
+
+            if (dsp->env && sn_release && pn_release)
+            {
+               dsp->slot[sn_release].param[pn_release].adjust *= release_factor;
+               dsp->slot[sn_release].param[pn_release].value *= release_factor;
+            }
         }
     }
     xmlFree(xsid);
