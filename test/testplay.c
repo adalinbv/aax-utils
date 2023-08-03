@@ -321,6 +321,7 @@ int main(int argc, char **argv)
     float velocity;
     float fraction;
     int base_freq[2];
+    char no_patches = 1;
     char verbose = 0;
     char repeat = 0;
     char fft = 0;
@@ -422,10 +423,10 @@ int main(int argc, char **argv)
             s = aaxDriverGetSetup(config, AAX_MUSIC_GENRE_STRING);
             if (s) printf(" Genre    : %s\n", s);
             s = aaxDriverGetSetup(config, AAX_RELEASE_DATE_STRING);
-            if (s) printf(" Release date: %s\n", s);
+            if (s) printf(" Date     : %s\n", s);
 
             s = aaxDriverGetSetup(config, AAX_TRACK_NUMBER_STRING);
-            if (s) printf(" Track number: %s\n", s);
+            if (s) printf(" Track no.: %s\n", s);
 
             s = aaxDriverGetSetup(config, AAX_SONG_COPYRIGHT_STRING);
             if (s) printf(" Copyright: %s\n", s);
@@ -443,6 +444,7 @@ int main(int argc, char **argv)
             testForError(refbuf, "Unable to create the refbuf buffer");
         }
 
+        no_patches = aaxBufferGetSetup(buffer, AAX_MAX_PATCHES);
         base_freq[0] = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
         fraction = 1e-6f*aaxBufferGetSetup(buffer, AAX_REFRESH_RATE);
         if (reffile) {
@@ -472,6 +474,7 @@ int main(int argc, char **argv)
             }
 
             printf("Base file: %s\n", infile);
+            printf(" Buffer no. of patches  : %i\n", no_patches);
             printf(" Buffer sample frequency: %5i Hz\n",
                     aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE));
             printf(" Buffer base frequency  : %5i Hz\n", base_freq[0]);
