@@ -321,6 +321,7 @@ int main(int argc, char **argv)
     float velocity;
     float fraction;
     int base_freq[2];
+    char sampled_release = 0;
     char no_patches = 1;
     char verbose = 0;
     char repeat = 0;
@@ -444,6 +445,7 @@ int main(int argc, char **argv)
             testForError(refbuf, "Unable to create the refbuf buffer");
         }
 
+        sampled_release = aaxBufferGetSetup(buffer, AAX_SAMPLED_RELEASE);
         no_patches = aaxBufferGetSetup(buffer, AAX_MAX_PATCHES);
         base_freq[0] = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
         fraction = 1e-6f*aaxBufferGetSetup(buffer, AAX_REFRESH_RATE);
@@ -498,6 +500,9 @@ int main(int argc, char **argv)
             if (f > 1.0f) printf("%5.1f sec\n", f);
             else if (f > 1e-3f) printf("%5.1f ms\n", 1e3f*f);
             else printf("%5.1f us\n", 1e6f*f);
+
+            printf(" Buffer sampled release : %s\n",
+                     sampled_release ? "true" : "false");
         }
 
         ofile = getOutputFile(argc, argv, NULL);
