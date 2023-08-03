@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2018 by Erik Hofman.
- * Copyright (C) 2009-2018 by Adalin B.V.
+ * Copyright (C) 2008-2023 by Erik Hofman.
+ * Copyright (C) 2009-2023 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -42,8 +42,8 @@
 #include "wavfile.h"
 
 #define FILE_PATH		SRC_PATH"/loop.wav"
-#define LOOP_START_SEC		0.5750625f
-#define LOOP_END_SEC		1.9775625f
+#define LOOP_START_SEC		0.5750f
+#define LOOP_END_SEC		1.977475f
 
 int main(int argc, char **argv)
 {
@@ -62,13 +62,18 @@ int main(int argc, char **argv)
         if (buffer)
         {
             aaxEmitter emitter;
-            float dt = 0.0f;
+            int freq, loop_start, loop_end;
             int q, state, num;
             char stopped = 0;
+            float dt = 0.0f;
+
+            freq = aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE);
+            loop_start = rintf(freq*LOOP_START_SEC);
+            loop_end = rintf(freq*LOOP_END_SEC);
 
             res = aaxBufferSetSetup(buffer, AAX_SAMPLED_RELEASE, AAX_TRUE);
-            res = aaxBufferSetSetup(buffer, AAX_LOOP_START, 9201);
-            res = aaxBufferSetSetup(buffer, AAX_LOOP_END, 31641);
+            res = aaxBufferSetSetup(buffer, AAX_LOOP_START, loop_start);
+            res = aaxBufferSetSetup(buffer, AAX_LOOP_END, loop_end);
             testForState(res, "aaxBufferSetLoopPoints");
 
             /** emitter */
@@ -97,6 +102,7 @@ int main(int argc, char **argv)
             testForState(res, "aaxEmitterStart");
 
             q = 0;
+            set_mode(1);
             do
             {
                 msecSleep(50);
@@ -122,7 +128,8 @@ int main(int argc, char **argv)
                 }
                 state = aaxEmitterGetState(emitter);
             }
-            while (state != AAX_PROCESSED);
+            while (!get_key() && state != AAX_PROCESSED);
+            set_mode(0);
 
             res = aaxMixerDeregisterEmitter(config, emitter);
             res = aaxEmitterDestroy(emitter);
