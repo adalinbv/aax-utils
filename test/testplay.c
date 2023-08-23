@@ -503,6 +503,27 @@ int main(int argc, char **argv)
 
             printf(" Buffer sampled release : %s\n",
                      sampled_release ? "true" : "false");
+
+            if (verbose > 1)
+            {
+               int i;
+               printf("Envelope Levels:\t");
+               for (i=AAX_ENVELOPE_LEVEL0; i<AAX_ENVELOPE_RATE6; i += 2)
+               {
+                  f = (float)aaxBufferGetSetup(buffer, i)*1e-6f;
+                  printf("%4.2f\t", f ? _MAX(f, 0.01f) : 0.0f);
+               }
+               printf("\n");
+               printf("Envelope Rates:\t\t");
+               for (i=AAX_ENVELOPE_RATE0; i<=AAX_ENVELOPE_RATE6; i += 2)
+               {
+                  f = (float)aaxBufferGetSetup(buffer, i)*1e-6f;
+                  if (f < 0.1f) printf ("%4.2fms\t", f*1000.0f);
+                  else if (f == AAX_FPINFINITE) printf("%4.2f\t", f);
+                  else printf("%4.2fs\t", f);
+               }
+               printf("\n");
+            }
         }
 
         ofile = getOutputFile(argc, argv, NULL);
