@@ -71,6 +71,7 @@ enum simplify_t {
 
 static char debug = 0;
 static char commons = 1;
+static char normalize = 0;
 static float freq = 220.0f;
 static float timing_factor = 1.0f;
 static char* false_const = "false";
@@ -452,7 +453,6 @@ char *fill_type(enum aaxType type)
 
 void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simplify_t simplify)
 {
-    char *keep_volume = getenv("KEEP_VOLUME");
     xmlId *xsid = xmlMarkId(xid);
     int s, snum;
     float f;
@@ -464,8 +464,8 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
         {
             unsigned int p, pnum = xmlNodeGetNum(xsid, "param");
             xmlId *xpid = xmlMarkId(xsid);
-            int sn_release = 0;
-            int pn_release = 0;
+//          int sn_release = 0;
+//          int pn_release = 0;
             int sn = s;
 
             if (xmlAttributeExists(xsid, "n")) {
@@ -515,7 +515,7 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
                     {
                         if ((pn % 2) == 0)
                         {
-                            if (!keep_volume)
+                            if (!normalize)
                             {
                                 adjust *= envelope_factor;
                                 value *= envelope_factor;
@@ -1731,6 +1731,8 @@ float calculate_loudness(char *infile, struct aax_t *aax, enum simplify_t simpli
                     loudness = 0.0;
                 }
             }
+#else
+            (void)peak;
 #endif
             if (loudness == 0.0)
             {
@@ -1786,6 +1788,7 @@ void help()
     printf(" -o, --output <file>\t\twrite the new .aaxs configuration to this file.\n");
     printf(" -g, --gain\t\t\tApply a gain factor.\n");
     printf("     --auto-gain\t\tApply auto gain changes.\n");
+    printf("     --normalize-envelope\tNormalize the timed gain filter gains.\n");
     printf("     --timing-factor\t\tApply a factor to the envelope time parameters.\n");
     printf("     --debug\t\t\tAdd some debug information to the AAXS file.\n");
     printf("     --no-layers\t\tDo not add layers.\n");
@@ -1803,6 +1806,7 @@ void help()
 
 int main(int argc, char **argv)
 {
+    char *keep_volume = getenv("KEEP_VOLUME");
     enum simplify_t simplify = NORMAL;
     char *infile, *outfile;
     char agc = 0;
@@ -1834,6 +1838,13 @@ int main(int argc, char **argv)
         agc = 1;
     }
 
+    if (keep_volume) {
+        normalize = 1;
+    }
+    if (getCommandLineOption(argc, argv, "--normalize-envelope")) {
+        normalize = 1;
+    }
+
     if (getCommandLineOption(argc, argv, "--no-layers")) {
         simplify |= NO_LAYER_SUPPORT;
     }
@@ -1852,12 +1863,13 @@ int main(int argc, char **argv)
     outfile = getOutputFile(argc, argv, NULL);
     if (infile)
     {
-        float fval, sound_gain, envelope_factor;
+        float sound_gain, envelope_factor;
         struct aax_t aax;
 
         if (get_info(&aax, infile))
         {
 #if 0
+            float fval;
             if (agc)
             {
                 if (aax.info.note.min && aax.info.note.max)
@@ -1896,6 +1908,7 @@ int main(int argc, char **argv)
                 sound_gain *= getGain(argc, argv);
             }
 #else
+            (void)agc;
             printf("%-42s\n", infile);
             envelope_factor = 1.0f;
             fill_aax(&aax, infile, simplify, 1.0f, 1.0f, 0);
