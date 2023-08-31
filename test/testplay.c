@@ -320,7 +320,7 @@ int main(int argc, char **argv)
     aaxConfig config;
     float velocity;
     float fraction;
-    int base_freq[2];
+    float base_freq[2];
     char sampled_release = 0;
     char no_patches = 1;
     char verbose = 0;
@@ -447,10 +447,10 @@ int main(int argc, char **argv)
 
         sampled_release = aaxBufferGetSetup(buffer, AAX_SAMPLED_RELEASE);
         no_patches = aaxBufferGetSetup(buffer, AAX_MAX_PATCHES);
-        base_freq[0] = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
-        fraction = 1e-6f*aaxBufferGetSetup(buffer, AAX_REFRESH_RATE);
+        base_freq[0] = AAX_INT_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY));
+        fraction = AAX_INT_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_PITCH_FRACTION));
         if (reffile) {
-            base_freq[1] = aaxBufferGetSetup(refbuf, AAX_BASE_FREQUENCY);
+            base_freq[1] = AAX_INT_TO_FLOAT(aaxBufferGetSetup(refbuf, AAX_BASE_FREQUENCY));
         } else {
             base_freq[1] = 0.0f;
         }
@@ -471,7 +471,7 @@ int main(int argc, char **argv)
                 printf("Reference file: %s\n", reffile);
                 printf(" Buffer sample frequency: %5i Hz\n",
                         aaxBufferGetSetup(refbuf, AAX_SAMPLE_RATE));
-                printf(" Buffer base frequency  : %5i Hz\n", base_freq[1]);
+                printf(" Buffer base frequency  : %5.3f Hz\n", base_freq[1]);
                 printf("\n");
             }
 
@@ -479,7 +479,7 @@ int main(int argc, char **argv)
             printf(" Buffer no. of patches  : %i\n", no_patches);
             printf(" Buffer sample frequency: %5i Hz\n",
                     aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE));
-            printf(" Buffer base frequency  : %5i Hz\n", base_freq[0]);
+            printf(" Buffer base frequency  : %5.3f Hz\n", base_freq[0]);
             printf(" Buffer pitch fraction  : %4.3f\n", fraction);
 
             tracks = aaxBufferGetSetup(buffer, AAX_TRACKS);
@@ -510,14 +510,14 @@ int main(int argc, char **argv)
                printf("Envelope Levels:\t");
                for (i=AAX_ENVELOPE_LEVEL0; i<AAX_ENVELOPE_RATE6; i += 2)
                {
-                  f = (float)aaxBufferGetSetup(buffer, i)*1e-6f;
+                  f = AAX_INT_TO_FLOAT(aaxBufferGetSetup(buffer, i));
                   printf("%4.2f\t", f ? _MAX(f, 0.01f) : 0.0f);
                }
                printf("\n");
                printf("Envelope Rates:\t\t");
                for (i=AAX_ENVELOPE_RATE0; i<=AAX_ENVELOPE_RATE6; i += 2)
                {
-                  f = (float)aaxBufferGetSetup(buffer, i)*1e-6f;
+                  f = AAX_INT_TO_FLOAT(aaxBufferGetSetup(buffer, i));
                   if (f < 0.1f) printf ("%4.2fms\t", f*1000.0f);
                   else if (f == AAX_FPINFINITE) printf("%4.2f\t", f);
                   else printf("%4.2fs\t", f);
