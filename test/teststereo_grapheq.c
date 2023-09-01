@@ -34,6 +34,7 @@
 #endif
 
 #include <stdio.h>
+#include <math.h>
 
 #include <aax/aax.h>
 
@@ -42,6 +43,11 @@
 #include "wavfile.h"
 
 #define FILE_PATH		SRC_PATH"/stereo.wav"
+
+float _lin2db(float v) { return 20.0f*log10f(_MAX(v, 1e-9f)); }
+float band[AAX_MAX_BANDS] = {
+   4.0f, 2.0f, 1.0f, 0.5f, 0.7f, 0.7f, 1.0f, 0.7f
+};
 
 int main(int argc, char **argv)
 {
@@ -64,13 +70,10 @@ int main(int argc, char **argv)
             aaxFilter filter;
             aaxEffect effect;
             float dt = 0.0f;
-            int q, state;
+            int i, q, state;
             float pitch;
 
             printf("\nPlayback stereo with 8-band graphic equalizer enabled.");
-            printf("\n 44Hz | 100Hz | 220Hz | 500Hz |"
-                   " 1.1kHz | 2.5kHz | 5.7kHz | 13kHz\n");
-
             /** emitter */
             emitter = aaxEmitterCreate();
             testForError(emitter, "Unable to create a new emitter");
@@ -101,17 +104,22 @@ int main(int argc, char **argv)
             testForState(res, "aaxMixerStart");
 
             /* equalizer */
+            printf("\n|  44Hz | 100Hz | 220Hz | 500Hz |"
+                   " 1.2kHz| 2.7kHz| 6.3kHz| 15kHz |\n|");
+            for (i=0; i<AAX_MAX_BANDS; ++i) {
+                printf("% 6.1f |", band[i]);
+            }
+            printf("\n\n");
+
             filter = aaxFilterCreate(config, AAX_GRAPHIC_EQUALIZER);
             testForError(filter, "aaxFilterCreate");
 
-            printf("  0.3 |  1.0  |  1.0  |  0.5  |");
             res = aaxFilterSetSlot(filter, 0, AAX_LINEAR,
-                                              0.333f, 1.0f, 1.0f, 0.5333f);
+                                   band[0], band[1], band[2], band[3]);
             testForState(res, "aaxFilterSetSlot/0");
 
-            printf("  0.7   |  0.7   |  0.8   |  0.7 \n\n");
             res = aaxFilterSetSlot(filter, 1, AAX_LINEAR,
-                                              0.6667f, 0.6667f, 0.8f, 0.6667f);
+                                   band[4], band[5], band[6], band[7]);
             testForState(res, "aaxFilterSetSlot/1");
 
             res = aaxFilterSetState(filter, AAX_TRUE);
@@ -130,9 +138,9 @@ int main(int argc, char **argv)
             q = 0;
             do
             {
-                msecSleep(50);
-                dt += 0.05f;
-
+                msecSleep(5);
+                dt += 0.005f;
+#if 0
                 if (++q > 10)
                 {
                     unsigned long offs, offs_bytes;
@@ -146,9 +154,21 @@ int main(int argc, char **argv)
                            "(%li samples/ %li bytes)\n", dt, off_s,
                            offs, offs_bytes);
                 }
+#endif
                 state = aaxEmitterGetState(emitter);
+
+                printf("|");
+                for (i=0; i<AAX_MAX_BANDS; ++i)
+                {
+                   int b = (i+1)<<8;
+                   int a = aaxMixerGetSetup(config, AAX_AVERAGE_VALUE+b);
+                   float g = AAX_TO_FLOAT(a);
+                   printf("% 6.1f |", _lin2db(g));
+               }
+               printf("\r");
             }
             while (state == AAX_PLAYING);
+            printf("\n");
 
             filter = aaxMixerGetFilter(config, AAX_GRAPHIC_EQUALIZER);
             aaxFilterSetState(filter, AAX_FALSE);
