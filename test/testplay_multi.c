@@ -53,11 +53,14 @@ int main(int argc, char **argv)
     char *devname, *infile;
     aaxConfig config;
     float velocity;
+    float gain;
     char verbose = 0;
     char repeat = 0;
     char fm = 0;
     char *env;
     int res;
+
+    gain = getGain(argc, argv);
 
     if (getCommandLineOption(argc, argv, "-v") ||
         getCommandLineOption(argc, argv, "--verbose"))
@@ -88,7 +91,19 @@ int main(int argc, char **argv)
     if (config)
     {
         aaxBuffer buffer;
+        aaxFilter filter;
         char *ofile;
+
+
+        filter = aaxFilterCreate(config, AAX_VOLUME_FILTER);
+        testForError(filter, "Unable to create the volume filter");
+
+        res = aaxFilterSetParam(filter, AAX_GAIN, AAX_LINEAR, gain);
+        testForState(res, "aaxFilterSetParam");
+
+        res = aaxMixerSetFilter(config, filter);
+        testForState(res, "aaxMixerSetGain");
+        aaxFilterDestroy(filter);
 
         res = aaxMixerSetSetup(config, AAX_REFRESH_RATE, 90.0f);
         testForState(res, "aaxMixerSetSetup");
