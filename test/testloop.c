@@ -34,6 +34,7 @@
 #endif
 
 #include <stdio.h>
+#include <math.h>
 
 #include <aax/aax.h>
 
