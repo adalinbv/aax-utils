@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2008-2022 by Erik Hofman.
- * Copyright (C) 2009-2022 by Adalin B.V.
+ * Copyright (C) 2008-2023 by Erik Hofman.
+ * Copyright (C) 2009-2023 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -447,8 +447,8 @@ int main(int argc, char **argv)
 
         sampled_release = aaxBufferGetSetup(buffer, AAX_SAMPLED_RELEASE);
         no_patches = aaxBufferGetSetup(buffer, AAX_MAX_PATCHES);
-        base_freq[0] = AAX_INT_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY));
-        fraction = AAX_INT_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_PITCH_FRACTION));
+        base_freq[0] = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
+        fraction = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_PITCH_FRACTION));
         if (reffile) {
             base_freq[1] = AAX_INT_TO_FLOAT(aaxBufferGetSetup(refbuf, AAX_BASE_FREQUENCY));
         } else {
@@ -463,7 +463,7 @@ int main(int argc, char **argv)
 
         if (verbose)
         {
-            unsigned int start, end, tracks, max_samples;
+            unsigned int start, end, loops, tracks, max_samples;
             float f, fs;
 
             if (reffile)
@@ -483,15 +483,18 @@ int main(int argc, char **argv)
             printf(" Buffer pitch fraction  : %4.3f\n", fraction);
 
             tracks = aaxBufferGetSetup(buffer, AAX_TRACKS);
-            printf(" Buffer no. tracks      : %i\n", tracks);
+            printf(" Buffer no. tracks\t: %i\n", tracks);
+
+            loops = aaxBufferGetSetup(buffer, AAX_LOOP_COUNT);
+            if (loops != -1) printf(" Buffer no. loops\t: %i\n", loops);
+            else printf(" Buffer no. loops\t: infinite\n");
 
             start = aaxBufferGetSetup(buffer, AAX_LOOP_START);
             end = aaxBufferGetSetup(buffer, AAX_LOOP_END);
-            printf(" Buffer loop start:     : %i\n", start);
-            printf(" Buffer loop end:       : %i\n", end);
-
+            printf(" Buffer loop start\t: %i samples\n", start);
+            printf(" Buffer loop end\t: %i samples\n", end);
             max_samples = aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
-            printf(" Buffer no. samples     : %5i\n", max_samples);
+            printf(" Buffer size\t\t: %5i samples\n", max_samples);
 
             fs = (float)aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE);
             f = fs/max_samples;
@@ -507,22 +510,37 @@ int main(int argc, char **argv)
             if (verbose > 1)
             {
                int i;
-               printf("Envelope Levels:\t");
+               printf(" Buffer Envelope\t:\n");
+               printf("\tlevels:\t\t");
                for (i=AAX_ENVELOPE_LEVEL0; i<AAX_ENVELOPE_RATE6; i += 2)
                {
-                  f = AAX_INT_TO_FLOAT(aaxBufferGetSetup(buffer, i));
+                  f = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, i));
                   printf("%4.2f\t", f ? _MAX(f, 0.01f) : 0.0f);
                }
                printf("\n");
-               printf("Envelope Rates:\t\t");
+               printf("\trates:\t\t");
                for (i=AAX_ENVELOPE_RATE0; i<=AAX_ENVELOPE_RATE6; i += 2)
                {
-                  f = AAX_INT_TO_FLOAT(aaxBufferGetSetup(buffer, i));
+                  f = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, i));
                   if (f < 0.1f) printf ("%4.2fms\t", f*1000.0f);
                   else if (f == AAX_FPINFINITE) printf("%4.2f\t", f);
                   else printf("%4.2fs\t", f);
                }
                printf("\n");
+
+               f = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_TREMOLO_DEPTH));
+               printf(" Buffer Tremolo Depth\t: %5.2f (%s)\n", f, f ? "enabled": "disabled");
+               f = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_TREMOLO_RATE));
+               printf(" Buffer Tremolo Rate\t: %5.2f Hz\n", f);
+               f = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_TREMOLO_SWEEP));
+               printf(" Buffer Tremolo Sweep\t: %5.2f sec.\n", f);
+
+               f = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_VIBRATO_DEPTH));
+               printf(" Buffer Vibrato Depth\t: %5.2f (%s)\n", f, f ? "enabled": "disabled");
+               f = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_VIBRATO_RATE));
+               printf(" Buffer Vibrato Rate\t: %5.2f Hz\n", f);
+               f = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_VIBRATO_SWEEP));
+               printf(" Buffer Vibrato Sweep\t: %5.2f sec.\n", f);
             }
         }
 
@@ -593,9 +611,9 @@ int main(int argc, char **argv)
             {
                 if (max_stages > 1)
                 {
-                    printf("Playback envelope:\n");
-                    printf("\tstage duration: %3.1f sec.\n", envelope_time);
-                    printf("\tstage:");
+                    printf("User provided gain envelope:\n");
+                    printf("\tstage duration  : %3.1f sec.\n", envelope_time);
+                    printf("\tstage:\t");
                     for(i=0; i<max_stages; ++i) {
                         printf("\t%5i", i);
                     }
@@ -607,10 +625,10 @@ int main(int argc, char **argv)
                     printf("\n");
                 }
                 else {
-                    printf("Playback envelope     : %5.1f\n", gain);
+                    printf("Playback gain           : %5.1f\n", gain);
                 }
 
-                printf("Playback pitch    : %5.1f", pitch[0]);
+                printf("Playback pitch          : %5.1f", pitch[0]);
                 if (pitch2)
                 {
                     printf("    to % .1f,     duration: %3.1f sec.\n",

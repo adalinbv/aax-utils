@@ -85,7 +85,7 @@ int main(int argc, char **argv)
             aaxEffect effect;
             aaxEmitter emitter[256];
             float pitch, anglestep;
-            int frame_timing;
+            float frame_timing;
             int i, deg = 0;
 
             /** mixer */
@@ -206,8 +206,8 @@ int main(int argc, char **argv)
             }
             while (++i < num);
 
-            frame_timing = aaxMixerGetSetup(config, AAX_FRAME_TIMING);
-            printf("frame rendering time: %f ms\n", frame_timing/1000.0f);
+            frame_timing = AAX_TO_FLOAT(aaxMixerGetSetup(config, AAX_FRAME_TIMING));
+            printf("frame rendering time: %f ms\n", frame_timing);
 
             aaxMatrix64SetOrientation(mtx64, SensorPos, SensorAt, SensorUp);
             aaxMatrix64Inverse(mtx64);

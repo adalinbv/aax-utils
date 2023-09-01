@@ -81,7 +81,7 @@ int main(int argc, char **argv)
             float pitch, anglestep;
             aaxFilter filter;
             aaxEffect effect;
-            int frame_timing;
+            float frame_timing;
             int i, deg = 0;
             aaxMtx4d mtx64;
 
@@ -184,8 +184,8 @@ int main(int argc, char **argv)
             }
             while (++i < num);
 
-            frame_timing = aaxMixerGetSetup(config, AAX_FRAME_TIMING);
-            printf("frame rendering time: %f ms\n", frame_timing/1000.0f);
+            frame_timing = AAX_TO_FLOAT(aaxMixerGetSetup(config, AAX_FRAME_TIMING));
+            printf("frame rendering time: %f ms\n", frame_timing);
 
             deg = 0;
             while(deg < 360)
