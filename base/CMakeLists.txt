@@ -2,6 +2,7 @@
 set(BASE_HEADERS
   geometry.h
   logging.h
+  random.h
   memory.h
   timer.h
   types.h
@@ -10,6 +11,7 @@ set(BASE_HEADERS
 set(BASE_OBJS
   logging.c
   memory.c
+  random.c
   timer.c
   types.c
 )
