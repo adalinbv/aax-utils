@@ -450,7 +450,7 @@ int main(int argc, char **argv)
         base_freq[0] = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
         fraction = AAX_TO_FLOAT(aaxBufferGetSetup(buffer, AAX_PITCH_FRACTION));
         if (reffile) {
-            base_freq[1] = AAX_INT_TO_FLOAT(aaxBufferGetSetup(refbuf, AAX_BASE_FREQUENCY));
+            base_freq[1] = AAX_TO_FLOAT(aaxBufferGetSetup(refbuf, AAX_BASE_FREQUENCY));
         } else {
             base_freq[1] = 0.0f;
         }
@@ -469,7 +469,7 @@ int main(int argc, char **argv)
             if (reffile)
             {
                 printf("Reference file: %s\n", reffile);
-                printf(" Buffer sample frequency: %5i Hz\n",
+                printf(" Buffer sample frequency: %5li Hz\n",
                         aaxBufferGetSetup(refbuf, AAX_SAMPLE_RATE));
                 printf(" Buffer base frequency  : %5.3f Hz\n", base_freq[1]);
                 printf("\n");
@@ -477,7 +477,7 @@ int main(int argc, char **argv)
 
             printf("Base file: %s\n", infile);
             printf(" Buffer no. of patches  : %i\n", no_patches);
-            printf(" Buffer sample frequency: %5i Hz\n",
+            printf(" Buffer sample frequency: %5li Hz\n",
                     aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE));
             printf(" Buffer base frequency  : %5.3f Hz\n", base_freq[0]);
             printf(" Buffer pitch fraction  : %4.3f\n", fraction);

@@ -117,8 +117,8 @@ int main(int argc, char **argv)
 
         if (verbose)
         {
-            printf("Sample frequency: %i Hz\n", aaxBufferGetSetup(buffer, AAX_FREQUENCY));
-            printf("Base frequency  : %i Hz\n", aaxBufferGetSetup(buffer, AAX_UPDATE_RATE));
+            printf("Sample frequency: %li Hz\n", aaxBufferGetSetup(buffer, AAX_FREQUENCY));
+            printf("Base frequency  : %li Hz\n", aaxBufferGetSetup(buffer, AAX_UPDATE_RATE));
         }
 
         ofile = getOutputFile(argc, argv, NULL);
