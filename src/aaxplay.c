@@ -122,8 +122,9 @@ int main(int argc, char **argv)
     aaxConfig record = NULL;
     aaxConfig file = NULL;
     float gain = 1.0f;
-    int res, rv = 0;
     int verbose = 0;
+    int64_t res;
+    int rv = 0;
 
     if (argc == 1 || getCommandLineOption(argc, argv, "-h") ||
                      getCommandLineOption(argc, argv, "--help"))
@@ -367,7 +368,7 @@ int main(int argc, char **argv)
 
         if (record && verbose)
         {
-            unsigned int samples = aaxMixerGetSetup(record, AAX_SAMPLES_MAX);
+            int64_t samples = aaxMixerGetSetup(record, AAX_SAMPLES_MAX);
             int rate = aaxMixerGetSetup(record, AAX_FREQUENCY);
             int bps = aaxGetBitsPerSample(aaxMixerGetSetup(record, AAX_FORMAT));
             int bitrate = aaxMixerGetSetup(record, AAX_BIT_RATE);
@@ -380,7 +381,7 @@ int main(int argc, char **argv)
             bitrate = abs(bitrate);
             if (samples) {
                 printf(" Audio format: %i Hz, %i bits/sample, %s%.1f kbps, "
-                       "%i tracks, %i samples\n", rate, bps, vbr ? "~" : "",
+                       "%i tracks, %li samples\n", rate, bps, vbr ? "~" : "",
                         1e-3f*bitrate, tracks, samples);
             } else {
                 printf(" Audio format: %i Hz, %i bits/sample, %s%i kbps, "
