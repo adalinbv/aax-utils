@@ -62,6 +62,14 @@
 # define PATH_SEPARATOR		'/'
 #endif
 
+#define WARN(a)			printf("\033[0;31mWarning:\033[0m "a"\n")
+#define WARN2(a,...)		printf("\033[0;31mWarning:\033[0m "a"\n", __VA_ARGS__)
+
+#define FREQUENCY_MAX		20000.0f
+#define CHORUS_MAX		60e-3f
+#define DELAY_MAX		1.0f
+#define REVERB_MAX		1.0f
+
 enum simplify_t {
     NORMAL = 0,
     SIMPLIFY          = 0x01,
@@ -419,7 +427,8 @@ struct dsp_t
             float value;
             float pitch;
             float adjust;
-            char *type;
+            enum aaxType type;
+            char *type_name;
         } param[4];
     } slot[4];
 };
@@ -532,7 +541,8 @@ void fill_slots(struct dsp_t *dsp, xmlId *xid, float envelope_factor, enum simpl
 
                     dsp->slot[sn].param[pn].adjust = adjust;
                     dsp->slot[sn].param[pn].value = value;
-                    dsp->slot[sn].param[pn].type = fill_type(type);
+                    dsp->slot[sn].param[pn].type_name = fill_type(type);
+                    dsp->slot[sn].param[pn].type = type;
                 }
             }
             xmlFree(xpid);
@@ -583,18 +593,16 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
         if (!emitter && !layer && final)
         {
             if ((src_type & AAX_SOURCE_MASK) == AAX_TIMED_TRANSITION) {
-                printf("\033[0;31mWarning:\033[0m timed transision filters "
-                       "and effects are one-shot only and therefore\n\t of "
-                       "little use inside audio-frames.\n");
+                WARN("timed transision filters and effects are one-shot only "
+                     "and therefore\n\t of little use inside audio-frames.");
             }
 
             if ((t == FILTER) &&
                 (dsp->eff_type == AAX_FREQUENCY_FILTER))
             {
                 if ((src_type & AAX_SOURCE_MASK) == AAX_ENVELOPE_FOLLOW) {
-                    printf("\033[0;31mWarning:\033[0m A frequency filter is "
-                           "defined in an audio frame\n\t\tConsider using a one"
-                           ", two or three band equalizer.\n");
+                    WARN("A frequency filter is defined in an audio frame\n\t\t"
+                         "Consider using a one , two or three band equalizer.");
                 }
             }
         }
@@ -621,9 +629,8 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     fill_slots(dsp, xid, envelope_factor, simplify);
 
     if (!final && dsp->env && !dsp->sustain && dsp->release_time == 0.0f) {
-        printf("\033[0;31mWarning:\033[0m timed-gain filter does not"
-               "specify an infinite sustain\n\t\tand does not specify a "
-               "release-time.\n");
+        WARN("timed-gain filter does not specify an infinite sustain\n\t\tand "
+             "does not specify a release-time.");
     }
 
     if (!distance)
@@ -661,18 +668,16 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
         if (!emitter && !layer && final)
         {
             if ((src_type & AAX_SOURCE_MASK) == AAX_TIMED_TRANSITION) {
-                printf("\033[0;31mWarning:\033[0m timed transision filters "
-                       "and effects are one-shot only and therefore\n\t of "
-                       "little use inside audio-frames.\n");
+                WARN("timed transision filters and effects are one-shot only "
+                     "and therefore\n\t of little use inside audio-frames.");
             }
 
             if ((t == FILTER) &&
                 (dsp->eff_type == AAX_FREQUENCY_FILTER))
             {
                 if ((src_type & AAX_SOURCE_MASK) == AAX_ENVELOPE_FOLLOW) {
-                    printf("\033[0;31mWarning:\033[0m A frequency filter is "
-                           "defined in an audio frame\n\t\tConsider using a one"
-                           ", two or three band equalizer.\n");
+                    WARN("A frequency filter is defined in an audio frame\n\t\t"
+                         "Consider using a one , two or three band equalizer.");
                 }
             }
         }
@@ -705,6 +710,7 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simpli
     char *ident = (!sound || (simplify & NO_LAYER_SUPPORT)) ? "  " : "   ";
     char *src = dsp->src;
     unsigned int s, p;
+    char delay;
 
     if (src == false_const) {
         return;
@@ -730,6 +736,13 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simpli
     }
     fprintf(output, ">\n");
 
+    delay = (dsp->dtype == EFFECT) &&
+              (dsp->eff_type == AAX_PHASING_EFFECT ||
+               dsp->eff_type == AAX_CHORUS_EFFECT ||
+               dsp->eff_type == AAX_FLANGING_EFFECT ||
+               dsp->eff_type == AAX_DELAY_EFFECT ||
+               dsp->eff_type == AAX_REVERB_EFFECT);
+
     for(s=0; s<dsp->no_slots; ++s)
     {
         if (dsp->slot[s].state) {
@@ -739,9 +752,22 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simpli
         }
         for(p=0; p<4; ++p)
         {
-            char * type = dsp->slot[s].param[p].type;
+            char* type = dsp->slot[s].param[p].type_name;
             float adjust = dsp->slot[s].param[p].adjust;
             float pitch = dsp->slot[s].param[p].pitch;
+            float value = dsp->slot[s].param[p].value;
+
+            if (delay && s == 0 && (p == 2 || p == 3))
+            {
+                if (type == AAX_LINEAR)
+                {
+                    if (p == 3 && value > 1.0f) { // offset
+                        WARN("offset exceeds 1.0f");
+                     } else if (dsp->slot[s].param[3].value + value > 1.0f) {
+                        WARN("offset+depth exceeds 1.0f");
+                     }
+                }
+            }
 
             fprintf(output, "%s  <param n=\"%i\"", ident, p);
             if (type) {
@@ -766,7 +792,6 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simpli
                 {
                     float freq1 = note2freq(info->note.min);
                     float freq2 = note2freq(info->note.max);
-                    float value = dsp->slot[s].param[p].value;
                     float lin1 = _MAX(value - adjust*_lin2log(freq1), 0.01f);
                     float lin2 = _MAX(value - adjust*_lin2log(freq2), 0.01f);
 
@@ -820,7 +845,9 @@ void free_dsp(struct dsp_t *dsp)
     for(s=0; s<dsp->no_slots; ++s)
     {
         for(p=0; p<4; ++p) {
-            if (dsp->slot[s].param[p].type) free(dsp->slot[s].param[p].type);
+            if (dsp->slot[s].param[p].type_name) {
+                free(dsp->slot[s].param[p].type_name);
+            }
         }
     }
     if (dsp->type) xmlFree(dsp->type);
@@ -1274,7 +1301,7 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
                 for (n=0; n < p; ++n) {
                     if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
                         obj->dsp[n].dtype == obj->dsp[p].dtype) {
-                        printf("\033[0;31mWarning:\033[0m %s filter is defined mutiple times.\n", type);
+                        WARN2("%s filter is defined mutiple times.", type);
                     }
                 }
                 p++;
@@ -1305,7 +1332,7 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
                 for (n=0; n < p; ++n) {
                     if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
                         obj->dsp[n].dtype == obj->dsp[p].dtype) {
-                        printf("\033[0;31mWarning:\033[0m %s effect is defined mutiple times.\n", type);
+                        WARN2("%s effect is defined mutiple times.", type);
                     }
                 }
                 p++;
