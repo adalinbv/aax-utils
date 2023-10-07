@@ -805,28 +805,78 @@ getSourceString(enum aaxSourceType type, char freqfilter, char delay)
     return strdup(rv);
 }
 
+
+/*
+ * Mix a newly generated waveform-, or noise-type with the existing sound data
+ * of the buffer.
+ *
+ * The buffer parameter is the handle as returned by aaxBufferCreate.
+ *
+ * The rate parameter specifies;
+ * - the frequency of the waveform-type (between 1 Hz and 22050 Hz).
+ * - how static a noise-type will sound (0.0 for non-static and 1.0 for highly
+ *   static).
+ *
+ * The type parameter is an enumerated type aaxWaveformType and specifies which
+ * waveform-types to mix with the existing sound data.
+ *
+ * The ratio parameter specifies the mixing ratio of the new waveform and the
+ * existing data. A value of 1.0 will overwrite existing data and a value of
+ * 0.0 will preserve existing data. A value of 0.5 mixes the new waveform and
+ * existing data at an equal level.
+ *
+ * The ptype parameter is an enumerated type aaxProcessingType and specifies
+ * how the newly generated waveform-type should act upon the current data in
+ * the buffer. Possible values;
+ *  - AAX_OVERWRITE, AAX_ADD, AAX_MIX, AAX_RINGMODULATE, AAX_APPEND
+ */
 int
-bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType stype)
+bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType stype,
+                      float ratio, enum aaxProcessingType ptype)
 {
-    static const char aax_fmt[] = "<?xml version=\"1.0\"?>\n \
-        <aeonwave>\n \
-         <sound frequency=\"%.0f\">\n \
-          <waveform src=\"%s%s\" staticity=\"%f\"/>\n \
-         </sound>\n \
-        </aeonwave>";
-    char *waveform = getSourceString(stype, 0, 0);
+    static char been_here = 0;
+    static char *proc_type[] = {
+     "none", "overwrite", "add", "mix", "modulate", "append"
+    };
+    static const char aax_fmt[] = "<?xml version=\"1.0\"?>\n\
+<aeonwave>\n <sound frequency=\"%.0f\">\n </sound>\n</aeonwave>";
+    static char aaxs[4097];
     int rv = AAX_FALSE;
+    float freq;
 
-    if ((stype >= AAX_1ST_WAVE && stype <= AAX_LAST_WAVE) ||
-        (stype >= AAX_1ST_NOISE && stype <= AAX_LAST_NOISE))
+    freq = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
+    if (!been_here || ptype == AAX_OVERWRITE || ratio == 1.0f)
     {
-        char *inverse = (stype & AAX_INVERSE) ? "inverse-" : "";
-        char aaxs[1024];
+        freq = rate;
+        snprintf(aaxs, 4096, aax_fmt, freq);
+        been_here = 1;
+    }
 
-        snprintf(aaxs, 1024, aax_fmt, rate, inverse, waveform, rate);
+    if (ratio > 0.0f && ptype < AAX_PROCESSING_MAX)
+    {
+        char *ptr = strstr(aaxs, " </sound>");
+        if (ptr)
+        {
+            if (stype >= AAX_1ST_WAVE && stype <= AAX_LAST_WAVE)
+            {
+                char *processing = proc_type[ptype];
+                char *waveform = getSourceString(stype, 0, 0);
+                char *inverse = (stype & AAX_INVERSE) ? "inverse-" : "";
+                int len = 4096 - (ptr-aaxs);
+                float pitch = rate/freq;
 
-        aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_AAXS16S);
-        rv = aaxBufferSetData(buffer, aaxs);
+                snprintf(ptr, len, "  <waveform src=\"%s%s\" processing=\"%s\" ratio=\"%.3f\" pitch=\"%.3f\"/>\n </sound>\n</aeonwave>", inverse, waveform, processing, ratio, pitch);
+
+                aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_AAXS16S);
+                rv = aaxBufferSetData(buffer, aaxs);
+            }
+            else if (stype >= AAX_1ST_NOISE && stype <= AAX_LAST_NOISE)
+            {
+            }
+        }
+    }
+    else {
+        rv = AAX_TRUE;
     }
 
     return rv;

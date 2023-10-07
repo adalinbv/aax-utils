@@ -108,7 +108,8 @@ int main(int argc, char **argv)
             res = aaxBufferSetSetup(buffer[i], AAX_FREQUENCY, SAMPLE_FREQ);
             testForState(res, "aaxBufferSetFrequency");
 
-            res = bufferProcessWaveform(buffer[i], pitch*rate, type);
+            res = bufferProcessWaveform(buffer[i], pitch*rate, type,
+                                        1.0f, AAX_ADD);
             testForState(res, "bufferProcessWaveform");
 
 #if 0

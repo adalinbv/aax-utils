@@ -90,7 +90,8 @@ int main()
         res = aaxBufferSetSetup(buffer, AAX_FREQUENCY, SAMPLE_FREQ);
         testForState(res, "aaxBufferSetFrequency");
 
-        res = bufferProcessWaveform(buffer, 0.0f, AAX_WHITE_NOISE);
+        res = bufferProcessWaveform(buffer, 0.0f, AAX_WHITE_NOISE,
+                                    1.0f, AAX_ADD);
         testForState(res, "bufferProcessWaveform");
 
         /** mixer */
