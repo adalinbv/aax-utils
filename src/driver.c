@@ -857,22 +857,24 @@ bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType stype,
         char *ptr = strstr(aaxs, " </sound>");
         if (ptr)
         {
+            char *processing = proc_type[ptype];
+            char *waveform = getSourceString(stype, 0, 0);
+            char *inverse = (stype & AAX_INVERSE) ? "inverse-" : "";
+            int len = 4096 - (ptr-aaxs);
+
             if (stype >= AAX_1ST_WAVE && stype <= AAX_LAST_WAVE)
             {
-                char *processing = proc_type[ptype];
-                char *waveform = getSourceString(stype, 0, 0);
-                char *inverse = (stype & AAX_INVERSE) ? "inverse-" : "";
-                int len = 4096 - (ptr-aaxs);
                 float pitch = rate/freq;
-
                 snprintf(ptr, len, "  <waveform src=\"%s%s\" processing=\"%s\" ratio=\"%.3f\" pitch=\"%.3f\"/>\n </sound>\n</aeonwave>", inverse, waveform, processing, ratio, pitch);
-
-                aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_AAXS16S);
-                rv = aaxBufferSetData(buffer, aaxs);
             }
             else if (stype >= AAX_1ST_NOISE && stype <= AAX_LAST_NOISE)
             {
+                snprintf(ptr, len, "  <waveform src=\"%s%s\" processing=\"%s\" ratio=\"%.3f\" staticity=\"%.3f\"/>\n </sound>\n</aeonwave>", inverse, waveform, processing, ratio, rate);
+
             }
+            aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_AAXS16S);
+            rv = aaxBufferSetData(buffer, aaxs);
+printf("%s\n", aaxs);
         }
     }
     else {
