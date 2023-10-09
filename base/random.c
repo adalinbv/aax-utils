@@ -33,6 +33,7 @@
 # include <sys/random.h>
 #endif
 #include <sys/time.h>
+#include <stdlib.h>
 
 #include <base/types.h>
 
