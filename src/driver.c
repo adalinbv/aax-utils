@@ -887,7 +887,6 @@ bufferProcessWaveform(aaxBuffer buffer, float rate, enum aaxSourceType stype,
             }
             aaxBufferSetSetup(buffer, AAX_FORMAT, AAX_AAXS16S);
             rv = aaxBufferSetData(buffer, aaxs);
-printf("%s\n", aaxs);
         }
     }
     else {
