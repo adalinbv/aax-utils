@@ -126,93 +126,88 @@ getRenderer(int argc, char **argv)
 int
 getNumEmitters(int argc, char **argv)
 {
-    int num = 1;
+    int rv = 1;
     char *ret;
 
     /* -n for the number of emitters */
     ret = getCommandLineOption(argc, argv, "-n");
     if (!ret) ret = getCommandLineOption(argc, argv, "--num");
-    if (ret) num = atoi(ret);
-    return num;
+    if (ret) rv = atoi(ret);
+    return rv;
 }
 
 float
 getFrequency(int argc, char **argv)
 {
-    float num = 0.0f;
+    float rv = 0.0f;
     char *ret = getCommandLineOption(argc, argv, "-f");
     if (!ret) ret = getCommandLineOption(argc, argv, "--frequency");
-    if (ret) num = (float)atof(ret);
-    return num;
+    if (ret) rv = (float)atof(ret);
+    return rv;
 }
 
 float
 getPitch(int argc, char **argv)
 {
-    float num = 1.0f;
+    float rv = 1.0f;
     char *ret = getCommandLineOption(argc, argv, "-p");
     if (!ret) ret = getCommandLineOption(argc, argv, "--pitch");
-    if (ret) num = (float)atof(ret);
-    return num;
+    if (ret) rv = (float)atof(ret);
+    return rv;
 }
 
 float
 getPitchRange(int argc, char **argv)
 {
-    float num = 0.0f;
+    float rv = 0.0f;
     char *ret = getCommandLineOption(argc, argv, "-p");
     if (!ret) ret = getCommandLineOption(argc, argv, "--pitch");
     if (ret) {
        ret = strchr(ret, '-');
        if (ret) ret++;
     }
-    if (ret) num = (float)atof(ret);
-    return num;
+    if (ret) rv = (float)atof(ret);
+    return rv;
 }
 
 float
 getPitchTime(int argc, char **argv)
 {
-    float num = 0.0f;
+    float rv = 0.0f;
     char *ret = getCommandLineOption(argc, argv, "-p");
     if (!ret) ret = getCommandLineOption(argc, argv, "--pitch");
     if (ret) {
        ret = strchr(ret, ':');
        if (ret) ret++;
     }
-    if (ret) num = (float)atof(ret);
-    return num;
+    if (ret) rv = (float)atof(ret);
+    return rv;
 }
 
 float
 getGain(int argc, char **argv)
 {
-    float num = 1.0f;
+    float rv = 1.0f;
     char *ret = getCommandLineOption(argc, argv, "-g");
     if (!ret) ret = getCommandLineOption(argc, argv, "--gain");
-    if (ret) num = (float)atof(ret);
-    return num;
+    if (ret) rv = (float)atof(ret);
+    return rv;
 }
 
 float
 getEnvelopeStage(int argc, char **argv, int stage)
 {
-    float rv = getGain(argc, argv);
-    if (stage > 0)
+    float rv = 0.0f;
+    char *ret = getCommandLineOption(argc, argv, "-g");
+    if (!ret) ret = getCommandLineOption(argc, argv, "--gain");
+    if (ret) rv = (float)atof(ret);
+    if (ret && stage > 0)
     {
-        char *ret;
         rv = 0.0f;
-
-        ret = getCommandLineOption(argc, argv, "-g");
-        if (!ret) ret = getCommandLineOption(argc, argv, "--gain");
-        if (ret)
-        {
-            rv = 0.0f;
-            do {
-                ret = strchr(ret, '-');
-                if (ret) ret++;
-            } while (ret && --stage);
-        }
+        do {
+            ret = strchr(ret, '-');
+            if (ret) ret++;
+        } while (ret && --stage);
         if (ret) rv = (float)atof(ret);
     }
     return rv;
@@ -227,62 +222,62 @@ getGainRange(int argc, char **argv)
 float
 getGainTime(int argc, char **argv)
 {
-    float num = 1.0f;
+    float rv = 1.0f;
     char *ret = getCommandLineOption(argc, argv, "-g");
     if (!ret) ret = getCommandLineOption(argc, argv, "--gain");
     if (ret) {
        ret = strchr(ret, ':');
        if (ret) ret++;
     }
-    if (ret) num = (float)atof(ret);
-    return num;
+    if (ret) rv = (float)atof(ret);
+    return rv;
 }
 
 static float
-handleTime(char *ret, float num)
+handleTime(char *ret, float rv)
 {
    char *ptr1 = strchr(ret, ':');
    char *ptr2 = ptr1 ? strchr(ptr1+1, ':') : NULL;
 
    if (ptr2)
    {
-      num = atof(ptr2+1);
-      num += 60.0f*atof(ptr1+1);
-      num += 60.0f*60.0f*atof(ret);
+      rv = atof(ptr2+1);
+      rv += 60.0f*atof(ptr1+1);
+      rv += 60.0f*60.0f*atof(ret);
    }
    else if (ptr1)
    {
-      num = atof(ptr1+1);
-      num += 60.0f*atof(ret);
+      rv = atof(ptr1+1);
+      rv += 60.0f*atof(ret);
    }
    else { 
-      num = (float)atof(ret);
+      rv = (float)atof(ret);
    }
 
-   return num;
+   return rv;
 }
 
 float getTime(int argc, char **argv)
 {
-    float num = 0.0f;
+    float rv = 0.0f;
     char *ret = getCommandLineOption(argc, argv, "-t");
     if (!ret) ret = getCommandLineOption(argc, argv, "--time");
     if (ret) {
-        num = handleTime(ret, num);
+        rv = handleTime(ret, rv);
     }
-    return num;
+    return rv;
 }
 
 float
 getDuration(int argc, char **argv)
 {
-    float num = 1.0f;
+    float rv = 1.0f;
     char *ret = getCommandLineOption(argc, argv, "-t");
     if (!ret) ret = getCommandLineOption(argc, argv, "--time");
     if (ret) {
-        num = handleTime(ret, num);
+        rv = handleTime(ret, rv);
     }
-    return num;
+    return rv;
 }
 
 
@@ -730,6 +725,24 @@ getSourceString(enum aaxSourceType type, char freqfilter, char delay)
             SRC_ADD(p, l, m, "1st-order");
         } else if (type & AAX_EFFECT_2ND_ORDER) {
             SRC_ADD(p, l, m, "2nd-order");
+        }
+
+        if (type & AAX_1STAGE) {
+            SRC_ADD(p, l, m, "1-stage");
+        } else if (type & AAX_2STAGE) {
+            SRC_ADD(p, l, m, "2-stage");
+        } else if (type & AAX_3STAGE) {
+            SRC_ADD(p, l, m, "3-stage");
+        } else if (type & AAX_4STAGE) {
+            SRC_ADD(p, l, m, "4-stage");
+        } else if (type & AAX_5STAGE) {
+            SRC_ADD(p, l, m, "5-stage");
+        } else if (type & AAX_6STAGE) {
+            SRC_ADD(p, l, m, "6-stage");
+        } else if (type & AAX_7STAGE) {
+            SRC_ADD(p, l, m, "7-stage");
+        } else if (type & AAX_8STAGE) {
+            SRC_ADD(p, l, m, "8-stage");
         }
     }
 
