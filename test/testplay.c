@@ -47,11 +47,13 @@
 #include "wavfile.h"
 
 
-#define MAX_STAGES			4
+					// default MIDI gain
+#define GAIN				(100.0f/127.0f)
 #define SLEEP_TIME			10e-3f
 #define SLIDE_TIME			7.0f
 #define	BLOCK_SIZE			4096
 #define FILE_PATH			SRC_PATH"/tictac.wav"
+#define MAX_STAGES			4
 
 aaxVec3d EmitterPos = { 0.0,  0.0,  0.0  };
 aaxVec3f EmitterDir = { 0.0f, 0.0f, 1.0f };
@@ -573,7 +575,7 @@ int main(int argc, char **argv)
                envelope[i] = getEnvelopeStage(argc, argv, i);
                if (envelope[i] > 0.0f) max_stages++;
             }
-            gain = prevgain = (envelope[0] > 0.0f) ? envelope[0] : 1.0f;
+            gain = prevgain = (envelope[0] != 1.0f) ? envelope[0] : GAIN;
 
             envelope_time = getGainTime(argc, argv);
             if (envelope_time == 0.0f) envelope_time = SLIDE_TIME;
@@ -900,8 +902,9 @@ int main(int argc, char **argv)
                duration = dt;
             }
 
-            printf("Playing sound for %3.1f seconds of %3.1f seconds, "
-                   "or until a key is pressed\n", duration, dt);
+            printf("Playing sound at %.0f%% volume "
+                    "for %3.1f seconds of %3.1f seconds,\n"
+                   "\tor until a key is pressed\n", gain*100, duration, dt);
             i = 0;
             dt = 0.0f;
             set_mode(1);
