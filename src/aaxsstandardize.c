@@ -121,16 +121,6 @@ static char* lwrstr(char *s) {
     return s;
 }
 
-enum type_t
-{
-    WAVEFORM = 0,
-    FILTER,
-    EFFECT,
-    EMITTER,
-    FRAME,
-    MIXER
-};
-
 static const char* format_float3(float f)
 {
     static char buf[32];
@@ -404,11 +394,55 @@ void free_info(struct info_t *info)
 
 }
 
+enum type_t
+{
+    WAVEFORM = 0,
+    FILTER,
+    EFFECT,
+    EMITTER,
+    FRAME,
+    MIXER
+};
+
+static int flt_pos[AAX_FILTER_MAX] =
+{
+     0, /* AAX_FILTER_NONE */
+    15, /* AAX_EQUALIZER shared with AAX_GRAPHIC_EQUALIZER */
+    11, /* AAX_VOLUME_FILTER */
+    13, /* AAX_DYNAMIC_GAIN_FILTER */
+    12, /* AAX_TIMED_GAIN_FILTER */
+     0, /* AAX_DIRECTIONAL_FILTER */
+     0, /* AAX_DISTANCE_FILTER */
+     6, /* AAX_FREQUENCY_FILTER */
+     4, /* AAX_BITCaaxFilterGetByNameRUSHER_FILTER */
+    15, /* AAX_GRAPHIC_EQUALIZER shared with AAX_EQUALIZER */
+    17, /* AAX_COMPRESSOR */
+    14  /* AAX_DYNAMIC_LAYER_FILTER */
+};
+
+static int eff_pos[AAX_EFFECT_MAX] =
+{
+     0, /* AAX_EFFECT_NONE */
+     1, /* AAX_PITCH_EFFECT */
+     3, /* AAX_DYNAMIC_PITCH_EFFECT */
+     2, /* AAX_TIMED_PITCH_EFFECT */
+     7, /* AAX_DISTORTION_EFFECT */
+     8, /* AAX_PHASING_EFFECT shared AAX_CHORUS_EFFECT/AAX_FLANGING_EFFECT */
+     8, /* AAX_CHORUS_EFFECT shared AAX_PHASING_EFFECT/AAX_FLANGING_EFFECT */
+     8, /* AAX_FLANGING_EFFECT shared AAX_PHASING_EFFECT/AAX_CHORUS_EFFECT */
+     0, /* AAX_VELOCITY_EFFECT */
+    10, /* AAX_REVERB_EFFECT */
+    16, /* AAX_CONVOLUTION_EFFECT */
+     5, /* AAX_RINGMODULATOR_EFFECT */
+     9  /* AAX_DELAY_EFFECT */
+};
+
 struct dsp_t
 {
     enum type_t dtype;
     int eff_type;
-    char *type;
+    int pos;
+    const char *type;
     char *src;
     char *repeat;
     int stereo;
@@ -696,11 +730,22 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
 void fill_dsp(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float envelope_factor, enum simplify_t simplify, char emitter, char layer)
 {
+    char type[1025];
+
+    type[1024] = 0;
+    xmlAttributeCopyString(xid, "type", type, 1024);
+
     dsp->dtype = t;
-    dsp->type = lwrstr(xmlAttributeGetString(xid, "type"));
-    if (t == FILTER) {
+    if (t == FILTER)
+    {
+        dsp->eff_type = aaxGetByName(type, AAX_FILTER_NAME);
+        dsp->type = aaxGetStringByType(dsp->eff_type, AAX_FILTER_NAME);
         fill_filter(dsp, xid, t, final, envelope_factor, simplify, emitter, layer);
-    } else if (t == EFFECT) {
+    }
+    else if (t == EFFECT)
+    {
+        dsp->eff_type = aaxGetByName(type, AAX_EFFECT_NAME);
+        dsp->type = aaxGetStringByType(dsp->eff_type, AAX_EFFECT_NAME);
         fill_effect(dsp, xid, t, final, envelope_factor, simplify, emitter, layer);
     }
 }
@@ -850,7 +895,6 @@ void free_dsp(struct dsp_t *dsp)
             }
         }
     }
-    if (dsp->type) xmlFree(dsp->type);
     if (dsp->repeat) xmlFree(dsp->repeat);
     if (dsp->src != false_const) xmlFree(dsp->src);
 }
@@ -1255,7 +1299,7 @@ struct object_t		// emitter, audioframe and mixer
     uint8_t looping;
 
     uint8_t no_dsps;
-    struct dsp_t dsp[16];
+    struct dsp_t dsp[AAX_FILTER_MAX+AAX_EFFECT_MAX];
 };
 
 void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char final, enum simplify_t simplify, char emitter)
@@ -1291,18 +1335,17 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
             if (!(simplify & SIMPLIFY) || !emitter
                   || strcasecmp(type, "frequency"))
             {
+                int flt_type = aaxGetByName(type, AAX_FILTER_NAME);
+                int pos = flt_pos[flt_type];
                 int n;
 
-                fill_dsp(&obj->dsp[p], xdid, FILTER, final, envelope_factor, simplify, emitter, 0);
-                if (obj->dsp[p].max > obj->envelope_max) {
-                    obj->envelope_max = obj->dsp[p].max;
+                if (obj->dsp[pos].eff_type == flt_type) {
+                    WARN2("%s filter is defined mutiple times", type);
                 }
 
-                for (n=0; n < p; ++n) {
-                    if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
-                        obj->dsp[n].dtype == obj->dsp[p].dtype) {
-                        WARN2("%s filter is defined mutiple times.", type);
-                    }
+                fill_dsp(&obj->dsp[pos], xdid, FILTER, final, envelope_factor, simplify, emitter, 0);
+                if (obj->dsp[pos].max > obj->envelope_max) {
+                    obj->envelope_max = obj->dsp[pos].max;
                 }
                 p++;
             }
@@ -1326,22 +1369,22 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
                 || !strcasecmp(type, "ringmodulator")))
                 || (emitter && !strcasecmp(type, "timed-pitch")))
             {
+                int eff_type = aaxGetByName(type, AAX_EFFECT_NAME);
+                int pos = eff_pos[eff_type];
                 int n;
 
-                fill_dsp(&obj->dsp[p], xdid, EFFECT, final, envelope_factor, simplify, emitter, 0);
-                for (n=0; n < p; ++n) {
-                    if (obj->dsp[n].eff_type == obj->dsp[p].eff_type &&
-                        obj->dsp[n].dtype == obj->dsp[p].dtype) {
-                        WARN2("%s effect is defined mutiple times.", type);
-                    }
+                if (obj->dsp[pos].eff_type == eff_type) {
+                    WARN2("%s effect is defined mutiple times", type);
                 }
+
+                fill_dsp(&obj->dsp[pos], xdid, EFFECT, final, envelope_factor, simplify, emitter, 0);
                 p++;
             }
             free(type);
         }
     }
     xmlFree(xdid);
-    obj->no_dsps = p;
+    obj->no_dsps = AAX_FILTER_MAX+AAX_EFFECT_MAX;
 }
 
 void print_object(struct object_t *obj, enum type_t type, struct info_t *info, FILE *output, enum simplify_t simplify)
@@ -1370,7 +1413,9 @@ void print_object(struct object_t *obj, enum type_t type, struct info_t *info, F
         fprintf(output, ">\n");
 
         for (d=0; d<obj->no_dsps; ++d) {
-            print_dsp(&obj->dsp[d], info, output, simplify, 0);
+            if (obj->dsp[d].type != NULL) {
+                print_dsp(&obj->dsp[d], info, output, simplify, 0);
+            }
         }
 
         if (type == EMITTER) {
