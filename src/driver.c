@@ -721,27 +721,28 @@ getSourceString(enum aaxSourceType type, char freqfilter, char delay)
 
     if (delay)
     {
-        if (type & AAX_EFFECT_1ST_ORDER) {
+        int order = type & AAX_ORDER_MASK;
+        if (order & AAX_EFFECT_1ST_ORDER) {
             SRC_ADD(p, l, m, "1st-order");
-        } else if (type & AAX_EFFECT_2ND_ORDER) {
+        } else if (order & AAX_EFFECT_2ND_ORDER) {
             SRC_ADD(p, l, m, "2nd-order");
         }
 
-        if (type & AAX_1STAGE) {
+        if (order == AAX_1STAGE) {
             SRC_ADD(p, l, m, "1-stage");
-        } else if (type & AAX_2STAGE) {
+        } else if (order == AAX_2STAGE) {
             SRC_ADD(p, l, m, "2-stage");
-        } else if (type & AAX_3STAGE) {
+        } else if (order == AAX_3STAGE) {
             SRC_ADD(p, l, m, "3-stage");
-        } else if (type & AAX_4STAGE) {
+        } else if (order == AAX_4STAGE) {
             SRC_ADD(p, l, m, "4-stage");
-        } else if (type & AAX_5STAGE) {
+        } else if (order == AAX_5STAGE) {
             SRC_ADD(p, l, m, "5-stage");
-        } else if (type & AAX_6STAGE) {
+        } else if (order == AAX_6STAGE) {
             SRC_ADD(p, l, m, "6-stage");
-        } else if (type & AAX_7STAGE) {
+        } else if (order == AAX_7STAGE) {
             SRC_ADD(p, l, m, "7-stage");
-        } else if (type & AAX_8STAGE) {
+        } else if (order == AAX_8STAGE) {
             SRC_ADD(p, l, m, "8-stage");
         }
     }
