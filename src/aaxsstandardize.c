@@ -658,7 +658,8 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
             src_type = aaxGetByName(src, AAX_ALL);
         }
-        dsp->src = getSourceString(src_type, freqfilter, AAX_FALSE);
+        dsp->src = aaxGetStringByType(src_type,
+                      freqfilter ? AAX_FREQUENCY_FILTER_NAME : AAX_SOURCE_NAME);
 
         if (!emitter && !layer && final)
         {
@@ -727,13 +728,13 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
                        dsp->eff_type == AAX_FLANGING_EFFECT ||
                        dsp->eff_type == AAX_DELAY_EFFECT ||
                        dsp->eff_type == AAX_REVERB_EFFECT);
-
         enum aaxSourceType src_type = AAX_CONSTANT;
 
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
             src_type = aaxGetByName(src, AAX_ALL);
         }
-        dsp->src = getSourceString(src_type, AAX_FALSE, delay);
+        dsp->src = aaxGetStringByType(src_type,
+                               delay ? AAX_DELAY_EFFECT_NAME : AAX_SOURCE_NAME);
 
         if (!emitter && !layer && final)
         {
@@ -932,7 +933,7 @@ void free_dsp(struct dsp_t *dsp)
         }
     }
     if (dsp->repeat) xmlFree(dsp->repeat);
-    if (dsp->src != false_const) xmlFree(dsp->src);
+    if (dsp->src != false_const) aaxFree(dsp->src);
 }
 
 struct waveform_t
@@ -1373,7 +1374,6 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
             {
                 int flt_type = aaxGetByName(type, AAX_FILTER_NAME);
                 int pos = flt_pos[flt_type];
-                int n;
 
                 if (obj->dsp[pos].eff_type == flt_type) {
                     WARN2("%s filter is defined mutiple times", type);
@@ -1407,7 +1407,6 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
             {
                 int eff_type = aaxGetByName(type, AAX_EFFECT_NAME);
                 int pos = eff_pos[eff_type];
-                int n;
 
                 if (obj->dsp[pos].eff_type == eff_type) {
                     WARN2("%s effect is defined mutiple times", type);
