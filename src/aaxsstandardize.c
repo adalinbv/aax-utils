@@ -404,19 +404,55 @@ enum type_t
     MIXER
 };
 
+/*
+ * Filter & Effect sequence:
+ * -------------------------
+ *    velocity effect
+ *  1 pitch effect - fixed pitch
+ *  2 dynamic pitch efect
+ *    parent pitch
+ *  3 timed pitch efect
+ *    pitch effect - slide
+ *    pitch effect - clamping
+ *    volume filter - occlusion
+ *  4 bitcrusher filter 
+ *  5 ringmodulator effect
+ *  6 frequency filter
+ *    bitcrisher filter - add noise
+ *  7 distortion effect
+ *  8 delay effect - phasing, chorus, flanging
+ *  9 delay-line effect
+ * 10 reverb
+ *    note velocity
+ * 11 timed  gain
+ *    note soft, note pressure
+ *    parent gain effect
+ * 12 dynamic gain filter
+ *    buffer gain
+ *    distance filter, directional filter
+ * 13 volume filter
+ * 14 dynamic layer filter
+ *    distance attenutation frequency filtering
+ *    volume filter - clamping
+ *    frame dynamic gain filter
+ * 15 convolution
+ * 16 compressor
+ * 17 equalizer
+*/
+
 static int flt_pos[AAX_FILTER_MAX] =
 {
      0, /* AAX_FILTER_NONE */
     15, /* AAX_EQUALIZER shared with AAX_GRAPHIC_EQUALIZER */
-    11, /* AAX_VOLUME_FILTER */
-    13, /* AAX_DYNAMIC_GAIN_FILTER */
-    12, /* AAX_TIMED_GAIN_FILTER */
+    13, /* AAX_VOLUME_FILTER */
+    12, /* AAX_DYNAMIC_GAIN_FILTER */
+    11, /* AAX_TIMED_GAIN_FILTER */
      0, /* AAX_DIRECTIONAL_FILTER */
      0, /* AAX_DISTANCE_FILTER */
      6, /* AAX_FREQUENCY_FILTER */
-     4, /* AAX_BITCaaxFilterGetByNameRUSHER_FILTER */
-    15, /* AAX_GRAPHIC_EQUALIZER shared with AAX_EQUALIZER */
-    17, /* AAX_COMPRESSOR */
+     4, /* AAX_BITCRUSHER_FILTER */
+    17, /* AAX_GRAPHIC_EQUALIZER shared with AAX_EQUALIZER */
+    16, /* AAX_COMPRESSOR */
     14  /* AAX_DYNAMIC_LAYER_FILTER */
 };
 
@@ -424,15 +460,15 @@ static int eff_pos[AAX_EFFECT_MAX] =
 {
      0, /* AAX_EFFECT_NONE */
      1, /* AAX_PITCH_EFFECT */
-     3, /* AAX_DYNAMIC_PITCH_EFFECT */
-     2, /* AAX_TIMED_PITCH_EFFECT */
+     2, /* AAX_DYNAMIC_PITCH_EFFECT */
+     3, /* AAX_TIMED_PITCH_EFFECT */
      7, /* AAX_DISTORTION_EFFECT */
      8, /* AAX_PHASING_EFFECT shared AAX_CHORUS_EFFECT/AAX_FLANGING_EFFECT */
      8, /* AAX_CHORUS_EFFECT shared AAX_PHASING_EFFECT/AAX_FLANGING_EFFECT */
      8, /* AAX_FLANGING_EFFECT shared AAX_PHASING_EFFECT/AAX_CHORUS_EFFECT */
      0, /* AAX_VELOCITY_EFFECT */
     10, /* AAX_REVERB_EFFECT */
-    16, /* AAX_CONVOLUTION_EFFECT */
+    15, /* AAX_CONVOLUTION_EFFECT */
      5, /* AAX_RINGMODULATOR_EFFECT */
      9  /* AAX_DELAY_EFFECT */
 };
