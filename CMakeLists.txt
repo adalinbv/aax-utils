@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0)
+cmake_minimum_required(VERSION 3.7.0)
 set(cmake_verbose_makefile TRUE)
 
 if (COMMAND CMAKE_POLICY)
