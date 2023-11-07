@@ -573,14 +573,14 @@ int main(int argc, char **argv)
             for (i=0; i<MAX_STAGES+1; ++i)
             {
                envelope[i] = getEnvelopeStage(argc, argv, i);
-               if (i && envelope[i] > 0.0f) max_stages++;
+               if (envelope[i] >= 0.0f) max_stages++;
             }
-            gain = prevgain = (envelope[0] != 0.0f) ? envelope[0] : GAIN;
+            gain = prevgain = (envelope[0] >= 0.0f) ? envelope[0] : GAIN;
 
             envelope_time = getGainTime(argc, argv);
             if (envelope_time == 0.0f) envelope_time = SLIDE_TIME;
 
-            if (envelope[stage+1] == 0.0f) {
+            if (envelope[1] < 0.0f) {
                 envelope_step = 0.0f;
             } else {
                 envelope_step = (envelope[1]-envelope[0])/(envelope_time/SLEEP_TIME);
@@ -965,7 +965,7 @@ int main(int argc, char **argv)
                 else if (stage < max_stages)
                 {
                     stage++;
-                    if (envelope[stage+1] == 0.0f) {
+                    if (envelope[stage+1] < 0.0f) {
                         envelope_step = 0.0f;
                     } else {
                         envelope_step = (envelope[stage+1]-envelope[stage])/(envelope_time/SLEEP_TIME);
