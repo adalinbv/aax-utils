@@ -575,7 +575,7 @@ int main(int argc, char **argv)
                envelope[i] = getEnvelopeStage(argc, argv, i);
                if (envelope[i] > 0.0f) max_stages++;
             }
-            gain = prevgain = (envelope[0] != 1.0f) ? envelope[0] : GAIN;
+            gain = prevgain = (envelope[0] != 0.0f) ? envelope[0] : GAIN;
 
             envelope_time = getGainTime(argc, argv);
             if (envelope_time == 0.0f) envelope_time = SLIDE_TIME;
