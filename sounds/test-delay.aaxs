@@ -30,11 +30,11 @@
  </emitter>
 
  <audioframe>
-  <effect type="chorus" src="sine|exponential">
+  <effect type="delay" src="sine|exponential|5th-order">
    <slot n="0">
     <param n="0">0.7</param>
     <param n="1">0.1</param>
-    <param n="2">1.0</param>
+    <param n="2">0.1</param>
     <param n="3">0.0</param>
    </slot>
    <slot n="1">

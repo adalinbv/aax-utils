@@ -20,7 +20,7 @@
  </info>
 
  <sound gain="0.74" frequency="220" duration="0.5">
-  <waveform src="sine"/>
+  <waveform src="sawtooth"/>
  </sound>
 
  <emitter looping="true">
@@ -38,20 +38,12 @@
     <param n="3">0.0</param>
    </slot>
   </filter>
-  <filter type="frequency" src="true">
+  <effect type="flanging" src="sine">
    <slot n="0">
-    <param n="0">1600.0</param>
-    <param n="1">1.0</param>
-    <param n="2">0.9</param>
-    <param n="3">1.0</param>
-   </slot>
-  </filter>
-  <effect type="flanging" src="true">
-   <slot n="0">
-    <param n="0">0.6</param>
-    <param n="1">0.0</param>
-    <param n="2">0.0</param>
-    <param n="3">0.1</param>
+    <param n="0">0.86</param>
+    <param n="1">0.1</param>
+    <param n="2" type="msec">20.0</param>
+    <param n="3" type="msec">0.1</param>
    </slot>
   </effect>
  </emitter>

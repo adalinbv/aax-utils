@@ -7,17 +7,17 @@
  </sound>
 
  <emitter looping="true">
-  <effect type="chorus" src="sine|exponential">
+  <effect type="chorus" src="sine|3th-order">
    <slot n="0">
-    <param n="0">0.7</param>
-    <param n="1">0.1</param>
-    <param n="2">1.0</param>
-    <param n="3">0.0</param>
+    <param n="0">0.5</param>
+    <param n="1">0.2</param>
+    <param n="2" type="msec">20.0</param>
+    <param n="3" type="msec">10.0</param>
    </slot>
    <slot n="1">
     <param n="0">250.0</param>
     <param n="1">5000.0</param>
-    <param n="2">0.1</param>
+    <param n="2">0.496</param>
     <param n="3">1.0</param>
    </slot>
   </effect>

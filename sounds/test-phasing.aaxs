@@ -7,12 +7,12 @@
  </sound>
 
  <emitter looping="true">
-  <effect type="phasing" src="sine">
+  <effect type="phasing" src="sine|3th-order">
    <slot n="0">
-    <param n="0">0.7</param>
+    <param n="0">0.5</param>
     <param n="1">0.1</param>
-    <param n="2">1.0</param>
-    <param n="3">0.0</param>
+    <param n="2" type="usec">50.0</param>
+    <param n="3" type="usec">50.0</param>
    </slot>
    <slot n="1">
     <param n="0">250.0</param>
