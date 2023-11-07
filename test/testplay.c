@@ -573,7 +573,7 @@ int main(int argc, char **argv)
             for (i=0; i<MAX_STAGES+1; ++i)
             {
                envelope[i] = getEnvelopeStage(argc, argv, i);
-               if (envelope[i] > 0.0f) max_stages++;
+               if (i && envelope[i] > 0.0f) max_stages++;
             }
             gain = prevgain = (envelope[0] != 0.0f) ? envelope[0] : GAIN;
 
