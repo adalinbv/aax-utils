@@ -1,25 +1,10 @@
 <?xml version="1.0"?>
 
 <aeonwave>
- <sound frequency="440">
+ <sound frequency="55">
   <waveform src="impulse"/>
  </sound>
 
- <emitter looping="true">
-  <filter type="timed-gain">
-   <slot n="0">
-    <param n="0">2.18</param>
-    <param n="1">0.05</param>
-    <param n="2">1.9</param>
-    <param n="3">inf</param>
-   </slot>
-   <slot n="1">
-    <param n="0">0.134</param>
-    <param n="1">0.2</param>
-    <param n="2">0.0</param>
-    <param n="3">0.0</param>
-   </slot>
-  </filter>
- </emitter>
+ <emitter looping="true"/>
 
 </aeonwave>
