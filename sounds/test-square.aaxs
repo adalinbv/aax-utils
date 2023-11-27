@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 
 <aeonwave>
+ <info version="0.1"/>
+
  <sound frequency="55">
   <waveform src="square"/>
  </sound>
