@@ -96,6 +96,26 @@ aaxVec3d SensorPos = { 0.0,  0.0,  0.0  };
 aaxVec3f SensorAt = {  0.0f, 0.0f, 1.0f };
 aaxVec3f SensorUp = {  0.0f, 1.0f, 0.0f };
 
+// Gains for AAXS info block version 0.0
+static float _gains_v0[AAX_MAX_WAVE][2] = {
+  { 0.7f,  1.0f }, // AAX_SAWTOOTH,  AAX_PURE_SAWTOOTH
+  { 0.95f, 1.0f }, // AAX_SQUARE,    AAX_PURE_SQUARE
+  { 0.9f,  1.0f }, // AAX_TRIANGLE,  AAX_PURE_TRIANGLE
+  { 1.0f,  1.0f }, // AAX_SINE,      AAX_PURE_SINE
+  { 1.0f,  1.0f }, // AAX_CYCLOID,   AAX_PURE_CYCLOID
+  { 1.1f, 1.f/16.f } // AAX_IMPULSE, AAX_PURE_IMPULSE
+};
+
+// Volume matched gains for AAXS info block version >= 0.1
+static float _gains[AAX_MAX_WAVE][2] = {
+  { 0.5f,  0.4f }, // AAX_SAWTOOTH, AAX_PURE_SAWTOOTH
+  { 0.5f,  0.4f }, // AAX_SQUARE,   AAX_PURE_SQUARE
+  { 1.1f,  1.2f }, // AAX_TRIANGLE, AAX_PURE_TRIANGLE
+  { 1.0f,  1.1f }, // AAX_SINE,     AAX_PURE_SINE
+  { 0.95f, 0.9f }, // AAX_CYCLOID,  AAX_PURE_CYCLOID
+  { 1.0f,  5.2f }  // AAX_IMPULSE,  AAX_PURE_IMPULSE
+};
+
 static float _lin2log(float v) { return log10f(v); }
 //  static float _log2lin(float v) { return powf(10.f,v); }
 static float _lin2db(float v) { return 20.f*log10f(v); }
@@ -173,6 +193,7 @@ static uint8_t freq2note(float freq) {
     return rintf(12.0f*log2f(freq/440.0f)+69.0f);
 }
 
+float version = 0.0f;
 struct info_t
 {
     char *path;
@@ -223,6 +244,8 @@ void fill_info(struct info_t *info, xmlId *xid, const char *filename)
             info->path[size] = 0;
         }
     }
+
+    version = xmlAttributeGetDouble(xid, "version");
 
     info->pan = _MINMAX(xmlAttributeGetDouble(xid, "pan"), -1.0f, 1.0f);
     info->program = info->bank = -1;
@@ -313,6 +336,7 @@ void print_info(struct info_t *info, FILE *output)
     strftime(year, 5, "%Y", tm_info);
 
     fprintf(output, " <info");
+    fprintf(output, " version=\"0.1f\"");
     if (info->name) fprintf(output, " name=\"%s\"", info->name);
     if (info->bank >= 0) fprintf(output, " bank=\"%i\"", info->bank);
     if (info->program >= 0) fprintf(output, " program=\"%i\"", info->program);
@@ -875,6 +899,38 @@ char fill_waveform(struct waveform_t *wave, xmlId *xid, enum simplify_t simplify
     wave->src = lwrstr(xmlAttributeGetString(xid, "src"));
     wave->processing = lwrstr(xmlAttributeGetString(xid, "processing"));
     wave->ratio = xmlAttributeGetDouble(xid, "ratio");
+    if (wave->ratio == 0.0f) wave->ratio = 1.0f;
+    if (version < 0.1f) // convert to version 0.1
+    {
+        int src = aaxGetByName(wave->src, AAX_SOURCE_NAME);
+        if (src & AAX_SOURCE_MASK)
+        {
+            int processing = aaxGetByName(wave->processing,AAX_PROCESSING_NAME);
+            int src = aaxGetByName(wave->src, AAX_SOURCE_NAME);
+            int wtype = src & AAX_SOURCE_MASK;
+            int waveform = wtype & ~AAX_PURE_WAVEFORM;
+            int noise = wtype & AAX_NOISE_MASK;
+            int pure = (wtype & AAX_PURE_WAVEFORM) ? 1 : 0;
+            float ogain = _gains_v0[waveform-AAX_1ST_WAVE][pure];
+            float ngain = _gains[waveform-AAX_1ST_WAVE][pure];
+            float gain = ogain/ngain;
+            switch(processing)
+            {
+            case AAX_PROCESSING_NONE:
+            case AAX_ADD:
+                wave->ratio *= gain;
+                break;
+             case AAX_MIX:
+//              wave->ratio -= 0.5f*gain*wave->ratio;
+                break;
+             case AAX_RINGMODULATE:
+                wave->ratio *= gain;
+                break;
+             default:
+                break;
+            }
+        }
+    }
     wave->pitch = _MAX(xmlAttributeGetDouble(xid, "pitch"), 0.0f);
     wave->staticity =_MINMAX(xmlAttributeGetDouble(xid, "staticity"),0.0f,1.0f);
     wave->random =_MINMAX(xmlAttributeGetDouble(xid, "random"),0.0f,1.0f);
@@ -902,9 +958,9 @@ void print_waveform(struct waveform_t *wave, FILE *output, enum simplify_t simpl
     if (wave->processing) fprintf(output, " processing=\"%s\"", wave->processing);
     if (wave->ratio) {
         if (wave->processing && !strcasecmp(wave->processing, "mix") && wave->ratio != 0.5f) {
-            fprintf(output, " ratio=\"%s\"", format_float6(wave->ratio));
+            fprintf(output, " ratio=\"%s\"", format_float3(wave->ratio));
         } else if (wave->ratio != 1.0f) {
-            fprintf(output, " ratio=\"%s\"", format_float6(wave->ratio));
+            fprintf(output, " ratio=\"%s\"", format_float3(wave->ratio));
         }
     }
     if (wave->pitch && wave->pitch != 1.0f) fprintf(output, " pitch=\"%s\"", format_float6(wave->pitch));
@@ -997,6 +1053,7 @@ char fill_layers(struct sound_t *sound, xmlId *xid, enum simplify_t simplify)
         }
 
         layer->ratio = xmlAttributeGetDouble(xlid, "ratio");
+        if (layer->ratio == 0.0f) layer->ratio = 1.0f;
         layer->pitch= xmlAttributeGetDouble(xlid, "pitch");
 
         if (!(simplify & SIMPLIFY))
@@ -1059,7 +1116,7 @@ void print_layers(struct sound_t *sound, struct info_t *info, FILE *output, enum
 
         if (!(simplify & NO_LAYER_SUPPORT)) fprintf(output, "  <layer n=\"%i\"", l);
 
-        if (layer->ratio != 0.0 && layer->ratio != 1.0) {
+        if (layer->ratio != 1.0) {
             fprintf(output, " ratio=\"%s\"", format_float3(layer->ratio));
         }
         if (layer->pitch != 0.0  && layer->pitch != 1.0) {
