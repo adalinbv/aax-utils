@@ -336,7 +336,7 @@ void print_info(struct info_t *info, FILE *output)
     strftime(year, 5, "%Y", tm_info);
 
     fprintf(output, " <info");
-    fprintf(output, " version=\"0.1f\"");
+    fprintf(output, " version=\"0.1\"");
     if (info->name) fprintf(output, " name=\"%s\"", info->name);
     if (info->bank >= 0) fprintf(output, " bank=\"%i\"", info->bank);
     if (info->program >= 0) fprintf(output, " program=\"%i\"", info->program);
