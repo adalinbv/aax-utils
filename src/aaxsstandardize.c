@@ -96,7 +96,7 @@ aaxVec3d SensorPos = { 0.0,  0.0,  0.0  };
 aaxVec3f SensorAt = {  0.0f, 0.0f, 1.0f };
 aaxVec3f SensorUp = {  0.0f, 1.0f, 0.0f };
 
-// Gains for AAXS info block version 0.0
+// Gains for AAXS sound version 1.0
 static float _gains_v0[AAX_MAX_WAVE][2] = {
   { 0.7f,  1.0f }, // AAX_SAWTOOTH,  AAX_PURE_SAWTOOTH
   { 0.95f, 1.0f }, // AAX_SQUARE,    AAX_PURE_SQUARE
@@ -106,7 +106,7 @@ static float _gains_v0[AAX_MAX_WAVE][2] = {
   { 1.1f, 1.f/16.f } // AAX_IMPULSE, AAX_PURE_IMPULSE
 };
 
-// Volume matched gains for AAXS info block version >= 0.1
+// Volume matched gains for AAXS sound version > 1.0
 static float _gains[AAX_MAX_WAVE][2] = {
   { 0.5f,  0.4f }, // AAX_SAWTOOTH, AAX_PURE_SAWTOOTH
   { 0.5f,  0.4f }, // AAX_SQUARE,   AAX_PURE_SQUARE
@@ -193,7 +193,7 @@ static uint8_t freq2note(float freq) {
     return rintf(12.0f*log2f(freq/440.0f)+69.0f);
 }
 
-float version = 0.0f;
+float sound_version = 0.0f;
 struct info_t
 {
     char *path;
@@ -245,7 +245,14 @@ void fill_info(struct info_t *info, xmlId *xid, const char *filename)
         }
     }
 
-    version = xmlAttributeGetDouble(xid, "version");
+    xtid = xmlNodeGet(xid, "sound");
+    if (xtid)
+    {
+       if (xmlAttributeExists(xtid, "version")) {
+          sound_version = xmlAttributeGetDouble(xtid, "version");
+       }
+       xmlFree(xtid);
+    }
 
     info->pan = _MINMAX(xmlAttributeGetDouble(xid, "pan"), -1.0f, 1.0f);
     info->program = info->bank = -1;
@@ -336,7 +343,6 @@ void print_info(struct info_t *info, FILE *output)
     strftime(year, 5, "%Y", tm_info);
 
     fprintf(output, " <info");
-    fprintf(output, " version=\"0.1\"");
     if (info->name) fprintf(output, " name=\"%s\"", info->name);
     if (info->bank >= 0) fprintf(output, " bank=\"%i\"", info->bank);
     if (info->program >= 0) fprintf(output, " program=\"%i\"", info->program);
@@ -409,6 +415,7 @@ void print_info(struct info_t *info, FILE *output)
         }
         fprintf(output, "/>\n");
     }
+    fprintf(output, "  <sound version=\"1.1\"/>\n");
     fprintf(output, " </info>\n\n");
 }
 
@@ -900,7 +907,7 @@ char fill_waveform(struct waveform_t *wave, xmlId *xid, enum simplify_t simplify
     wave->processing = lwrstr(xmlAttributeGetString(xid, "processing"));
     wave->ratio = xmlAttributeGetDouble(xid, "ratio");
     if (wave->ratio == 0.0f) wave->ratio = 1.0f;
-    if (version < 0.1f) // convert to version 0.1
+    if (sound_version <= 1.0f) // convert to version 1.1
     {
         int src = aaxGetByName(wave->src, AAX_SOURCE_NAME);
         if (src & AAX_SOURCE_MASK)
@@ -922,6 +929,7 @@ char fill_waveform(struct waveform_t *wave, xmlId *xid, enum simplify_t simplify
                 break;
              case AAX_MIX:
 //              wave->ratio -= 0.5f*gain*wave->ratio;
+                wave->ratio = wave->ratio*ogain/(2.0f*ngain);
                 break;
              case AAX_RINGMODULATE:
                 wave->ratio *= gain;
