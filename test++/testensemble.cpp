@@ -140,9 +140,11 @@ int main(int argc, char **argv)
     aax::Buffer& buffer = aax.buffer(infile);
     if (buffer)
     {
-        aax::Instrument instrument(aax, buffer);
+        aax::Ensemble ensemble(aax, buffer);
 
-        TRY( aax.add(instrument) );
+        TRY( aax.add(ensemble) );
+
+        TRY( ensemble.add(buffer) );
 
         float base_freq = buffer.get(AAX_BASE_FREQUENCY);
         float freq = getFrequency(argc, argv);
@@ -151,8 +153,8 @@ int main(int argc, char **argv)
             else freq = pitch*base_freq;
         }
 
-        instrument.set_gain(gain);
-        instrument.play(note, 1.0f, buffer, pitch);
+        ensemble.set_gain(gain);
+        ensemble.play(note, 1.0f, pitch);
 
         set_mode(1);
         do
@@ -164,12 +166,12 @@ int main(int argc, char **argv)
             dt += 0.25f;
 
             if (get_key()) {
-               instrument.finish();
+               ensemble.finish();
             }
         }
-        while (!instrument.finished());
+        while (!ensemble.finished());
         set_mode(0);
-        TRY( aax.remove(instrument) );
+        TRY( aax.remove(ensemble) );
     }
     else {
         printf("Unable to load: %s\n", infile);
