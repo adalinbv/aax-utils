@@ -114,7 +114,7 @@ int main(int argc, char **argv)
         help();
     }
 
-    float gain = aax::ln( getGain(argc, argv) );
+    float gain = aax::math::ln( getGain(argc, argv) );
     float pitch = getPitch(argc, argv);
 
     char *env;
@@ -147,12 +147,12 @@ int main(int argc, char **argv)
         float base_freq = buffer.get(AAX_BASE_FREQUENCY);
         float freq = getFrequency(argc, argv);
         if (freq == 0.0f) {
-            if (note) freq = aax::note2freq(note);
+            if (note) freq = aax::math::note2freq(note);
             else freq = pitch*base_freq;
         }
 
         instrument.set_gain(gain);
-        instrument.play(note, 1.0f, buffer, pitch);
+        instrument.play(note, 1.0f, pitch);
 
         set_mode(1);
         do
