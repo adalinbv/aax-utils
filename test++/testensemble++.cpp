@@ -128,10 +128,11 @@ int main(int argc, char **argv)
     char *key_on_file = getCommandLineOption(argc, argv, "--key-on");
     char *key_off_file = getCommandLineOption(argc, argv, "--key-off");
 
+    char *devname = getDeviceName(argc, argv);
     char *infile = getInputFile(argc, argv, FILE_PATH);
 
     // Open the default device for playback
-    aax::AeonWave aax(AAX_MODE_WRITE_STEREO);
+    aax::AeonWave aax(devname, AAX_MODE_WRITE_STEREO);
     TRY( aax.set(AAX_INITIALIZED) );
     TRY( aax.set(AAX_PLAYING) );
 
@@ -145,6 +146,7 @@ int main(int argc, char **argv)
 
         TRY( aax.add(ensemble) );
 
+        ensemble.add_instrument(buffer);
         ensemble.add_instrument(buffer);
         ensemble.add_instrument(buffer);
         ensemble.add_instrument(buffer);
