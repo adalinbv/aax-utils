@@ -37,8 +37,10 @@
 
 #include <cstdio>
 #include <string>
+#include <filesystem>
 
 #include <aax/instrument.hpp>
+#include <xml.h>
 
 #include "driver.h"
 
@@ -48,7 +50,7 @@
 
 void help()
 {
-    printf("Usage: testinstrument++ [options]\n");
+    printf("Usage: testensemble++ [options]\n");
     printf("Plays audio from a file.\n");
     printf("Optionally writes the audio to an output file.\n");
 
@@ -106,6 +108,58 @@ tone2note(const char *t)
     return rv;
 }
 
+bool add_buffer(aax::AeonWave& aax, aax::Ensemble& ensemble, const char *infile)
+{
+    printf("Processing buffer: %s\n", infile);
+    std::filesystem::path path = infile;
+    if (path.extension() == ".xml")
+    {
+        xmlId *xid = xmlOpen(infile);
+        if (xid)
+        {
+            xmlId *xlid = xmlNodeGet(xid, "aeonwave/set/layer");
+            if (xlid)
+            {
+                char file[64] = "";
+                xmlId *xpid = xmlMarkId(xlid);
+                int slen, num = xmlNodeGetNum(xlid, "patch");
+                for (int i=0; i<num; i++)
+                {
+                    if (xmlNodeGetPos(xlid, xpid, "patch", i) != 0)
+                    {
+                        float gain = 1.0f, pitch = 1.0f;
+                        if (xmlAttributeExists(xpid, "pitch")) {
+                            gain = xmlAttributeGetDouble(xpid, "pitch");
+                        }
+                        if (xmlAttributeExists(xpid, "gain")) {
+                            gain = xmlAttributeGetDouble(xpid, "gain");
+                        }
+                        int min = xmlAttributeGetInt(xpid, "min");
+                        int max = xmlAttributeGetInt(xpid, "max");
+                        if (!max) max = 128;
+                        slen = xmlAttributeCopyString(xpid, "file", file, 64);
+                        if (slen)
+                        {
+                            file[slen] = 0;
+                            aax::Buffer& buffer = aax.buffer(file);
+                            ensemble.add_member(buffer, pitch, gain, min, max);
+                        }
+                    }
+                }
+                xmlFree(xpid);
+            }
+            xmlFree(xid);
+        }
+    }
+    else
+    {
+        aax::Buffer& buffer = aax.buffer(infile);
+        ensemble.add_member(buffer);
+    }
+
+    return true;
+}
+
 int main(int argc, char **argv)
 {
     if (argc == 1 || getCommandLineOption(argc, argv, "-h") ||
@@ -114,16 +168,19 @@ int main(int argc, char **argv)
         help();
     }
 
+    float freq = getFrequency(argc, argv);
     float gain = aax::math::ln( getGain(argc, argv) );
-    float pitch = getPitch(argc, argv);
+    float pitch = 1.0f;
 
     char *env;
-    int note = 0;
+    int note = DEFAULT_NOTE;
     env = getCommandLineOption(argc, argv, "-n");
     if (!env) env = getCommandLineOption(argc, argv, "--note");
-    if (env) {
-        note = tone2note(env);
-    }
+    if (env) note = tone2note(env);
+
+    if (!freq) freq = aax::math::note2freq(note);
+    freq *= getPitch(argc, argv);
+    note = aax::math::freq2note(freq);
 
     char *key_on_file = getCommandLineOption(argc, argv, "--key-on");
     char *key_off_file = getCommandLineOption(argc, argv, "--key-off");
@@ -136,45 +193,17 @@ int main(int argc, char **argv)
     TRY( aax.set(AAX_INITIALIZED) );
     TRY( aax.set(AAX_PLAYING) );
 
-    float dt = 0.0f;
-    printf("Processing buffer: %s\n", infile);
-    aax::Buffer& buffer = aax.buffer(infile);
-    if (buffer)
-    {
-        aax::Buffer nullBuffer;
-        aax::Ensemble ensemble(aax, nullBuffer);
+    aax::Ensemble ensemble(aax);
 
+    float dt = 0.0f;
+    bool res = add_buffer(aax, ensemble, infile);
+    if (res)
+    {
         TRY( aax.add(ensemble) );
 
-        ensemble.add_instrument(buffer);
-        ensemble.add_instrument(buffer);
-        ensemble.add_instrument(buffer);
-        ensemble.add_instrument(buffer);
-        ensemble.add_instrument(buffer);
-
-        float base_freq = buffer.get(AAX_BASE_FREQUENCY);
-        float fraction = AAX_TO_FLOAT(buffer.get(AAX_PITCH_FRACTION));
-
-        float pitch2, freq;
-        float pitch = 1.0f;
-        if (note) {
-            freq = aax::math::note2freq(note);
-        } else {
-            freq = getFrequency(argc, argv);
-            note = aax::math::freq2note(base_freq);
-        }
-        if (freq == 0.0f) {
-            pitch = getPitch(argc, argv);
-        }
-        else
-        {
-            freq = fraction*(freq - base_freq) + base_freq;
-            if (base_freq) pitch = freq/base_freq;
-            pitch2 = 0.0f;
-        }
-
         ensemble.set_gain(gain);
-        ensemble.play(note, 1.0f, pitch);
+printf("note: %i\n", note);
+        ensemble.play(note, 1.0f);
 
         set_mode(1);
         do
@@ -193,10 +222,7 @@ int main(int argc, char **argv)
         set_mode(0);
         TRY( aax.remove(ensemble) );
     }
-    else {
-        printf("Unable to load: %s\n", infile);
-    }
-
     printf("\n");
+
     return 0;
 }
