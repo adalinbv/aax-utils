@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2016-2023 by Erik Hofman.
- * Copyright (C) 2016-2023 by Adalin B.V.
+ * Copyright (C) 2016-2024 by Erik Hofman.
+ * Copyright (C) 2016-2024 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -57,16 +57,12 @@ void help()
     printf("\nOptions:\n");
     printf("  -d, --device <device>\t\tplayback device (default if not specified)\n");
     printf("  -f, --frequency <freq>\tset the playback frequency\n");
-    printf("      --fft\t\t\tdo FFT analysis\n");
-    printf("      --fm\t\t\tuse FM playback mode (aaxs only)\n");
     printf("  -g, --gain <v>\t\tchange the gain setting\n");
     printf("  -i, --input <file>\t\tplayback audio from a file\n");
     printf("      --key-on <file>\t\tSet the key-on sample file\n");
     printf("      --key-off <file>\t\tSet the key-off sample file\n");
     printf("  -n, --note <note>\t\tset the playback note\n");
     printf("  -o, --output <file>\t\talso write to an audio file (optional)\n");
-    printf("      --repeat <num>\t\tset the number of repeats\n");
-    printf("      --velocity <vel>\t\tset the note velocity\n");
     printf("  -p, --pitch <pitch>\t\tset the playback pitch\n");
     printf("  -v, --verbose [<level>]\tshow extra playback information\n");
     printf("  -h, --help\t\t\tprint this message and exit\n");
@@ -108,8 +104,9 @@ tone2note(const char *t)
     return rv;
 }
 
-bool add_buffer(aax::AeonWave& aax, aax::Ensemble& ensemble, const char *infile)
+float add_buffer(aax::AeonWave& aax, aax::Ensemble& ensemble, const char *infile)
 {
+    float duration = 0.0f;
     printf("Processing buffer: %s\n", infile);
     std::filesystem::path path = infile;
     if (path.extension() == ".xml")
@@ -141,7 +138,15 @@ bool add_buffer(aax::AeonWave& aax, aax::Ensemble& ensemble, const char *infile)
                         if (slen)
                         {
                             file[slen] = 0;
-                            aax::Buffer& buffer = aax.buffer(file);
+
+                            std::string path = aax.info(AAX_SHARED_DATA_DIR);
+                            path.append("/ultrasynth/");
+                            path.append(file);
+                            path.append(".aaxs");
+                            aax::Buffer& buffer = aax.buffer(path);
+                            float dt = float(buffer.get(AAX_NO_SAMPLES));
+                            dt /= float(buffer.get(AAX_SAMPLE_RATE));
+                            if (dt > duration) duration = dt;
                             ensemble.add_member(buffer, pitch, gain, min, max);
                         }
                     }
@@ -155,9 +160,11 @@ bool add_buffer(aax::AeonWave& aax, aax::Ensemble& ensemble, const char *infile)
     {
         aax::Buffer& buffer = aax.buffer(infile);
         ensemble.add_member(buffer);
+        duration = float(aaxBufferGetSetup(buffer, AAX_NO_SAMPLES));
+        duration /= float(aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE));
     }
 
-    return true;
+    return duration;
 }
 
 int main(int argc, char **argv)
@@ -188,7 +195,7 @@ int main(int argc, char **argv)
     char *devname = getDeviceName(argc, argv);
     char *infile = getInputFile(argc, argv, FILE_PATH);
 
-    // Open the default device for playback
+    // Open the device for playback
     aax::AeonWave aax(devname, AAX_MODE_WRITE_STEREO);
     TRY( aax.set(AAX_INITIALIZED) );
     TRY( aax.set(AAX_PLAYING) );
@@ -196,14 +203,17 @@ int main(int argc, char **argv)
     aax::Ensemble ensemble(aax);
 
     float dt = 0.0f;
-    bool res = add_buffer(aax, ensemble, infile);
-    if (res)
+    float duration = add_buffer(aax, ensemble, infile);
+    if (duration > 0.0f)
     {
         TRY( aax.add(ensemble) );
 
         ensemble.set_gain(gain);
-printf("note: %i\n", note);
         ensemble.play(note, 1.0f);
+
+        printf("Playing sound at %.0f%% volume "
+                "for %3.1f seconds of %3.1f seconds,\n"
+                "\tor until a key is pressed\n", gain*100, duration, dt);
 
         set_mode(1);
         do
