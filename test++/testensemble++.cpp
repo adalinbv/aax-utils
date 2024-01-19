@@ -39,7 +39,9 @@
 #include <string>
 #include <filesystem>
 
-#include <aax/instrument.hpp>
+#include <aax/instrument>
+namespace aax = aeonwave;
+
 #include <xml.h>
 
 #include "driver.h"
@@ -117,6 +119,11 @@ float add_buffer(aax::AeonWave& aax, aax::Ensemble& ensemble, const char *infile
             xmlId *xlid = xmlNodeGet(xid, "aeonwave/set/layer");
             if (xlid)
             {
+                float volume = 1.0f;
+                if (xmlAttributeExists(xlid, "gain")) {
+                    volume = xmlAttributeGetDouble(xlid, "gain");
+                }
+
                 char file[64] = "";
                 xmlId *xpid = xmlMarkId(xlid);
                 int slen, num = xmlNodeGetNum(xlid, "patch");
@@ -124,13 +131,16 @@ float add_buffer(aax::AeonWave& aax, aax::Ensemble& ensemble, const char *infile
                 {
                     if (xmlNodeGetPos(xlid, xpid, "patch", i) != 0)
                     {
-                        float gain = 1.0f, pitch = 1.0f;
+                        float gain = volume;
                         if (xmlAttributeExists(xpid, "pitch")) {
-                            gain = xmlAttributeGetDouble(xpid, "pitch");
+                            gain *= xmlAttributeGetDouble(xpid, "pitch");
                         }
+
+                        float pitch = 1.0f;
                         if (xmlAttributeExists(xpid, "gain")) {
                             gain = xmlAttributeGetDouble(xpid, "gain");
                         }
+
                         int min = xmlAttributeGetInt(xpid, "min");
                         int max = xmlAttributeGetInt(xpid, "max");
                         if (!max) max = 128;

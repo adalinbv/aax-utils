@@ -37,8 +37,9 @@
 #include <unistd.h>
 #include <string>
 
-#include <aax/aeonwave.hpp>
-#include <aax/strings.hpp>
+#include <aax/aeonwave>
+#include <aax/strings>
+namespace aax = aeonwave;
 
 #include <driver.h> 
 

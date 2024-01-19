@@ -35,7 +35,8 @@
 
 #include <stdio.h>
 
-#include <aax/aeonwave.hpp>
+#include <aax/aeonwave>
+namespace aax = aeonwave;
 
 #include "base/types.h"
 #include "driver.h"

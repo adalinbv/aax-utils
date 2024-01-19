@@ -35,7 +35,8 @@
 
 #include <ostream>
 
-#include <aax/aeonwave.hpp>
+#include <aax/aeonwave>
+namespace aax = aeonwave;
 
 #define PRINT_ROW(mtx, r, c) \
         printf ("% 6.3f % 6.3f % 6.3f % 6.3f%c", \

@@ -36,8 +36,9 @@
 #include <iostream>
 #include <limits>
 
-#include <aax/aeonwave.hpp>
-#include <aax/strings.hpp>
+#include <aax/aeonwave>
+#include <aax/strings>
+namespace aax = aeonwave;
 
 static int maximumWidth = 80;
 

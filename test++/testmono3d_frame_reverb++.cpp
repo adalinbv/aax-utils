@@ -36,7 +36,8 @@
 #include <stdio.h>
 #include <math.h>
 
-#include <aax/aeonwave.hpp>
+#include <aax/aeonwave>
+namespace aax = aeonwave;
 
 #include "base/types.h"
 #include "base/geometry.h"

@@ -38,7 +38,8 @@
 #include <cstdio>
 #include <string>
 
-#include <aax/aeonwave.hpp>
+#include <aax/aeonwave>
+namespace aax = aeonwave;
 
 #include "driver.h"
 
