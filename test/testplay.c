@@ -869,11 +869,7 @@ int main(int argc, char **argv)
             res = aaxMixerSetState(config, AAX_PLAYING);
             testForState(res, "aaxMixerStart");
 
-            xbuffer = setFiltersEffects(argc, argv, config, NULL, frame, emitter, NULL);
-            if (xbuffer) {
-                res = aaxAudioFrameAddBuffer(frame2, xbuffer);
-            }
-
+            xbuffer = setFiltersEffects(argc, argv, config, NULL, frame2, emitter, NULL);
             /** schedule the emitter for playback */
             if (playref)
             {
