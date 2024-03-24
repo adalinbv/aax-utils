@@ -1605,18 +1605,14 @@ void print_aax(struct aax_t *aax, const char *outfile, char tmp, enum simplify_t
         output = stdout;
     }
 
-    fprintf(output, "<?xml version=\"1.0\"?>\n\n");
+    fprintf(output, "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n");
 
     fprintf(output, "<!--\n");
-    fprintf(output, " * Copyright (C) 2017-%s by Erik Hofman.\n", year);
-    fprintf(output, " * Copyright (C) 2017-%s by Adalin B.V.\n", year);
-    fprintf(output, " * All rights reserved.\n");
-    if ((!aax->info.license || (commons & 0x80) || !strcmp(aax->info.license, "Attribution-ShareAlike 4.0 International")) && commons)
-    {
-        fprintf(output, " *\n");
-        fprintf(output, " * This file is part of AeonWave and covered by the\n");
-        fprintf(output, " * Creative Commons Attribution-ShareAlike 4.0 International Public License\n");
-        fprintf(output, " * https://creativecommons.org/licenses/by-sa/4.0/legalcode\n");
+    fprintf(output, " * SPDX-FileCopyrightText: Copyright © 2017-%s by Erik Hofman.\n", year);
+    fprintf(output, " * SPDX-FileCopyrightText: Copyright © 2017-%s by Adalin B.V.\n", year);
+    fprintf(output, " *\n * Package Name: AeonWave Audio eXtentions library.\n");
+    if ((!aax->info.license || (commons & 0x80) || !strcmp(aax->info.license, "Attribution-ShareAlike 4.0 International")) && commons) {
+        fprintf(output, " *\n * SPDX-License-Identifier: CC-BY-SA-4.0\n");
     }
     else
     {
