@@ -219,13 +219,18 @@ struct info_t
 
     struct note_t
     {
+        uint8_t hold_mode;
         uint8_t polyphony;
-        uint8_t min, max, step;
+        uint8_t min, max;
         float pitch_fraction;
     } note;
 
     int aftertouch_mode;
     float aftertouch_factor;
+
+    int modulation_mode;
+    float modulation_factor;
+    float modulation_rate;
 };
 
 void fill_info(struct info_t *info, xmlId *xid, const char *filename)
@@ -276,8 +281,21 @@ void fill_info(struct info_t *info, xmlId *xid, const char *filename)
     xtid = xmlNodeGet(xid, "aftertouch");
     if (xtid)
     {
-        info->aftertouch_mode = xmlAttributeGetInt(xtid, "mode");
+        char *m = xmlAttributeGetString(xtid, "mode");
+        info->aftertouch_mode = aaxGetByName(m, AAX_MODULATION_NAME);
+        aaxFree(m);
         info->aftertouch_factor = xmlAttributeGetDouble(xtid, "sensitivity");
+        xmlFree(xtid);
+    }
+
+    xtid = xmlNodeGet(xid, "modulation");
+    if (xtid)
+    {
+        char *m = xmlAttributeGetString(xtid, "mode");
+        info->modulation_mode = aaxGetByName(m, AAX_MODULATION_NAME);
+        aaxFree(m);
+        info->modulation_factor = xmlAttributeGetDouble(xtid, "depth");
+        info->modulation_rate = xmlAttributeGetDouble(xtid, "rate");
         xmlFree(xtid);
     }
 
@@ -287,7 +305,7 @@ void fill_info(struct info_t *info, xmlId *xid, const char *filename)
         info->note.polyphony = _MAX(xmlAttributeGetInt(xtid, "polyphony"), 0);
         info->note.min = _MINMAX(xmlAttributeGetInt(xtid, "min"), 0, 127);
         info->note.max = _MINMAX(xmlAttributeGetInt(xtid, "max"), 0, 127);
-        info->note.step = _MAX(xmlAttributeGetInt(xtid, "step"), 0);
+        info->note.hold_mode = xmlAttributeCompareString(xtid, "hold", "string");
         info->note.pitch_fraction = xmlAttributeGetDouble(xtid, "pitch-fraction");
         xmlFree(xtid);
     }
@@ -403,15 +421,29 @@ void print_info(struct info_t *info, FILE *output)
         fprintf(output, "  <note polyphony=\"%i\"", info->note.polyphony);
         if (info->note.min) fprintf(output, " min=\"%i\"", info->note.min);
         if (info->note.max) fprintf(output, " max=\"%i\"", info->note.max);
-        if (info->note.step) fprintf(output, " step=\"%i\"", info->note.step);
+        if (info->note.hold_mode) fprintf(output, " hold=\"string\"");
         if (info->note.pitch_fraction) fprintf(output, " pitch-fraction=\"%.2g\"", info->note.pitch_fraction);
         fprintf(output, "/>\n");
     }
 
+     if (info->modulation_mode || info->modulation_factor || info->modulation_rate) {
+        char *m = aaxGetStringByType(info->modulation_mode,AAX_MODULATION_NAME);
+        fprintf(output, "  <modulation mode=\"%s\"", m);
+        aaxFree(m);
+        if (info->modulation_factor) {
+           fprintf(output, " depth=\"%.2f\"", info->modulation_factor);
+        }
+        if (info->modulation_rate) {
+           fprintf(output, " rate=\"%.2f\"", info->modulation_rate);
+        }
+        fprintf(output, "/>\n");
+    }
     if (info->aftertouch_mode || info->aftertouch_factor) {
-        fprintf(output, "  <aftertouch mode=\"%i\"", info->aftertouch_mode);
+        char *m = aaxGetStringByType(info->aftertouch_mode,AAX_MODULATION_NAME);
+        fprintf(output, "  <aftertouch mode=\"%s\"", m);
+        aaxFree(m);
         if (info->aftertouch_factor) {
-           fprintf(output, " sensitivity=\"%2.1f\"", info->aftertouch_factor);
+           fprintf(output, " sensitivity=\"%.1f\"", info->aftertouch_factor);
         }
         fprintf(output, "/>\n");
     }
@@ -1707,7 +1739,7 @@ float calculate_loudness(char *infile, struct aax_t *aax, enum simplify_t simpli
         buffer = aaxBufferReadFromStream(config, aaxsfile);
         testForError(buffer, "Unable to create a buffer from an aaxs file.");
 
-        float base_freq = aaxBufferGetSetup(buffer, AAX_UPDATE_RATE);
+        float base_freq = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
         if (freq > 0.0f) pitch = freq / base_freq;
         else freq = base_freq;
 
