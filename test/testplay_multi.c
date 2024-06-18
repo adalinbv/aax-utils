@@ -118,7 +118,7 @@ int main(int argc, char **argv)
         if (verbose)
         {
             printf("Sample frequency: %li Hz\n", aaxBufferGetSetup(buffer, AAX_FREQUENCY));
-            printf("Base frequency  : %li Hz\n", aaxBufferGetSetup(buffer, AAX_UPDATE_RATE));
+            printf("Base frequency  : %li Hz\n", aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY));
         }
 
         ofile = getOutputFile(argc, argv, NULL);
@@ -145,7 +145,7 @@ int main(int argc, char **argv)
             pitch = getFrequency(argc, argv);
             if (pitch)
             {
-               float f = aaxBufferGetSetup(buffer, AAX_UPDATE_RATE);
+               float f = aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY);
                if (f) pitch /= f;
             }
             if (pitch == 0.0f) {

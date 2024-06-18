@@ -88,7 +88,6 @@ int main(int argc, char **argv)
         std::cout << "Mixer frequency range: " << aax.get(AAX_FREQUENCY_MIN)/1000 << "kHz - " << aax.get(AAX_FREQUENCY_MAX)/1000 << "kHz" << std::endl;
         std::cout << "Mixer frequency: " << aax.get(AAX_FREQUENCY) << " Hz" << std::endl;
         std::cout << "Mixer refresh rate: " << aax.get(AAX_REFRESH_RATE) << " Hz" << std::endl;
-        std::cout << "Mixer update rate:  " << aax.get(AAX_UPDATE_RATE) << " Hz" << std::endl;
         std::cout << "Mixer latency: " << aax.get(AAX_LATENCY)*1e-3f << " ms" << std::endl;
 
         unsigned int x = aax.get(AAX_MONO_EMITTERS);

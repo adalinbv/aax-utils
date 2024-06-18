@@ -238,11 +238,6 @@ int main(int argc, char **argv)
             x = aaxMixerGetSetup(cfg, AAX_REFRESH_RATE);
             printf("Mixer refresh rate: %3u Hz\n", x);
 
-            x = aaxMixerGetSetup(cfg, AAX_UPDATE_RATE);
-            if (x) {
-                printf("Mixer update rate:  %3u Hz\n", x);
-            }
-
             x = aaxMixerGetSetup(cfg, AAX_BIT_RATE);
             printf("Mixer bitrate: %8.1f kbps\n", 1e-3f*x);
 
