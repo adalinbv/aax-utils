@@ -33,6 +33,9 @@
 #include "config.h"
 #endif
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <stdio.h>
 #include <ctype.h>
 #include <math.h>
@@ -471,7 +474,7 @@ int main(int argc, char **argv)
             if (reffile)
             {
                 printf("Reference file: %s\n", reffile);
-                printf(" Buffer sample frequency: %5li Hz\n",
+                printf(" Buffer sample frequency: %5" PRIu64 " Hz\n",
                         aaxBufferGetSetup(refbuf, AAX_SAMPLE_RATE));
                 printf(" Buffer base frequency  : %5.3f Hz\n", base_freq[1]);
                 printf("\n");
@@ -479,7 +482,7 @@ int main(int argc, char **argv)
 
             printf("Base file: %s\n", infile);
             printf(" Buffer no. of patches  : %i\n", no_patches);
-            printf(" Buffer sample frequency: %5li Hz\n",
+            printf(" Buffer sample frequency: %5" PRIu64 " Hz\n",
                     aaxBufferGetSetup(buffer, AAX_SAMPLE_RATE));
             printf(" Buffer base frequency  : %5.3f Hz\n", base_freq[0]);
             printf(" Buffer pitch fraction  : %4.3f\n", fraction);

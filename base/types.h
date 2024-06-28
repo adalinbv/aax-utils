@@ -53,6 +53,8 @@ typedef int size_t;
 # endif
 #endif
 
+#define GMATH_PI                  3.14159265358979323846f
+
 #define _MIN(a,b)	(((a)<(b)) ? (a) : (b))
 #define _MAX(a,b)       (((a)>(b)) ? (a) : (b))
 #define _MINMAX(a,b,c)  (((a)>(c)) ? (c) : (((a)<(b)) ? (b) : (a)))

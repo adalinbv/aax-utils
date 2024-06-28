@@ -33,6 +33,9 @@
 #include "config.h"
 #endif
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -381,7 +384,7 @@ int main(int argc, char **argv)
             bitrate = abs(bitrate);
             if (samples) {
                 printf(" Audio format: %i Hz, %i bits/sample, %s%.1f kbps, "
-                       "%i tracks, %li samples\n", rate, bps, vbr ? "~" : "",
+                       "%i tracks, %" PRIu64 " samples\n", rate, bps, vbr ? "~" : "",
                         1e-3f*bitrate, tracks, samples);
             } else {
                 printf(" Audio format: %i Hz, %i bits/sample, %s%i kbps, "

@@ -33,6 +33,9 @@
 #include "config.h"
 #endif
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <stdio.h>
 #include <math.h>
 #include <stdlib.h>	// atof
@@ -117,8 +120,8 @@ int main(int argc, char **argv)
 
         if (verbose)
         {
-            printf("Sample frequency: %li Hz\n", aaxBufferGetSetup(buffer, AAX_FREQUENCY));
-            printf("Base frequency  : %li Hz\n", aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY));
+            printf("Sample frequency: %" PRIu64 " Hz\n", aaxBufferGetSetup(buffer, AAX_FREQUENCY));
+            printf("Base frequency  : %" PRIu64 " Hz\n", aaxBufferGetSetup(buffer, AAX_BASE_FREQUENCY));
         }
 
         ofile = getOutputFile(argc, argv, NULL);

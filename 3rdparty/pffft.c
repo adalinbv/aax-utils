@@ -63,6 +63,8 @@
 #include <math.h>
 #include <assert.h>
 
+#include <base/types.h>
+
 /* detect compiler flavour */
 #if defined(_MSC_VER)
 #  define COMPILER_MSVC
@@ -1084,7 +1086,7 @@ static void rffti1_ps(int n, float *wa, int *ifac)
   int k1, j, ii;
 
   int nf = decompose(n,ifac,ntryh);
-  float argh = (2*M_PI) / n;
+  float argh = (2*GMATH_PI) / n;
   int is = 0;
   int nfm1 = nf - 1;
   int l1 = 1;
@@ -1117,7 +1119,7 @@ void cffti1_ps(int n, float *wa, int *ifac)
   int k1, j, ii;
 
   int nf = decompose(n,ifac,ntryh);
-  float argh = (2*M_PI)/(float)n;
+  float argh = (2*GMATH_PI)/(float)n;
   int i = 1;
   int l1 = 1;
   for (k1=1; k1<=nf; k1++) {
@@ -1229,7 +1231,7 @@ PFFFT_Setup *pffft_new_setup(int N, pffft_transform_t transform) {
       int i = k/SIMD_SZ;
       int j = k%SIMD_SZ;
       for (m=0; m < SIMD_SZ-1; ++m) {
-        float A = -2*M_PI*(m+1)*k / N;
+        float A = -2*GMATH_PI*(m+1)*k / N;
         s->e[(2*(i*3 + m) + 0) * SIMD_SZ + j] = cos(A);
         s->e[(2*(i*3 + m) + 1) * SIMD_SZ + j] = sin(A);
       }
@@ -1240,7 +1242,7 @@ PFFFT_Setup *pffft_new_setup(int N, pffft_transform_t transform) {
       int i = k/SIMD_SZ;
       int j = k%SIMD_SZ;
       for (m=0; m < SIMD_SZ-1; ++m) {
-        float A = -2*M_PI*(m+1)*k / N;
+        float A = -2*GMATH_PI*(m+1)*k / N;
         s->e[(2*(i*3 + m) + 0)*SIMD_SZ + j] = cos(A);
         s->e[(2*(i*3 + m) + 1)*SIMD_SZ + j] = sin(A);
       }

@@ -33,6 +33,9 @@
 #include "config.h"
 #endif
 
+#define __STDC_FORMAT_MACROS
+#include <inttypes.h>
+
 #include <stdio.h>
 
 #include <aax/aax.h>
@@ -104,7 +107,7 @@ int main(int argc, char **argv)
             res = aaxMixerSetSetup(config, AAX_REFRESH_RATE, REFRATE);
             testForState(res, "aaxMixerSetSetup");
 
-            printf("refresh rate: %li\n", aaxMixerGetSetup(config, AAX_REFRESH_RATE));
+            printf("refresh rate: %" PRIu64 "\n", aaxMixerGetSetup(config, AAX_REFRESH_RATE));
 
             res = aaxMixerRegisterEmitter(config, emitter);
             testForState(res, "aaxMixerRegisterEmitter");

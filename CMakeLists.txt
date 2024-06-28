@@ -92,11 +92,8 @@ if (MSVC)
     endif ()
 else(MSVC)
     if (MINGW)
-       ADD_DEFINITIONS(-U__STRICT_ANSI__)
-       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -static -static-libstdc++" CACHE STRING
-          "Flags used by MingW."
-          FORCE)
-       set(CMAKE_C_FLAGS "${C_FLAGS} -static -static-libgcc" CACHE STRING
+       ADD_DEFINITIONS(-D__STRICT_ANSI__)
+       set(CMAKE_SHARED_LINKER_FLAGS "${LD_FLAGS} -static-libstdc++" CACHE STRING
           "Flags used by MingW."
           FORCE)
     endif (MINGW)

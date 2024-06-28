@@ -8,8 +8,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <base/types.h>
+
 /* This can be replaced by any BSD-like queue implementation. */
-#include "queue.h"
+#include "queue.h" 
 
 #define CHECK_ERROR(condition, errorcode, goto_point)                          \
   if ((condition)) {                                                           \
@@ -158,10 +160,10 @@ interp_create(unsigned int taps, unsigned int factor, unsigned int channels) {
     double m = (double) j - (double) (interp->taps - 1) / 2.0;
     double c = 1.0;
     if (fabs(m) > ALMOST_ZERO) {
-      c = sin(m * M_PI / interp->factor) / (m * M_PI / interp->factor);
+      c = sin(m * GMATH_PI / interp->factor) / (m * GMATH_PI / interp->factor);
     }
     /* Apply Hanning window */
-    c *= 0.5 * (1 - cos(2 * M_PI * j / (interp->taps - 1)));
+    c *= 0.5 * (1 - cos(2 * GMATH_PI * j / (interp->taps - 1)));
 
     if (fabs(c) > ALMOST_ZERO) { /* Ignore any zero coeffs. */
       /* Put the coefficient into the correct subfilter */
@@ -256,7 +258,7 @@ static int ebur128_init_filter(ebur128_state* st) {
   double G = 3.999843853973347;
   double Q = 0.7071752369554196;
 
-  double K = tan(M_PI * f0 / (double) st->samplerate);
+  double K = tan(GMATH_PI * f0 / (double) st->samplerate);
   double Vh = pow(10.0, G / 20.0);
   double Vb = pow(Vh, 0.4996667741545416);
 
@@ -277,7 +279,7 @@ static int ebur128_init_filter(ebur128_state* st) {
 
   f0 = 38.13547087602444;
   Q = 0.5003270373238773;
-  K = tan(M_PI * f0 / (double) st->samplerate);
+  K = tan(GMATH_PI * f0 / (double) st->samplerate);
 
   ra[1] = 2.0 * (K * K - 1.0) / (1.0 + K / Q + K * K);
   ra[2] = (1.0 - K / Q + K * K) / (1.0 + K / Q + K * K);
