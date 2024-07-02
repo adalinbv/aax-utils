@@ -207,6 +207,9 @@ int main(int argc, char **argv)
             s = aaxDriverGetSetup(cfg, AAX_VENDOR_STRING);
             printf("Vendor string: %s\n", s);
 
+            s = aaxGetString(AAX_NAME_STRING);
+            printf("Library string: %s\n", s);
+
             x = aaxGetByType(AAX_VERSION_MAJOR);
             y = aaxGetByType(AAX_VERSION_MINOR);
             s = aaxGetString(AAX_VERSION_STRING);
