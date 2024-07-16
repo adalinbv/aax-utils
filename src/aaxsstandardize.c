@@ -1,6 +1,6 @@
 /*
- * Copyright (C) 2018-2023 by Erik Hofman.
- * Copyright (C) 2018-2023 by Adalin B.V.
+ * Copyright (C) 2018-2024 by Erik Hofman.
+ * Copyright (C) 2018-2024 by Adalin B.V.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -70,6 +70,8 @@
 #define DELAY_MAX		1.0f
 #define REVERB_MAX		1.0f
 
+#define DSP_MAX			(AAX_FILTER_MAX+AAX_EFFECT_MAX)
+
 enum simplify_t {
     NORMAL = 0,
     SIMPLIFY          = 0x01,
@@ -114,6 +116,37 @@ static float _gains[AAX_MAX_WAVE][2] = {
   { 1.0f,  1.1f }, // AAX_SINE,     AAX_PURE_SINE
   { 0.95f, 0.9f }, // AAX_CYCLOID,  AAX_PURE_CYCLOID
   { 1.0f,  5.2f }  // AAX_IMPULSE,  AAX_PURE_IMPULSE
+};
+
+static int filter_order[AAX_FILTER_MAX] = {
+  -1, // AAX_FILTER_NONE
+  18, // AAX_EQUALIZER
+   8, // AAX_VOLUME_FILTER
+   7, // AAX_DYNAMIC_GAIN_FILTER
+   6, // AAX_TIMED_GAIN_FILTER
+   0, // AAX_DIRECTIONAL_FILTER
+   5, // AAX_DISTANCE_FILTER
+  12, // AAX_FREQUENCY_FILTER
+  10, // AAX_BITCRUSHER_FILTER
+  18, // AAX_GRAPHIC_EQUALIZER
+  17, // AAX_COMPRESSOR,
+   9  // AAX_DYNAMIC_LAYER_FILTER,
+};
+
+static int effect_order[AAX_EFFECT_MAX] = {
+  -1, // AAX_EFFECT_NONE
+   2, // AAX_PITCH_EFFECT
+   4, // AAX_DYNAMIC_PITCH_EFFECT
+   3, // AAX_TIMED_PITCH_EFFECT
+  13, // AAX_DISTORTION_EFFECT
+  14, // AAX_PHASING_EFFECT
+  14, // AAX_CHORUS_EFFECT
+  14, // AAX_FLANGING_EFFECT
+   1, // AAX_VELOCITY_EFFECT
+  16, // AAX_REVERB_EFFECT
+  16, // AAX_CONVOLUTION_EFFECT
+  11, // AAX_RINGMODULATOR_EFFECT
+  15  // AAX_DELAY_EFFECT
 };
 
 static float _lin2log(float v) { return log10f(v); }
@@ -645,7 +678,7 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     else
     {
         char src[64];
-        char freqfilter = ((dsp->dtype == FILTER) && (dsp->eff_type == AAX_FREQUENCY_FILTER));
+        bool freqfilter = ((dsp->dtype == FILTER) && (dsp->eff_type == AAX_FREQUENCY_FILTER));
         enum aaxSourceType src_type = AAX_CONSTANT;
 
         if (xmlAttributeCopyString(xid, "src", src, 64)) {
@@ -705,8 +738,8 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
 void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float envelope_factor, enum simplify_t simplify, char emitter, char layer)
 {
-//  char distortion = 0;
-    char env = 0;
+//  bool distortion = false;
+    bool env = false;
 
     assert(t == EFFECT);
 
@@ -715,7 +748,7 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     if (1)
     {
         char src[64];
-        char delay = (dsp->dtype == EFFECT) &&
+        bool delay = (dsp->dtype == EFFECT) &&
                       (dsp->eff_type == AAX_PHASING_EFFECT ||
                        dsp->eff_type == AAX_CHORUS_EFFECT ||
                        dsp->eff_type == AAX_FLANGING_EFFECT ||
@@ -750,7 +783,7 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
     dsp->stereo = xmlAttributeGetBool(xid, "stereo");
     dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
     dsp->optional = xmlAttributeGetBool(xid, "optional");
-    if (dsp->eff_type ==AAX_DISTORTION_EFFECT) {
+    if (dsp->eff_type == AAX_DISTORTION_EFFECT) {
 //      distortion = 1;
     }
     dsp->env = env;
@@ -774,7 +807,7 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simpli
     char *ident = (!sound || (simplify & NO_LAYER_SUPPORT)) ? "  " : "   ";
     char *src = dsp->src;
     unsigned int s, p;
-    char delay;
+    bool delay;
 
     if (src == false_const) {
         return;
@@ -948,7 +981,7 @@ char fill_waveform(struct waveform_t *wave, xmlId *xid, enum simplify_t simplify
             int src = aaxGetByName(wave->src, AAX_SOURCE_NAME);
             int wtype = src & AAX_SOURCE_MASK;
             int waveform = wtype & ~AAX_PURE_WAVEFORM;
-            int noise = wtype & AAX_NOISE_MASK;
+//          int noise = wtype & AAX_NOISE_MASK;
             int pure = (wtype & AAX_PURE_WAVEFORM) ? 1 : 0;
             float ogain = _gains_v0[waveform-AAX_1ST_WAVE][pure];
             float ngain = _gains[waveform-AAX_1ST_WAVE][pure];
@@ -1353,12 +1386,12 @@ struct object_t		// emitter, audioframe and mixer
     uint8_t looping;
 
     uint8_t no_dsps;
-    struct dsp_t dsp[16];
+    struct dsp_t dsp[DSP_MAX];
 };
 
 void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char final, enum simplify_t simplify, char emitter)
 {
-    unsigned int p, d, dnum;
+    unsigned int d, dnum, no_dsps;
     xmlId *xdid;
 
     obj->freqfilter = -1;
@@ -1368,7 +1401,7 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
     obj->pan = _MINMAX(xmlAttributeGetDouble(xid, "pan"), -1.0f, 1.0f);
     obj->active = (obj->mode || obj->looping || obj->pan) ? 1 : 0;
 
-    p = 0;
+    no_dsps = 0;
     xdid = xmlMarkId(xid);
     dnum = xmlNodeGetNum(xdid, "filter");
     if (dnum) obj->active = 1;
@@ -1376,8 +1409,16 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
     {
         if (xmlNodeGetPos(xid, xdid, "filter", d) != 0)
         {
+            int p, eff_type;
             char *type = lwrstr(xmlAttributeGetString(xdid, "type"));
             if (!type) continue;
+
+            eff_type = aaxGetByName(type, AAX_FILTER_NAME);
+            p = filter_order[eff_type];
+
+            if (obj->dsp[p].type) {
+                WARN2("%s effect is defined mutiple times.", type);
+            }
 
             if (!emitter && !strcasecmp(type, "frequency")) {
                obj->freqfilter = d;
@@ -1402,7 +1443,7 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
                         WARN2("%s filter is defined mutiple times.", type);
                     }
                 }
-                p++;
+                no_dsps++;
             }
             free(type);
         }
@@ -1416,8 +1457,17 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
     {
         if (xmlNodeGetPos(xid, xdid, "effect", d) != 0)
         {
+            int p, eff_type;
             char *type = lwrstr(xmlAttributeGetString(xdid, "type"));
             if (!type) continue;
+
+
+            eff_type = aaxGetByName(type, AAX_EFFECT_NAME);
+            p = effect_order[eff_type];
+
+            if (obj->dsp[p].type) {
+                WARN2("%s effect is defined mutiple times.", type);
+            }
 
             if (!(simplify & SIMPLIFY)
                 || (!emitter && (!strcasecmp(type, "distortion")
@@ -1433,13 +1483,13 @@ void fill_object(struct object_t *obj, xmlId *xid, float envelope_factor, char f
                         WARN2("%s effect is defined mutiple times.", type);
                     }
                 }
-                p++;
+                no_dsps++;
             }
             free(type);
         }
     }
     xmlFree(xdid);
-    obj->no_dsps = p;
+    obj->no_dsps = no_dsps;
 }
 
 void print_object(struct object_t *obj, enum type_t type, struct info_t *info, FILE *output, enum simplify_t simplify)
@@ -1467,8 +1517,11 @@ void print_object(struct object_t *obj, enum type_t type, struct info_t *info, F
     {
         fprintf(output, ">\n");
 
-        for (d=0; d<obj->no_dsps; ++d) {
-            print_dsp(&obj->dsp[d], info, output, simplify, 0);
+        for (d=0; d<DSP_MAX; ++d)
+        {
+            if (obj->dsp[d].eff_type) {
+                print_dsp(&obj->dsp[d], info, output, simplify, 0);
+            }
         }
 
         if (type == EMITTER) {
