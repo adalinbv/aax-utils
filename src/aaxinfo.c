@@ -277,14 +277,14 @@ int main(int argc, char **argv)
             x = aaxMixerGetSetup(cfg, AAX_MONO_EMITTERS);
             y = aaxMixerGetSetup(cfg, AAX_STEREO_EMITTERS);
             printf("Available mono emitters:   ");
-            if (x == UINT_MAX) printf("infinite\n");
+            if (x == UINT_MAX) printf("unlimited\n");
             else printf("%3i\n", x);
             printf("Available stereo emitters: ");
-            if (y == UINT_MAX/2) printf("infinite\n");
+            if (y == UINT_MAX/2) printf("unlimited\n");
             else printf("%3i\n", y);
             x = aaxMixerGetSetup(cfg, AAX_AUDIO_FRAMES);
             printf("Available audio-frames: ");
-            if (x == UINT_MAX) printf("   infinite\n");
+            if (x == UINT_MAX) printf("   unlimited\n");
             else printf("%6i\n", x);
 
             printf("\nSupported Filters:\n ");
