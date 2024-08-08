@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+
+<aeonwave>
+ <sound frequency="440">
+  <waveform src="white-noise"/>
+ </sound>
+
+ <emitter looping="true">
+  <filter type="envelope">
+   <slot n="0">
+    <param n="0">1.0</param>
+    <param n="1">2.0</param>
+    <param n="2">1.0</param>
+    <param n="3">0.3</param>
+   </slot>
+  </filter>
+ </emitter>
+
+ <mixer>
+  <filter type="graphic-equalizer">
+   <slot n="0">
+    <param n="0">2.0</param>
+    <param n="1">1.5</param>
+    <param n="2">1.0</param>
+    <param n="3">0.5</param>
+   </slot>
+   <slot n="1">
+    <param n="0">0.0</param>
+    <param n="1">0.5</param>
+    <param n="2">1.0</param>
+    <param n="3">1.5</param>
+   </slot>
+  </filter>
+ </mixer>
+
+</aeonwave>
