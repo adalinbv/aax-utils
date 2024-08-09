@@ -46,7 +46,8 @@
 
 float _lin2db(float v) { return 20.0f*log10f(_MAX(v, 1e-9f)); }
 float band[AAX_MAX_BANDS] = {
-   4.0f, 2.0f, 1.0f, 0.5f, 0.7f, 0.7f, 1.0f, 0.7f
+   4.0f, 2.0f, 1.0f, 0.5f, 0.7f, 0.7f, 1.0f, 0.7f,
+   0.5f, 1.1f, 0.3f, 0.1f, 1.2f, 0.9f, 1.5f, 1.7f
 };
 
 int main(int argc, char **argv)
@@ -107,7 +108,7 @@ int main(int argc, char **argv)
             printf("\n|  44Hz | 100Hz | 220Hz | 500Hz |"
                    " 1.2kHz| 2.7kHz| 6.3kHz| 15kHz |\n|");
             for (i=0; i<AAX_MAX_BANDS; ++i) {
-                printf("% 6.1f |", band[i]);
+                printf("% 3.1f |", band[i]);
             }
             printf("\n\n");
 
@@ -121,6 +122,14 @@ int main(int argc, char **argv)
             res = aaxFilterSetSlot(filter, 1, AAX_LINEAR,
                                    band[4], band[5], band[6], band[7]);
             testForState(res, "aaxFilterSetSlot/1");
+
+            res = aaxFilterSetSlot(filter, 2, AAX_LINEAR,
+                                   band[8], band[9], band[10], band[11]);
+            testForState(res, "aaxFilterSetSlot/2");
+
+            res = aaxFilterSetSlot(filter, 3, AAX_LINEAR,
+                                   band[12], band[13], band[14], band[15]);
+            testForState(res, "aaxFilterSetSlot/3");
 
             res = aaxFilterSetState(filter, AAX_TRUE);
             testForState(res, "aaxFilterSetState");
@@ -163,7 +172,7 @@ int main(int argc, char **argv)
                    int b = (i+1)<<8;
                    int a = aaxMixerGetSetup(config, AAX_AVERAGE_VALUE+b);
                    float g = AAX_TO_FLOAT(a);
-                   printf("% 6.1f |", _lin2db(g));
+                   printf("% 4.0f |", _lin2db(g));
                }
                printf("\r");
             }
