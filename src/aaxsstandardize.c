@@ -510,7 +510,6 @@ struct dsp_t
     char *src;
     char *repeat;
     int stereo;
-    int optional;
     float max;
     char sustain;
     float release_time;
@@ -709,7 +708,6 @@ void fill_filter(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
     dsp->stereo = xmlAttributeGetBool(xid, "stereo");
     dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
-    dsp->optional = xmlAttributeGetBool(xid, "optional");
     if (dsp->eff_type == AAX_TIMED_GAIN_FILTER)
     {
         if (xmlAttributeExists(xid, "release-time")) {
@@ -784,7 +782,6 @@ void fill_effect(struct dsp_t *dsp, xmlId *xid, enum type_t t, char final, float
 
     dsp->stereo = xmlAttributeGetBool(xid, "stereo");
     dsp->repeat = lwrstr(xmlAttributeGetString(xid, "repeat"));
-    dsp->optional = xmlAttributeGetBool(xid, "optional");
     if (dsp->eff_type == AAX_DISTORTION_EFFECT) {
 //      distortion = 1;
     }
@@ -829,7 +826,6 @@ void print_dsp(struct dsp_t *dsp, struct info_t *info, FILE *output, enum simpli
     }
     if (dsp->repeat) fprintf(output, " repeat=\"%s\"", dsp->repeat);
     if (dsp->stereo) fprintf(output, " stereo=\"true\"");
-    if (dsp->optional) fprintf(output, " optional=\"true\"");
     if (dsp->release_time > 0.001f) {
         fprintf(output, " release-time=\"%s\"", format_float3(dsp->release_time));
     }
