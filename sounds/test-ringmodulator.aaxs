@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+
+<aeonwave>
+ <sound frequency="440">
+  <waveform src="sine"/>
+ </sound>
+
+ <emitter looping="true">
+  <filter type="envelope">
+   <slot n="0">
+    <param n="0">1.0</param>
+    <param n="1">10.0</param>
+    <param n="2">1.0</param>
+    <param n="3">1.0</param>
+   </slot>
+  </filter>
+ </emitter>
+
+ <audioframe>
+  <effect type="ringmodulator" src="sine">
+   <slot n="0">
+    <param n="0">1.0</param>
+    <param n="1">2.0</param>
+    <param n="2" auto="1.03">26.6</param>
+    <param n="3" auto="1.03">56.6</param>
+   </slot>
+  </effect>
+ </audioframe>
+
+</aeonwave>
