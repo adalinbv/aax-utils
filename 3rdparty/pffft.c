@@ -63,8 +63,6 @@
 #include <math.h>
 #include <assert.h>
 
-#include <base/types.h>
-
 /* detect compiler flavour */
 #if defined(_MSC_VER)
 #  define COMPILER_MSVC
@@ -93,7 +91,7 @@
 
 
 // define PFFFT_SIMD_DISABLE if you want to use scalar code instead of simd code
-#define PFFFT_SIMD_DISABLE
+//#define PFFFT_SIMD_DISABLE
 
 /*
    Altivec support macros 
@@ -267,7 +265,7 @@ void pffft_aligned_free(void *p) {
   if (p) free(*((void **) p - 1));
 }
 
-int pffft_simd_size() { return SIMD_SZ; }
+int pffft_simd_size(void) { return SIMD_SZ; }
 
 /*
   passf2 and passb2 has been merged here, fsign = -1 for passf2, +1 for passb2
@@ -1086,7 +1084,7 @@ static void rffti1_ps(int n, float *wa, int *ifac)
   int k1, j, ii;
 
   int nf = decompose(n,ifac,ntryh);
-  float argh = (2*GMATH_PI) / n;
+  float argh = (2*M_PI) / n;
   int is = 0;
   int nfm1 = nf - 1;
   int l1 = 1;
@@ -1119,7 +1117,7 @@ void cffti1_ps(int n, float *wa, int *ifac)
   int k1, j, ii;
 
   int nf = decompose(n,ifac,ntryh);
-  float argh = (2*GMATH_PI)/(float)n;
+  float argh = (2*M_PI)/(float)n;
   int i = 1;
   int l1 = 1;
   for (k1=1; k1<=nf; k1++) {
@@ -1226,27 +1224,19 @@ PFFFT_Setup *pffft_new_setup(int N, pffft_transform_t transform) {
   s->e = (float*)s->data;
   s->twiddle = (float*)(s->data + (2*s->Ncvec*(SIMD_SZ-1))/SIMD_SZ);  
 
-  if (transform == PFFFT_REAL) {
-    for (k=0; k < s->Ncvec; ++k) {
-      int i = k/SIMD_SZ;
-      int j = k%SIMD_SZ;
-      for (m=0; m < SIMD_SZ-1; ++m) {
-        float A = -2*GMATH_PI*(m+1)*k / N;
-        s->e[(2*(i*3 + m) + 0) * SIMD_SZ + j] = cos(A);
-        s->e[(2*(i*3 + m) + 1) * SIMD_SZ + j] = sin(A);
-      }
+  for (k=0; k < s->Ncvec; ++k) {
+    int i = k/SIMD_SZ;
+    int j = k%SIMD_SZ;
+    for (m=0; m < SIMD_SZ-1; ++m) {
+      float A = -2*M_PI*(m+1)*k / N;
+      s->e[(2*(i*3 + m) + 0) * SIMD_SZ + j] = cos(A);
+      s->e[(2*(i*3 + m) + 1) * SIMD_SZ + j] = sin(A);
     }
+  }
+
+  if (transform == PFFFT_REAL) {
     rffti1_ps(N/SIMD_SZ, s->twiddle, s->ifac);
   } else {
-    for (k=0; k < s->Ncvec; ++k) {
-      int i = k/SIMD_SZ;
-      int j = k%SIMD_SZ;
-      for (m=0; m < SIMD_SZ-1; ++m) {
-        float A = -2*GMATH_PI*(m+1)*k / N;
-        s->e[(2*(i*3 + m) + 0)*SIMD_SZ + j] = cos(A);
-        s->e[(2*(i*3 + m) + 1)*SIMD_SZ + j] = sin(A);
-      }
-    }
     cffti1_ps(N/SIMD_SZ, s->twiddle, s->ifac);
   }
 
@@ -1307,7 +1297,7 @@ void pffft_zreorder(PFFFT_Setup *setup, const float *in, float *out, pffft_direc
   v4sf *vout = (v4sf*)out;
   assert(in != out);
   if (setup->transform == PFFFT_REAL) {
-    int k, dk = N/32;
+    int dk = N/32;
     if (direction == PFFFT_FORWARD) {
       for (k=0; k < dk; ++k) {
         INTERLEAVE2(vin[k*8 + 0], vin[k*8 + 1], vout[2*(0*dk + k) + 0], vout[2*(0*dk + k) + 1]);
@@ -1701,19 +1691,19 @@ void pffft_zconvolve_accumulate(PFFFT_Setup *s, const float *a, const float *b, 
 # endif
 #endif
 
-  float ar, ai, br, bi, abr, abi;
+  float ar0, ai0, br0, bi0, abr0, abi0;
 #ifndef ZCONVOLVE_USING_INLINE_ASM
   v4sf vscal = LD_PS1(scaling);
   int i;
 #endif
 
   assert(VALIGNED(a) && VALIGNED(b) && VALIGNED(ab));
-  ar = ((v4sf_union*)va)[0].f[0];
-  ai = ((v4sf_union*)va)[1].f[0];
-  br = ((v4sf_union*)vb)[0].f[0];
-  bi = ((v4sf_union*)vb)[1].f[0];
-  abr = ((v4sf_union*)vab)[0].f[0];
-  abi = ((v4sf_union*)vab)[1].f[0];
+  ar0 = ((v4sf_union*)va)[0].f[0];
+  ai0 = ((v4sf_union*)va)[1].f[0];
+  br0 = ((v4sf_union*)vb)[0].f[0];
+  bi0 = ((v4sf_union*)vb)[1].f[0];
+  abr0 = ((v4sf_union*)vab)[0].f[0];
+  abi0 = ((v4sf_union*)vab)[1].f[0];
  
 #ifdef ZCONVOLVE_USING_INLINE_ASM // inline asm version, unfortunately miscompiled by clang 3.2, at least on ubuntu.. so this will be restricted to gcc
   const float *a_ = a, *b_ = b; float *ab_ = ab;
@@ -1767,8 +1757,8 @@ void pffft_zconvolve_accumulate(PFFFT_Setup *s, const float *a, const float *b, 
   }
 #endif
   if (s->transform == PFFFT_REAL) {
-    ((v4sf_union*)vab)[0].f[0] = abr + ar*br*scaling;
-    ((v4sf_union*)vab)[1].f[0] = abi + ai*bi*scaling;
+    ((v4sf_union*)vab)[0].f[0] = abr0 + ar0*br0*scaling;
+    ((v4sf_union*)vab)[1].f[0] = abi0 + ai0*bi0*scaling;
   }
 }
 
