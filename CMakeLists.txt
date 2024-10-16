@@ -24,7 +24,7 @@ else ()
 endif ()
 
 # read 'version' file into a variable (stripping any newlines or spaces)
-FILE(READ version versionFile)
+FILE(READ aax_utils_version versionFile)
 STRING(STRIP ${versionFile} AAXUTILS_VERSION)
 set(VERSION AAXUTILS_VERSION)
 
