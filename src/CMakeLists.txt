@@ -35,8 +35,3 @@ install(TARGETS aaxcvt
         COMPONENT Applications
 )
 
-CREATE_UTIL(aaxsstandardize)
-install(TARGETS aaxsstandardize
-        RUNTIME DESTINATION "${CMAKE_INSTALL_BINDIR}"
-        COMPONENT Applications
-)
