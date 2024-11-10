@@ -17,12 +17,12 @@
  </emitter>
 
  <audioframe>
-  <effect type="frequency-shift" src="sine">
+  <effect type="pitch-shift" rc="sine">
    <slot n="0">
     <param n="0">1.0</param>
-    <param n="1">0.3</param>
-    <param n="2">220.0</param>
-    <param n="3">-110.0</param>
+    <param n="1">0.0</param>
+    <param n="2">0.0</param>
+    <param n="3">1.0</param>
    </slot>
   </effect>
  </audioframe>

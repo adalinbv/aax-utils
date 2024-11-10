@@ -80,6 +80,7 @@ void help()
     printf("  -i, --input <file>\t\tplayback audio from a file\n");
     printf("      --key-on <file>\t\tSet the key-on sample file\n");
     printf("      --key-off <file>\t\tSet the key-off sample file\n");
+    printf("      --looping\t\t\tEnable looping of the sound\n");
     printf("  -n, --note <note>\t\tset the playback note\n");
     printf("  -o, --output <file>\t\talso write to an audio file (optional)\n");
     printf("      --repeat <num>\t\tset the number of repeats\n");
@@ -330,8 +331,9 @@ int main(int argc, char **argv)
     char no_patches = 1;
     char verbose = 0;
     char repeat = 0;
-    char fft = 0;
-    char fm = 0;
+    int looping = -1;
+    bool fft = false;
+    bool fm = false;
     char *env;
     int note;
     int res;
@@ -353,20 +355,25 @@ int main(int argc, char **argv)
     note = 0;
     env = getCommandLineOption(argc, argv, "-n");
     if (!env) env = getCommandLineOption(argc, argv, "--note");
-    if (env) {
-        note = tone2note(env);
-    }
+    if (env) note = tone2note(env);
 
     if (getCommandLineOption(argc, argv, "--repeat")) {
         repeat = 5;
     }
 
     if (getCommandLineOption(argc, argv, "--fft")) {
-        fft = 1;
+        fft = true;
+    }
+
+    env = getCommandLineOption(argc, argv, "--looping");
+    if (env)
+    {
+        if (env[0] == '\0') looping = true;
+        else looping = atoi(env);
     }
 
     if (getCommandLineOption(argc, argv, "--fm")) {
-        fm = 1;
+        fm = true;
     }
 
     env = getCommandLineOption(argc, argv, "--velocity");
@@ -558,8 +565,6 @@ int main(int argc, char **argv)
             aaxEmitter key_on = NULL, key_off = NULL;
             aaxEmitter e, emitter, refem = NULL;
             int i, stage, max_stages, state, key;
-            int paused = AAX_FALSE;
-            int playref = AAX_FALSE;
             aaxFrame frame, frame2;
             aaxFilter filter;
             aaxEffect effect;
@@ -567,6 +572,8 @@ int main(int argc, char **argv)
             aaxMtx4d mtx64;
             float duration;
             float dt = 0.0f;
+            bool playref = false;
+            bool paused = false;
 
             duration = getDuration(argc, argv);
 
@@ -749,6 +756,12 @@ int main(int argc, char **argv)
                 res = aaxEmitterAddBuffer(refem, refbuf);
             }
             testForState(res, "aaxEmitterAddBuffer");
+
+            if (looping >= 0)
+            {
+                res = aaxEmitterSetMode(emitter, AAX_LOOPING, looping);
+                testForState(res, "aaxEmitterSetMode");
+            }
 
             /** Key-On and Key-Off */
             if (key_on_buffer)
