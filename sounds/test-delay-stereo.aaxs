@@ -29,11 +29,11 @@
  </emitter>
 
  <audioframe>
-  <effect type="delay" rc="sine" sereo="true">
+  <effect type="delay" src="sine" sereo="true">
    <slot n="0">
     <param n="0">0.7</param>
-    <param n="1">0.0</param>
-    <param n="2" type="msec">300.0</param>
+    <param n="1">0.3</param>
+    <param n="2" type="msec">100.0</param>
     <param n="3" type="msec">30.0</param>
    </slot>
    <slot n="1">
