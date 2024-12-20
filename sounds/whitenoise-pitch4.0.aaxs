@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+
+<aeonwave>
+ <info version="0.1"/>
+
+ <sound>
+  <waveform src="white-noise" pitch="4.0"/>
+ </sound>
+
+ <emitter looping="true">
+ </emitter>
+
+</aeonwave>
