@@ -178,7 +178,7 @@ int main(int argc, char **argv)
 
             dt = (float)aaxBufferGetSetup(buffer, AAX_NO_SAMPLES);
             dt /= (float)aaxBufferGetSetup(buffer, AAX_FREQUENCY);
-            if (duration > dt && !aaxBufferGetSetup(buffer, AAX_LOOPING)) {
+            if (duration > dt && !aaxBufferGetSetup(buffer, AAX_LOOP_COUNT)) {
                duration = dt;
             }
 
